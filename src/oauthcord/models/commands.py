@@ -32,12 +32,13 @@ __all__ = (
 )
 
 
-@StatelessBaseModel.add_slots("name", "name_localizations", "value")
 class OptionChoice(
     StatelessBaseModel[
         "commands._StringApplicationCommandOptionChoiceResponse | commands.ApplicationCommandOptionChoiceRequest",
     ]
 ):
+    __slots__ = ("name", "name_localizations", "value")
+
     @override
     def _initialize(
         self,
@@ -65,27 +66,28 @@ class OptionChoice(
         return payload
 
 
-@StatelessBaseModel.add_slots(
-    "type",
-    "name",
-    "description",
-    "name_localizations",
-    "description_localizations",
-    "required",
-    "choices",
-    "min_value",
-    "max_value",
-    "min_length",
-    "max_length",
-    "autocomplete",
-    "channel_types",
-    "options",
-)
 class Option(
     StatelessBaseModel[
         "commands.ApplicationCommandOptionResponse | commands.ApplicationCommandOptionRequest",
     ]
 ):
+    __slots__ = (
+        "autocomplete",
+        "channel_types",
+        "choices",
+        "description",
+        "description_localizations",
+        "max_length",
+        "max_value",
+        "min_length",
+        "min_value",
+        "name",
+        "name_localizations",
+        "options",
+        "required",
+        "type",
+    )
+
     @override
     def _initialize(
         self,
@@ -183,20 +185,21 @@ class Option(
         return payload
 
 
-@StatelessBaseModel.add_slots(
-    "type",
-    "name",
-    "description",
-    "name_localizations",
-    "description_localizations",
-    "contexts",
-    "integration_types",
-    "default_member_permissions",
-    "nsfw",
-    "handler",
-    "options",
-)
 class RequestCommand(StatelessBaseModel["commands.ApplicationCommandRequest"]):
+    __slots__ = (
+        "contexts",
+        "default_member_permissions",
+        "description",
+        "description_localizations",
+        "handler",
+        "integration_types",
+        "name",
+        "name_localizations",
+        "nsfw",
+        "options",
+        "type",
+    )
+
     @override
     def _initialize(self, data: commands.ApplicationCommandRequest) -> None:
         self.type: ApplicationCommandType = to_enum(
@@ -280,25 +283,26 @@ class RequestCommand(StatelessBaseModel["commands.ApplicationCommandRequest"]):
         return payload
 
 
-@BaseModel.add_slots(
-    "type",
-    "id",
-    "application_id",
-    "name",
-    "description",
-    "name_localizations",
-    "description_localizations",
-    "contexts",
-    "integration_types",
-    "default_member_permissions",
-    "nsfw",
-    "version",
-    "guild_id",
-    "options",
-)
 class Command[
     D = commands.ApplicationCommandResponse | commands.GuildApplicationCommandResponse
 ](BaseModel[D]):
+    __slots__ = (
+        "application_id",
+        "contexts",
+        "default_member_permissions",
+        "description",
+        "description_localizations",
+        "guild_id",
+        "id",
+        "integration_types",
+        "name",
+        "name_localizations",
+        "nsfw",
+        "options",
+        "type",
+        "version",
+    )
+
     @override
     def _initialize(self, data: D) -> None:
         data_: (
@@ -347,16 +351,17 @@ class Command[
         ]
 
 
-@BaseModel.add_slots(
-    "parent",
-    "type",
-    "name",
-    "description",
-    "name_localizations",
-    "description_localizations",
-    "options",
-)
 class Subcommand[D = commands._SubCommandCommandOptionResponse](BaseModel[D]):
+    __slots__ = (
+        "description",
+        "description_localizations",
+        "name",
+        "name_localizations",
+        "options",
+        "parent",
+        "type",
+    )
+
     def __init__(
         self,
         *,
@@ -392,14 +397,13 @@ class Subcommand[D = commands._SubCommandCommandOptionResponse](BaseModel[D]):
         ]
 
 
-@Command.add_slots(
-    "commands",
-)
 class Group(
     Command[
         "commands.ApplicationCommandResponse | commands.GuildApplicationCommandResponse"
     ],
 ):
+    __slots__ = ("commands",)
+
     def __init__(
         self,
         *,
@@ -415,10 +419,11 @@ class Group(
         ]
 
 
-@BaseModel.add_slots("id", "type", "permission")
 class ApplicationCommandPermission(
     BaseModel["commands.ApplicationCommandPermissionsResponse"]
 ):
+    __slots__ = ("id", "permission", "type")
+
     @override
     def _initialize(self, data: commands.ApplicationCommandPermissionsResponse) -> None:
         self.id: int = convert_snowflake(data, "id")
@@ -428,10 +433,11 @@ class ApplicationCommandPermission(
         self.permission: bool = data["permission"]
 
 
-@BaseModel.add_slots("id", "application_id", "guild_id", "permissions")
 class GuildApplicationCommandPermissions(
     BaseModel["commands.GuildApplicationCommandPermissionsResponse"]
 ):
+    __slots__ = ("application_id", "guild_id", "id", "permissions")
+
     @override
     def _initialize(
         self, data: commands.GuildApplicationCommandPermissionsResponse

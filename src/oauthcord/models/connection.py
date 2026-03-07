@@ -29,21 +29,22 @@ __all__ = (
 )
 
 
-@BaseModel.add_slots(
-    "id",
-    "name",
-    "type",
-    "revoked",
-    "integrations",
-    "verified",
-    "friend_sync",
-    "metadata_visibility",
-    "show_activity",
-    "two_way_link",
-    "visibility",
-)
 class Connection(BaseModel["ConnectionPayload"]):
     """Represents a Discord user connection."""
+
+    __slots__ = (
+        "friend_sync",
+        "id",
+        "integrations",
+        "metadata_visibility",
+        "name",
+        "revoked",
+        "show_activity",
+        "two_way_link",
+        "type",
+        "verified",
+        "visibility",
+    )
 
     @override
     def _initialize(self, data: ConnectionPayload) -> None:
@@ -64,8 +65,9 @@ class Connection(BaseModel["ConnectionPayload"]):
         self.visibility: Visibility = to_enum(Visibility, data["visibility"])
 
 
-@BaseModel.add_slots("id", "type", "account", "guild")
 class Integration(BaseModel["IntegrationResponsePayload"]):
+    __slots__ = ("account", "guild", "id", "type")
+
     @override
     def _initialize(self, data: IntegrationResponsePayload) -> None:
         self.id: str = str(data["id"])
@@ -78,16 +80,18 @@ class Integration(BaseModel["IntegrationResponsePayload"]):
         )
 
 
-@BaseModel.add_slots("id", "name")
 class IntegrationAccount(BaseModel["IntegrationAccountResponsePayload"]):
+    __slots__ = ("id", "name")
+
     @override
     def _initialize(self, data: IntegrationAccountResponsePayload) -> None:
         self.id: str = str(data["id"])
         self.name: str = data["name"]
 
 
-@BaseModel.add_slots("id", "name", "icon")
 class IntegrationGuild(BaseModel["IntegrationGuildResponsePayload"]):
+    __slots__ = ("icon", "id", "name")
+
     @override
     def _initialize(self, data: IntegrationGuildResponsePayload) -> None:
         self.id: int = convert_snowflake(data, "id")

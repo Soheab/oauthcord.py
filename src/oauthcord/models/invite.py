@@ -22,23 +22,24 @@ __all__ = (
 )
 
 
-@BaseModel.add_slots(
-    "id",
-    "name",
-    "icon",
-    "description",
-    "banner",
-    "splash",
-    "verification_level",
-    "features",
-    "vanity_url_code",
-    "premium_subscription_count",
-    "premium_tier",
-    "nsfw",
-    "nsfw_level",
-)
 class InviteGuild(BaseModel["InviteGuildResponse"]):
     """Represents Discord API data for `InviteGuild`."""
+
+    __slots__ = (
+        "banner",
+        "description",
+        "features",
+        "icon",
+        "id",
+        "name",
+        "nsfw",
+        "nsfw_level",
+        "premium_subscription_count",
+        "premium_tier",
+        "splash",
+        "vanity_url_code",
+        "verification_level",
+    )
 
     @override
     def _initialize(self, data: InviteGuildResponse) -> None:
@@ -63,30 +64,31 @@ class InviteGuild(BaseModel["InviteGuildResponse"]):
         self.nsfw_level: int = data["nsfw_level"]
 
 
-@BaseModel.add_slots(
-    "code",
-    "type",
-    "guild_id",
-    "guild",
-    "channel",
-    "profile",
-    "inviter",
-    "target_type",
-    "target_user",
-    "target_application",
-    "roles",
-    "approximate_presence_count",
-    "approximate_member_count",
-    "expires_at",
-    "flags",
-    "new_member",
-    "show_verification_form",
-    "stage_instance",
-    "guild_scheduled_event",
-    "guild_join_request",
-)
 class Invite(BaseModel["InviteResponse"]):
     """Represents a Discord invite."""
+
+    __slots__ = (
+        "approximate_member_count",
+        "approximate_presence_count",
+        "channel",
+        "code",
+        "expires_at",
+        "flags",
+        "guild",
+        "guild_id",
+        "guild_join_request",
+        "guild_scheduled_event",
+        "inviter",
+        "new_member",
+        "profile",
+        "roles",
+        "show_verification_form",
+        "stage_instance",
+        "target_application",
+        "target_type",
+        "target_user",
+        "type",
+    )
 
     @override
     def _initialize(self, data: InviteResponse) -> None:

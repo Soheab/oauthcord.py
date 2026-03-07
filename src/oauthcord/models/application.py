@@ -51,7 +51,6 @@ __all__ = (
 )
 
 
-@BaseModel.add_slots("os", "name", "is_launcher")
 class ApplicationExecutable(BaseModel["ApplicationExecutableResponse"]):
     """Executable metadata for a Discord application build.
 
@@ -68,6 +67,8 @@ class ApplicationExecutable(BaseModel["ApplicationExecutableResponse"]):
         Whether this executable is the primary launcher.
     """
 
+    __slots__ = ("is_launcher", "name", "os")
+
     @override
     def _initialize(self, data: ApplicationExecutableResponse) -> None:
         self.os: str = data["os"]
@@ -75,7 +76,6 @@ class ApplicationExecutable(BaseModel["ApplicationExecutableResponse"]):
         self.is_launcher: bool = data["is_launcher"]
 
 
-@BaseModel.add_slots("id", "sku", "distributor")
 class ApplicationSKU(BaseModel["ApplicationSKUResponse"]):
     """Third-party SKU metadata associated with an application.
 
@@ -92,6 +92,8 @@ class ApplicationSKU(BaseModel["ApplicationSKUResponse"]):
         The distributor platform for the SKU.
     """
 
+    __slots__ = ("distributor", "id", "sku")
+
     @override
     def _initialize(self, data: ApplicationSKUResponse) -> None:
         self.id: str | None = data.get("id")
@@ -101,7 +103,6 @@ class ApplicationSKU(BaseModel["ApplicationSKUResponse"]):
         )
 
 
-@BaseModel.add_slots("id", "name")
 class Company(BaseModel["CompanyResponse"]):
     """Developer or publisher company information for an application.
 
@@ -117,13 +118,14 @@ class Company(BaseModel["CompanyResponse"]):
         The company display name.
     """
 
+    __slots__ = ("id", "name")
+
     @override
     def _initialize(self, data: CompanyResponse) -> None:
         self.id: int = convert_snowflake(data, "id")
         self.name: str = data["name"]
 
 
-@BaseModel.add_slots("scopes", "permissions")
 class ApplicationInstallParams(BaseModel["ApplicationInstallParamsResponse"]):
     """OAuth2 install parameters for an application.
 
@@ -138,13 +140,14 @@ class ApplicationInstallParams(BaseModel["ApplicationInstallParamsResponse"]):
         The permissions bitset represented as a string.
     """
 
+    __slots__ = ("permissions", "scopes")
+
     @override
     def _initialize(self, data: ApplicationInstallParamsResponse) -> None:
         self.scopes: list[str] = data["scopes"]
         self.permissions: str = data["permissions"]
 
 
-@BaseModel.add_slots("oauth2_install_params")
 class ApplicationIntegrationTypeConfiguration(
     BaseModel["ApplicationIntegrationTypeConfigurationResponse"]
 ):
@@ -160,6 +163,8 @@ class ApplicationIntegrationTypeConfiguration(
         The OAuth2 install parameters for this integration type, if present.
     """
 
+    __slots__ = ("oauth2_install_params",)
+
     @override
     def _initialize(
         self, data: ApplicationIntegrationTypeConfigurationResponse
@@ -171,12 +176,15 @@ class ApplicationIntegrationTypeConfiguration(
         )
 
 
-@BaseModel.add_slots(
-    "label_type", "release_phase", "label_until", "omit_badge_from_surfaces"
-)
 class EmbeddedActivityPlatformConfig(
     BaseModel["EmbeddedActivityPlatformConfigResponse"]
 ):
+    __slots__ = (
+        "label_type",
+        "label_until",
+        "omit_badge_from_surfaces",
+        "release_phase",
+    )
     """Per-platform configuration for an embedded activity.
 
     This model describes release labeling and badge visibility settings for a
@@ -211,24 +219,6 @@ class EmbeddedActivityPlatformConfig(
         ]
 
 
-@BaseModel.add_slots(
-    "application_id",
-    "activity_preview_video_asset_id",
-    "supported_platforms",
-    "default_orientation_lock_state",
-    "tablet_default_orientation_lock_state",
-    "requires_age_gate",
-    "legacy_responsive_aspect_ratio",
-    "premium_tier_requirement",
-    "free_period_starts_at",
-    "free_period_ends_at",
-    "client_platform_config",
-    "shelf_rank",
-    "has_csp_exception",
-    "displays_advertisements",
-    "supported_locales",
-    "blocked_locales",
-)
 class EmbeddedActivityConfig(BaseModel["EmbeddedActivityConfigResponse"]):
     """Configuration payload for a Discord embedded activity.
 
@@ -270,6 +260,25 @@ class EmbeddedActivityConfig(BaseModel["EmbeddedActivityConfigResponse"]):
     blocked_locales: :class:`list` of :class:`str`
         Locale codes blocked for the activity.
     """
+
+    __slots__ = (
+        "activity_preview_video_asset_id",
+        "application_id",
+        "blocked_locales",
+        "client_platform_config",
+        "default_orientation_lock_state",
+        "displays_advertisements",
+        "free_period_ends_at",
+        "free_period_starts_at",
+        "has_csp_exception",
+        "legacy_responsive_aspect_ratio",
+        "premium_tier_requirement",
+        "requires_age_gate",
+        "shelf_rank",
+        "supported_locales",
+        "supported_platforms",
+        "tablet_default_orientation_lock_state",
+    )
 
     @override
     def _initialize(self, data: EmbeddedActivityConfigResponse) -> None:
@@ -317,17 +326,17 @@ class EmbeddedActivityConfig(BaseModel["EmbeddedActivityConfigResponse"]):
         self.blocked_locales: list[str] = data.get("blocked_locales", [])
 
 
-@BaseModel.add_slots(
-    "type",
-    "key",
-    "name",
-    "name_localizations",
-    "description",
-    "description_localizations",
-)
 class ApplicationRoleConnectionMetadata(
     BaseModel["ApplicationRoleConnectionMetadataResponse"]
 ):
+    __slots__ = (
+        "description",
+        "description_localizations",
+        "key",
+        "name",
+        "name_localizations",
+        "type",
+    )
     """Metadata schema entry for application role connections.
 
     Each entry defines one metadata field that can be attached to a user's
@@ -361,13 +370,6 @@ class ApplicationRoleConnectionMetadata(
         )
 
 
-@BaseModel.add_slots(
-    "platform_name",
-    "platform_username",
-    "metadata",
-    "application",
-    "application_metadata",
-)
 class ApplicationRoleConnection(BaseModel["ApplicationRoleConnectionResponse"]):
     """A user's application role connection payload.
 
@@ -388,6 +390,14 @@ class ApplicationRoleConnection(BaseModel["ApplicationRoleConnectionResponse"]):
         The metadata schema entries, if provided.
     """
 
+    __slots__ = (
+        "application",
+        "application_metadata",
+        "metadata",
+        "platform_name",
+        "platform_username",
+    )
+
     @override
     def _initialize(self, data: ApplicationRoleConnectionResponse) -> None:
         self.platform_name: str | None = data.get("platform_name")
@@ -402,17 +412,6 @@ class ApplicationRoleConnection(BaseModel["ApplicationRoleConnectionResponse"]):
         ]
 
 
-@BaseModel.add_slots(
-    "application_id",
-    "link_id",
-    "type",
-    "asset_path",
-    "asset_id",
-    "title",
-    "description",
-    "custom_id",
-    "primary_cta",
-)
 class ActivityLink(BaseModel["ActivityLinkResponse"]):
     """Rich link metadata for an activity deep link.
 
@@ -441,6 +440,18 @@ class ActivityLink(BaseModel["ActivityLinkResponse"]):
         The primary call-to-action text, if provided.
     """
 
+    __slots__ = (
+        "application_id",
+        "asset_id",
+        "asset_path",
+        "custom_id",
+        "description",
+        "link_id",
+        "primary_cta",
+        "title",
+        "type",
+    )
+
     @override
     def _initialize(self, data: ActivityLinkResponse) -> None:
         self.application_id: int = convert_snowflake(data, "application_id")
@@ -458,10 +469,6 @@ class ActivityLink(BaseModel["ActivityLinkResponse"]):
         self.primary_cta: str | None = data.get("primary_cta")
 
 
-@BaseModel.add_slots(
-    "user_id",
-    "external_user_id",
-)
 class PartialApplicationIdentity(BaseModel["PartialApplicationIdentityResponse"]):
     """External identity mapping for an application user.
 
@@ -476,58 +483,14 @@ class PartialApplicationIdentity(BaseModel["PartialApplicationIdentityResponse"]
         The external user identifier.
     """
 
+    __slots__ = ("external_user_id", "user_id")
+
     @override
     def _initialize(self, data: PartialApplicationIdentityResponse) -> None:
         self.user_id: int = convert_snowflake(data, "user_id")
         self.external_user_id: str = data["external_user_id"]
 
 
-@BaseModel.add_slots(
-    "id",
-    "name",
-    "description",
-    "icon",
-    "cover_image",
-    "splash",
-    "type",
-    "flags",
-    "primary_sku_id",
-    "verify_key",
-    "eula_id",
-    "slug",
-    "aliases",
-    "executables",
-    "third_party_skus",
-    "hook",
-    "overlay",
-    "overlay_methods",
-    "overlay_warn",
-    "overlay_compatibility_hook",
-    "bot",
-    "developers",
-    "publishers",
-    "rpc_origins",
-    "deeplink_uri",
-    "integration_public",
-    "integration_require_code_grant",
-    "bot_public",
-    "bot_require_code_grant",
-    "terms_of_service_url",
-    "privacy_policy_url",
-    "tags",
-    "install_params",
-    "custom_install_url",
-    "integration_types_config",
-    "connection_entrypoint_url",
-    "is_verified",
-    "is_discoverable",
-    "is_monetized",
-    "storefront_available",
-    "max_participants",
-    "embedded_activity_config",
-    "parent_id",
-    "summary",
-)
 class PartialApplication(BaseModel["PartialApplicationResponse"], ApplicationHTTPMixin):
     """Partial Discord application metadata payload.
 
@@ -625,6 +588,53 @@ class PartialApplication(BaseModel["PartialApplicationResponse"], ApplicationHTT
     summary: :class:`str`
         The application summary, if provided.
     """
+
+    __slots__ = (
+        "aliases",
+        "bot",
+        "bot_public",
+        "bot_require_code_grant",
+        "connection_entrypoint_url",
+        "cover_image",
+        "custom_install_url",
+        "deeplink_uri",
+        "description",
+        "developers",
+        "embedded_activity_config",
+        "eula_id",
+        "executables",
+        "flags",
+        "hook",
+        "icon",
+        "id",
+        "install_params",
+        "integration_public",
+        "integration_require_code_grant",
+        "integration_types_config",
+        "is_discoverable",
+        "is_monetized",
+        "is_verified",
+        "max_participants",
+        "name",
+        "overlay",
+        "overlay_compatibility_hook",
+        "overlay_methods",
+        "overlay_warn",
+        "parent_id",
+        "primary_sku_id",
+        "privacy_policy_url",
+        "publishers",
+        "rpc_origins",
+        "slug",
+        "splash",
+        "storefront_available",
+        "summary",
+        "tags",
+        "terms_of_service_url",
+        "third_party_skus",
+        "type",
+        "verify_key",
+    )
 
     @override
     def _initialize(self, data: PartialApplicationResponse) -> None:

@@ -27,9 +27,10 @@ __all__ = (
 )
 
 
-@BaseModel.add_slots("tag", "reward_code")
 class QuestRewardsMetadata(BaseModel["QuestRewardsMetadataResponse"]):
     """Represents Discord API data for `QuestRewardsMetadata`."""
+
+    __slots__ = ("reward_code", "tag")
 
     @override
     def _initialize(self, data: QuestRewardsMetadataResponse) -> None:
@@ -37,9 +38,10 @@ class QuestRewardsMetadata(BaseModel["QuestRewardsMetadataResponse"]):
         self.reward_code: dict[str, object] | None = data.get("reward_code")
 
 
-@BaseModel.add_slots("quest_rewards")
 class TenantMetadata(BaseModel["TenantMetadataResponse"]):
     """Represents Discord API data for `TenantMetadata`."""
+
+    __slots__ = ("quest_rewards",)
 
     @override
     def _initialize(self, data: TenantMetadataResponse) -> None:
@@ -48,35 +50,36 @@ class TenantMetadata(BaseModel["TenantMetadataResponse"]):
         )
 
 
-@BaseModel.add_slots(
-    "id",
-    "type",
-    "sku_id",
-    "application_id",
-    "user_id",
-    "user",
-    "guild_id",
-    "parent_id",
-    "deleted",
-    "consumed",
-    "branches",
-    "starts_at",
-    "ends_at",
-    "promotion_id",
-    "subscription_id",
-    "gift_code_flags",
-    "gift_code_batch_id",
-    "gifter_user_id",
-    "gift_style",
-    "fulfillment_status",
-    "fulfilled_at",
-    "source_type",
-    "tenant_metadata",
-    "sku",
-    "subscription_plan",
-)
 class Entitlement(BaseModel["EntitlementResponse"]):
     """Represents a Discord application entitlement."""
+
+    __slots__ = (
+        "application_id",
+        "branches",
+        "consumed",
+        "deleted",
+        "ends_at",
+        "fulfilled_at",
+        "fulfillment_status",
+        "gift_code_batch_id",
+        "gift_code_flags",
+        "gift_style",
+        "gifter_user_id",
+        "guild_id",
+        "id",
+        "parent_id",
+        "promotion_id",
+        "sku",
+        "sku_id",
+        "source_type",
+        "starts_at",
+        "subscription_id",
+        "subscription_plan",
+        "tenant_metadata",
+        "type",
+        "user",
+        "user_id",
+    )
 
     @override
     def _initialize(self, data: EntitlementResponse) -> None:

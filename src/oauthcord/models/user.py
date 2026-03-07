@@ -51,8 +51,9 @@ __all__ = (
 )
 
 
-@BaseModel.add_slots("sku_id", "asset", "label")
 class BaseCollectable[D: Any = BaseCollectibleResponse](BaseModel[D]):
+    __slots__ = ("asset", "label", "sku_id")
+
     @override
     def _initialize(self, data: D) -> None:
         self.sku_id: int = convert_snowflake(data, "sku_id")
@@ -60,8 +61,9 @@ class BaseCollectable[D: Any = BaseCollectibleResponse](BaseModel[D]):
         self.label: str = data.get("label")
 
 
-@BaseModel.add_slots("palette")
 class CollectibleNameplate(BaseCollectable["CollectibleNameplateResponse"]):
+    __slots__ = ("palette",)
+
     @override
     def _initialize(self, data: CollectibleNameplateResponse) -> None:
         super()._initialize(data)
@@ -70,9 +72,10 @@ class CollectibleNameplate(BaseCollectable["CollectibleNameplateResponse"]):
         )
 
 
-@BaseModel.add_slots("nameplate")
 class Collectible(BaseModel["CollectablesResponse"]):
     """Represents Discord API data for `Collectible`."""
+
+    __slots__ = ("nameplate",)
 
     @override
     def _initialize(self, data: CollectablesResponse) -> None:
@@ -81,9 +84,10 @@ class Collectible(BaseModel["CollectablesResponse"]):
         )
 
 
-@BaseModel.add_slots("identity_guild_id", "identity_enabled", "tag", "badge")
 class PrimaryGuild(BaseModel["PrimaryGuildResponse"]):
     """Represents Discord API data for `PrimaryGuild`."""
+
+    __slots__ = ("badge", "identity_enabled", "identity_guild_id", "tag")
 
     @override
     def _initialize(self, data: PrimaryGuildResponse) -> None:
@@ -103,9 +107,10 @@ class PrimaryGuild(BaseModel["PrimaryGuildResponse"]):
             self.badge = None
 
 
-@BaseModel.add_slots("asset", "sku_id")
 class AvatarDecorationData(BaseModel["AvatarDecorationDataResponse"]):
     """Represents Discord API data for `AvatarDecorationData`."""
+
+    __slots__ = ("asset", "sku_id")
 
     @override
     def _initialize(self, data: AvatarDecorationDataResponse) -> None:
@@ -113,9 +118,10 @@ class AvatarDecorationData(BaseModel["AvatarDecorationDataResponse"]):
         self.sku_id: int = convert_snowflake(data, "sku_id")
 
 
-@BaseModel.add_slots("font", "effect", "colors")
 class DisplayNameStyle(BaseModel["DisplayNameStyleResponse"]):
     """Represents Discord API data for `DisplayNameStyle`."""
+
+    __slots__ = ("colors", "effect", "font")
 
     @override
     def _initialize(self, data: DisplayNameStyleResponse) -> None:
@@ -124,11 +130,17 @@ class DisplayNameStyle(BaseModel["DisplayNameStyleResponse"]):
         self.colors: list[int] = data["colors"]
 
 
-@BaseModel.add_slots(
-    "id", "username", "avatar", "discriminator", "public_flags", "global_name"
-)
 class PartialUser[D = PartialUserResponse](BaseModel[D]):
     """Represents a partial Discord user payload."""
+
+    __slots__ = (
+        "avatar",
+        "discriminator",
+        "global_name",
+        "id",
+        "public_flags",
+        "username",
+    )
 
     @override
     def _initialize(self, data: D) -> None:  # type: ignore
@@ -153,17 +165,18 @@ class PartialUser[D = PartialUserResponse](BaseModel[D]):
         return await self._http.__get_client().dm_channel(token=token, user_id=self.id)
 
 
-@BaseModel.add_slots(
-    "flags",
-    "banner",
-    "accent_color",
-    "banner_color",
-    "avatar_decoration_data",
-    "collectibles",
-    "display_name_styles",
-    "primary_guild",
-)
 class GuildMemberWithUser[D = GuildMemberWithUserResponse](PartialUser[D]):
+    __slots__ = (
+        "accent_color",
+        "avatar_decoration_data",
+        "banner",
+        "banner_color",
+        "collectibles",
+        "display_name_styles",
+        "flags",
+        "primary_guild",
+    )
+
     @override
     def _initialize(self, data: D) -> None:  # type: ignore
         super()._initialize(data)
@@ -198,9 +211,10 @@ class GuildMemberWithUser[D = GuildMemberWithUserResponse](PartialUser[D]):
         )
 
 
-@BaseModel.add_slots("email", "mfa_enabled", "locale", "premium_type")
 class CurrentUser(GuildMemberWithUser["CurrentUserResponse"]):
     """Represents the currently authorized Discord user."""
+
+    __slots__ = ("email", "locale", "mfa_enabled", "premium_type")
 
     @override
     def _initialize(self, data: CurrentUserResponse) -> None:
@@ -211,15 +225,16 @@ class CurrentUser(GuildMemberWithUser["CurrentUserResponse"]):
         self.premium_type: PremiumType = to_enum(PremiumType, data["premium_type"])
 
 
-@BaseModel.add_slots(
-    "user_is_staff",
-    "sla_email_sent",
-    "bypass_cooldown",
-    "is_provisional",
-    "backend_attempts",
-)
 class HarvestMetadata(BaseModel["HarvestMetadataResponse"]):
     """Represents Discord API data for `HarvestMetadata`."""
+
+    __slots__ = (
+        "backend_attempts",
+        "bypass_cooldown",
+        "is_provisional",
+        "sla_email_sent",
+        "user_is_staff",
+    )
 
     @override
     def _initialize(self, data: HarvestMetadataResponse) -> None:
@@ -230,22 +245,23 @@ class HarvestMetadata(BaseModel["HarvestMetadataResponse"]):
         self.backend_attempts: dict[str, int] = data.get("backend_attempts", {})
 
 
-@BaseModel.add_slots(
-    "harvest_id",
-    "user_id",
-    "email",
-    "state",
-    "status",
-    "created_at",
-    "completed_at",
-    "polled_at",
-    "backends",
-    "updated_at",
-    "shadow_run",
-    "harvest_metadata",
-)
 class Harvest(BaseModel["HarvestResponse"]):
     """Represents Discord API data for `Harvest`."""
+
+    __slots__ = (
+        "backends",
+        "completed_at",
+        "created_at",
+        "email",
+        "harvest_id",
+        "harvest_metadata",
+        "polled_at",
+        "shadow_run",
+        "state",
+        "status",
+        "updated_at",
+        "user_id",
+    )
 
     @override
     def _initialize(self, data: HarvestResponse) -> None:

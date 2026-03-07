@@ -24,9 +24,6 @@ if TYPE_CHECKING:
 __all__ = ("AccessTokenResponse",)
 
 
-@BaseModel.add_slots(
-    "token_type", "access_token", "refresh_token", "_scope", "_expires_in"
-)
 class AccessTokenResponse(
     BaseModel["AccessTokenResponsePayload | RefreshTokenResponsePayload"]
 ):
@@ -41,6 +38,8 @@ class AccessTokenResponse(
     refresh_token: :class:`str`
         The refresh token string used to obtain new access tokens.
     """
+
+    __slots__ = ("_expires_in", "_scope", "access_token", "refresh_token", "token_type")
 
     @override
     def _initialize(

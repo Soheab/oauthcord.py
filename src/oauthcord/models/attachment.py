@@ -11,25 +11,6 @@ if TYPE_CHECKING:
 __all__ = ("Attachment",)
 
 
-@BaseModel.add_slots(
-    "id",
-    "filename",
-    "size",
-    "url",
-    "proxy_url",
-    "title",
-    "description",
-    "content_type",
-    "height",
-    "width",
-    "content_scan_version",
-    "placeholder_version",
-    "placeholder",
-    "ephemeral",
-    "duration_secs",
-    "waveform",
-    "flags",
-)
 class Attachment(BaseModel["AttachmentPayload", "PartialAttachmentRequest"]):
     """Represents a Discord message attachment.
 
@@ -70,6 +51,26 @@ class Attachment(BaseModel["AttachmentPayload", "PartialAttachmentRequest"]):
     flags: :class:`AttachmentFlags`
         Attachment flags.
     """
+
+    __slots__ = (
+        "content_scan_version",
+        "content_type",
+        "description",
+        "duration_secs",
+        "ephemeral",
+        "filename",
+        "flags",
+        "height",
+        "id",
+        "placeholder",
+        "placeholder_version",
+        "proxy_url",
+        "size",
+        "title",
+        "url",
+        "waveform",
+        "width",
+    )
 
     @override
     def _initialize(self, data: AttachmentPayload) -> None:

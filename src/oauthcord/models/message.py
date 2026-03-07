@@ -27,21 +27,22 @@ __all__ = (
 )
 
 
-@BaseModel.add_slots(
-    "id",
-    "lobby_id",
-    "channel_id",
-    "type",
-    "content",
-    "author",
-    "flags",
-    "application_id",
-    "parent_application_id",
-    "channel",
-    "recipient_id",
-)
 class PartialMessage(BaseModel["PartialMessagePayload"]):
     """Represents a partial Discord message payload."""
+
+    __slots__ = (
+        "application_id",
+        "author",
+        "channel",
+        "channel_id",
+        "content",
+        "flags",
+        "id",
+        "lobby_id",
+        "parent_application_id",
+        "recipient_id",
+        "type",
+    )
 
     @override
     def _initialize(self, data: PartialMessagePayload) -> None:
@@ -72,32 +73,33 @@ class PartialMessage(BaseModel["PartialMessagePayload"]):
         )
 
 
-@BaseModel.add_slots(
-    "id",
-    "channel_id",
-    "lobby_id",
-    "author",
-    "content",
-    "timestamp",
-    "edited_timestamp",
-    "tts",
-    "mention_everyone",
-    "mentions",
-    "mention_roles",
-    "mention_channels",
-    "attachments",
-    "embeds",
-    "reactions",
-    "nonce",
-    "pinned",
-    "webhook_id",
-    "type",
-    "flags",
-    "components",
-    "thread",
-)
 class Message(BaseModel["MessagePayload"]):
     """Represents a full Discord message."""
+
+    __slots__ = (
+        "attachments",
+        "author",
+        "channel_id",
+        "components",
+        "content",
+        "edited_timestamp",
+        "embeds",
+        "flags",
+        "id",
+        "lobby_id",
+        "mention_channels",
+        "mention_everyone",
+        "mention_roles",
+        "mentions",
+        "nonce",
+        "pinned",
+        "reactions",
+        "thread",
+        "timestamp",
+        "tts",
+        "type",
+        "webhook_id",
+    )
 
     @override
     def _initialize(self, data: MessagePayload) -> None:

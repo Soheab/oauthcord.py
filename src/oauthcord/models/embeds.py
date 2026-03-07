@@ -14,12 +14,13 @@ __all__ = (
 )
 
 
-@StatelessBaseModel.add_slots("text", "icon_url", "proxy_icon_url")
 class EmbedFooter(
     StatelessBaseModel[
         "message_types.EmbedFooterResponse", "message_types.EmbedFooterRequest"
     ]
 ):
+    __slots__ = ("icon_url", "proxy_icon_url", "text")
+
     def __init__(
         self,
         text: str,
@@ -54,24 +55,25 @@ class EmbedFooter(
         )
 
 
-@StatelessBaseModel.add_slots(
-    "url",
-    "proxy_url",
-    "height",
-    "width",
-    "flags",
-    "description",
-    "content_type",
-    "content_scan_metadata",
-    "placeholder_version",
-    "placeholder",
-)
 class EmbedMedia(
     StatelessBaseModel[
         "message_types.EmbedMediaResponse", "message_types.EmbedMediaRequest"
     ]
 ):
     """Builder and serializer for Discord embed payload data."""
+
+    __slots__ = (
+        "content_scan_metadata",
+        "content_type",
+        "description",
+        "flags",
+        "height",
+        "placeholder",
+        "placeholder_version",
+        "proxy_url",
+        "url",
+        "width",
+    )
 
     def __init__(
         self,
@@ -124,12 +126,13 @@ class EmbedMedia(
         )
 
 
-@StatelessBaseModel.add_slots("name", "url", "icon_url", "proxy_icon_url")
 class EmbedAuthor(
     StatelessBaseModel[
         "message_types.EmbedAuthorResponse", "message_types.EmbedAuthorRequest"
     ]
 ):
+    __slots__ = ("icon_url", "name", "proxy_icon_url", "url")
+
     def __init__(
         self,
         name: str,
@@ -166,13 +169,14 @@ class EmbedAuthor(
         )
 
 
-@StatelessBaseModel.add_slots("name", "value", "inline")
 class EmbedField(
     StatelessBaseModel[
         "message_types.EmbedFieldResponse", "message_types.EmbedFieldRequest"
     ]
 ):
     """Builder and serializer for Discord embed payload data."""
+
+    __slots__ = ("inline", "name", "value")
 
     def __init__(self, name: str, value: str, *, inline: bool | None = None) -> None:
         super().__init__(data={"name": name, "value": value})
@@ -198,27 +202,28 @@ class EmbedField(
         return cls(data["name"], data["value"], inline=data.get("inline"))
 
 
-@StatelessBaseModel.add_slots(
-    "title",
-    "type",
-    "description",
-    "url",
-    "timestamp",
-    "color",
-    "footer",
-    "image",
-    "thumbnail",
-    "video",
-    "provider",
-    "author",
-    "fields",
-    "reference_id",
-    "content_scan_version",
-    "flags",
-)
 class Embed(
     StatelessBaseModel["message_types.EmbedResponse", "message_types.EmbedRequest"]
 ):
+    __slots__ = (
+        "author",
+        "color",
+        "content_scan_version",
+        "description",
+        "fields",
+        "flags",
+        "footer",
+        "image",
+        "provider",
+        "reference_id",
+        "thumbnail",
+        "timestamp",
+        "title",
+        "type",
+        "url",
+        "video",
+    )
+
     def __init__(
         self,
         *,

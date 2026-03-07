@@ -19,27 +19,28 @@ __all__ = (
 )
 
 
-@BaseModel.add_slots(
-    "guild_id",
-    "avatar",
-    "banner",
-    "communication_disabled_until",
-    "flags",
-    "joined_at",
-    "nick",
-    "pending",
-    "premium_since",
-    "role_ids",
-    "unusual_dm_activity_until",
-    "display_name_styles",
-    "user",
-    "mute",
-    "deaf",
-    "bio",
-    "permissions",
-)
 class GuildMember(BaseModel["GuildMemberResponse"]):
     """Represents a guild member payload for the authorized user."""
+
+    __slots__ = (
+        "avatar",
+        "banner",
+        "bio",
+        "communication_disabled_until",
+        "deaf",
+        "display_name_styles",
+        "flags",
+        "guild_id",
+        "joined_at",
+        "mute",
+        "nick",
+        "pending",
+        "permissions",
+        "premium_since",
+        "role_ids",
+        "unusual_dm_activity_until",
+        "user",
+    )
 
     @override
     def __init__(
@@ -104,18 +105,19 @@ class GuildMember(BaseModel["GuildMemberResponse"]):
         self.permissions: Permissions = Permissions(int(raw_permissions))
 
 
-@BaseModel.add_slots(
-    "guild_id",
-    "id",
-    "user_id",
-    "join_timestamp",
-    "flags",
-    "muted",
-    "mute_config",
-    "member",
-)
 class ThreadMember(BaseModel["ThreadMemberResponse"]):
     """Represents a thread member payload."""
+
+    __slots__ = (
+        "flags",
+        "guild_id",
+        "id",
+        "join_timestamp",
+        "member",
+        "mute_config",
+        "muted",
+        "user_id",
+    )
 
     @override
     def __init__(

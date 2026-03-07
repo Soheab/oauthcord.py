@@ -15,9 +15,10 @@ __all__ = (
 )
 
 
-@BaseModel.add_slots("id", "metadata", "flags")
 class LobbyMember(BaseModel["LobbyMemberResponse"]):
     """Represents a Discord lobby member payload."""
+
+    __slots__ = ("flags", "id", "metadata")
 
     @override
     def _initialize(self, data: LobbyMemberResponse) -> None:
@@ -30,11 +31,17 @@ class LobbyMember(BaseModel["LobbyMemberResponse"]):
         )
 
 
-@BaseModel.add_slots(
-    "id", "application_id", "metadata", "members", "flags", "linked_channel"
-)
 class Lobby(BaseModel["LobbyResponse"]):
     """Represents a Discord lobby payload."""
+
+    __slots__ = (
+        "application_id",
+        "flags",
+        "id",
+        "linked_channel",
+        "members",
+        "metadata",
+    )
 
     @override
     def _initialize(self, data: LobbyResponse) -> None:

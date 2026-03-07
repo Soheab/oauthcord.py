@@ -26,18 +26,6 @@ class StatelessBaseModel[D: Any, R: Any = None]:
     def _from_response(cls, data: D) -> Self:
         return cls(data=data)
 
-    @classmethod
-    def add_slots(
-        cls, *slot_names: str
-    ) -> Callable[[type[StatelessBaseModelT]], type[StatelessBaseModelT]]:
-        def decorator(
-            new_cls: type[StatelessBaseModelT],
-        ) -> type[StatelessBaseModelT]:
-            new_cls.__slots__ = cls.__slots__ + slot_names
-            return new_cls
-
-        return decorator
-
     def _initialize_subclass[C: StatelessBaseModel[Any, Any]](
         self, cls: type[C], data: Any
     ) -> C:

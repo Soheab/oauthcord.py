@@ -14,9 +14,10 @@ if TYPE_CHECKING:
 __all__ = ("Guild",)
 
 
-@BaseModel.add_slots("id", "name", "icon", "banner", "owner", "permissions", "features")
 class Guild(BaseModel["GuildPayload"]):
     """Represents a Discord guild available to the authorized user."""
+
+    __slots__ = ("banner", "features", "icon", "id", "name", "owner", "permissions")
 
     @override
     def _initialize(self, data: GuildPayload) -> None:

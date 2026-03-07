@@ -8,6 +8,8 @@ __all__ = ("Emoji",)
 class Emoji(StatelessBaseModel[Any, Any]):
     """Represents an emoji payload used in Discord request and response models."""
 
+    __slots__ = ("animated", "id", "name")
+
     def __init__(
         self,
         *,

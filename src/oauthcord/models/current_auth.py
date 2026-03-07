@@ -21,20 +21,21 @@ __all__ = (
 )
 
 
-@BaseModel.add_slots(
-    "id",
-    "name",
-    "icon",
-    "description",
-    "hook",
-    "bot_public",
-    "bot_require_code_grant",
-    "verify_key",
-)
 class CurrentApplication(
     BaseModel["CurrentAuthorizationInformationApplicationResponsePayload"]
 ):
     """Represents Discord API data for `CurrentApplication`."""
+
+    __slots__ = (
+        "bot_public",
+        "bot_require_code_grant",
+        "description",
+        "hook",
+        "icon",
+        "id",
+        "name",
+        "verify_key",
+    )
 
     @override
     def _initialize(
@@ -98,9 +99,10 @@ class CurrentApplication(
         pass
 
 
-@BaseModel.add_slots("_expires", "scopes", "application", "user")
 class CurrentInformation(BaseModel["CurrentAuthorizationInformationResponsePayload"]):
     """Represents Discord API data for `CurrentInformation`."""
+
+    __slots__ = ("_expires", "application", "scopes", "user")
 
     def _initialize(self, data: CurrentAuthorizationInformationResponsePayload) -> None:
         self._expires: datetime.datetime = datetime.datetime.fromisoformat(
