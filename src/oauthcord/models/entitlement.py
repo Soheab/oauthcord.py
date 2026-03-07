@@ -1,0 +1,129 @@
+import datetime
+from typing import TYPE_CHECKING, override
+
+from ..utils import convert_snowflake, iso_to_datetime
+from ._base import BaseModel
+from .enums import (
+    EntitlementFulfillmentStatus,
+    EntitlementSourceType,
+    EntitlementType,
+    GiftStyle,
+    to_enum,
+)
+from .user import PartialUser
+
+if TYPE_CHECKING:
+    from .internals._types.entitlement import (
+        EntitlementResponse,
+        QuestRewardsMetadataResponse,
+        TenantMetadataResponse,
+    )
+
+
+__all__ = (
+    "Entitlement",
+    "QuestRewardsMetadata",
+    "TenantMetadata",
+)
+
+
+@BaseModel.add_slots("tag", "reward_code")
+class QuestRewardsMetadata(BaseModel["QuestRewardsMetadataResponse"]):
+    """Represents Discord API data for `QuestRewardsMetadata`."""
+
+    @override
+    def _initialize(self, data: QuestRewardsMetadataResponse) -> None:
+        self.tag: int = data["tag"]
+        self.reward_code: dict[str, object] | None = data.get("reward_code")
+
+
+@BaseModel.add_slots("quest_rewards")
+class TenantMetadata(BaseModel["TenantMetadataResponse"]):
+    """Represents Discord API data for `TenantMetadata`."""
+
+    @override
+    def _initialize(self, data: TenantMetadataResponse) -> None:
+        self.quest_rewards: QuestRewardsMetadata | None = (
+            self._maybe_subclass_with_http(QuestRewardsMetadata, data, "quest_rewards")
+        )
+
+
+@BaseModel.add_slots(
+    "id",
+    "type",
+    "sku_id",
+    "application_id",
+    "user_id",
+    "user",
+    "guild_id",
+    "parent_id",
+    "deleted",
+    "consumed",
+    "branches",
+    "starts_at",
+    "ends_at",
+    "promotion_id",
+    "subscription_id",
+    "gift_code_flags",
+    "gift_code_batch_id",
+    "gifter_user_id",
+    "gift_style",
+    "fulfillment_status",
+    "fulfilled_at",
+    "source_type",
+    "tenant_metadata",
+    "sku",
+    "subscription_plan",
+)
+class Entitlement(BaseModel["EntitlementResponse"]):
+    """Represents a Discord application entitlement."""
+
+    @override
+    def _initialize(self, data: EntitlementResponse) -> None:
+        self.id: int = convert_snowflake(data, "id")
+        self.type: EntitlementType = to_enum(EntitlementType, data["type"])
+        self.sku_id: int = convert_snowflake(data, "sku_id")
+        self.application_id: int = convert_snowflake(data, "application_id")
+        self.user_id: int = convert_snowflake(data, "user_id")
+        self.user: PartialUser | None = self._maybe_subclass_with_http(
+            PartialUser, data, "user"
+        )
+        self.guild_id: int | None = convert_snowflake(
+            data, "guild_id", always_available=False
+        )
+        self.parent_id: int | None = convert_snowflake(
+            data, "parent_id", always_available=False
+        )
+        self.deleted: bool = data["deleted"]
+        self.consumed: bool | None = data.get("consumed")
+        self.branches: list[int] = [int(branch) for branch in data.get("branches", [])]
+        self.starts_at: datetime.datetime | None = iso_to_datetime(data["starts_at"])
+        self.ends_at: datetime.datetime | None = iso_to_datetime(data["ends_at"])
+        self.promotion_id: int | None = convert_snowflake(
+            data, "promotion_id", always_available=False
+        )
+        self.subscription_id: int | None = convert_snowflake(
+            data, "subscription_id", always_available=False
+        )
+        self.gift_code_flags: int = data["gift_code_flags"]
+        self.gift_code_batch_id: int | None = convert_snowflake(
+            data, "gift_code_batch_id", always_available=False
+        )
+        self.gifter_user_id: int | None = convert_snowflake(
+            data, "gifter_user_id", always_available=False
+        )
+        self.gift_style: GiftStyle | None = to_enum(GiftStyle, data.get("gift_style"))
+        self.fulfillment_status: EntitlementFulfillmentStatus | None = to_enum(
+            EntitlementFulfillmentStatus, data.get("fulfillment_status")
+        )
+        self.fulfilled_at: datetime.datetime | None = iso_to_datetime(
+            data.get("fulfilled_at")
+        )
+        self.source_type: EntitlementSourceType | None = to_enum(
+            EntitlementSourceType, data.get("source_type")
+        )
+        self.tenant_metadata: TenantMetadata | None = self._maybe_subclass_with_http(
+            TenantMetadata, data, "tenant_metadata"
+        )
+        self.sku: dict[str, object] | None = data.get("sku")
+        self.subscription_plan: dict[str, object] | None = data.get("subscription_plan")
