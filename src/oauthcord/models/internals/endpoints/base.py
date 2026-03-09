@@ -62,19 +62,7 @@ class BaseHTTPClient:
     redirect_uri: str
     _auth: aiohttp.BasicAuth
 
-    def _store_token_if_needed(self, token: AccessTokenResponse) -> None:
-        raise NotImplementedError
-
-    def _parse_token(self, token: ValidToken) -> str:
-        raise NotImplementedError
-
-    async def _get_current_token(
-        self,
-        token: ValidToken | None = None,
-        *,
-        refresh: bool = True,
-        for_refresh: bool = False,
-    ) -> AccessTokenResponse:
+    def _parse_token(self, token: ValidToken, *, refresh: bool = False) -> str:
         raise NotImplementedError
 
     async def request(
@@ -83,7 +71,6 @@ class BaseHTTPClient:
         *,
         token: ValidToken | None = None,
         headers: dict[str, str] | None = None,
-        include_token: bool = True,
         **kwargs: Any,
     ) -> Any:
         raise NotImplementedError

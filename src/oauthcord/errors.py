@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
-    from .enums import Scope
-    from .internals.endpoints.base import Route
+    from .models.enums import Scope
+    from .models.internals.endpoints.base import Route
 
 
 __all__ = (

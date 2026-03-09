@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 class ConnectionHTTPClientMixin(BaseHTTPClient):
     async def get_current_user_connections(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
     ) -> list[connection_types.ConnectionResponse]:
         return await self.request(
             Route("GET", "/users/@me/connections"),

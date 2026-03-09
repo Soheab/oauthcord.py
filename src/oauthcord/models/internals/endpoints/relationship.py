@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 class RelationshipHTTPClientMixin(BaseHTTPClient):
     async def get_relationships(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
     ) -> list[relationship_types.RelationshipResponse]:
         return await self.request(
             Route("GET", "/users/@me/relationships"),
@@ -19,7 +19,7 @@ class RelationshipHTTPClientMixin(BaseHTTPClient):
 
     async def create_relationship(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         user_id: int | str,
         type: relationship_types.RelationshipType | None = None,
@@ -39,7 +39,7 @@ class RelationshipHTTPClientMixin(BaseHTTPClient):
 
     async def delete_relationship(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         user_id: int | str,
     ) -> None:
@@ -50,7 +50,7 @@ class RelationshipHTTPClientMixin(BaseHTTPClient):
 
     async def get_game_relationships(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
     ) -> list[relationship_types.GameRelationshipResponse]:
         return await self.request(
             Route("GET", "/users/@me/game-relationships"),
@@ -59,7 +59,7 @@ class RelationshipHTTPClientMixin(BaseHTTPClient):
 
     async def create_game_relationship(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         user_id: int | str,
         type: relationship_types.RelationshipType | None = None,
@@ -75,7 +75,7 @@ class RelationshipHTTPClientMixin(BaseHTTPClient):
 
     async def delete_game_relationship(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         user_id: int | str,
     ) -> None:

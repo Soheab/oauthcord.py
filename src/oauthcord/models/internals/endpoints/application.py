@@ -21,7 +21,7 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
 
     async def create_application_attachment(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         application_id: int | str,
         file: File,
@@ -42,7 +42,7 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
 
     async def get_partial_application(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         application_id: int | str,
     ) -> application_types.PartialApplicationResponse:
@@ -53,7 +53,7 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
 
     async def get_user_application_role_connection(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         application_id: int | str,
     ) -> application_types.ApplicationRoleConnectionResponse:
@@ -64,7 +64,7 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
 
     async def edit_user_application_role_connection(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         application_id: int | str,
         platform_name: str | None = NotSet,
@@ -87,7 +87,7 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
 
     async def create_application_quick_link(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         application_id: int | str,
         title: str,
@@ -111,7 +111,7 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
 
     async def get_bulk_application_identities(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         user_ids: list[int | str],
     ) -> application_types.GetBulkApplicationIdentitiesResponse:
@@ -126,7 +126,7 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
 
     async def get_application_entitlements(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         application_id: int | str,
         user_id: int | str | None = None,
@@ -164,7 +164,7 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
 
     async def get_application_entitlement(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         application_id: int | str,
         entitlement_id: int | str,
@@ -178,7 +178,7 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
 
     async def consume_application_entitlement(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         application_id: int | str,
         entitlement_id: int | str,
@@ -193,7 +193,7 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
 
     async def delete_application_entitlement(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         application_id: int | str,
         entitlement_id: int | str,

@@ -23,7 +23,7 @@ from __future__ import annotations
 from aiohttp import web
 from aiohttp.web_response import json_response
 
-from oauthcord import OAuth2Cord, Scope
+from oauthcord import Client, Scope
 
 DISCORD_CLIENT_ID = 0
 DISCORD_CLIENT_SECRET = ""
@@ -35,14 +35,14 @@ app = web.Application()
 routes = web.RouteTableDef()
 
 scopes = [Scope.IDENTIFY, Scope.GUILDS]
-client = OAuth2Cord(
+client = Client(
     client_id=DISCORD_CLIENT_ID,
     client_secret=DISCORD_CLIENT_SECRET,
     redirect_uri=DISCORD_REDIRECT_URI,
     scopes=scopes,
     state=DISCORD_OAUTH_STATE,
 )
-authorize_url = client.oauth2_url()
+authorize_url = client.get_authorization_url()
 print(f"Open this URL to authorize: {authorize_url}")
 
 
@@ -54,11 +54,11 @@ async def callback(request: web.Request):
         return json_response(data={"error": "Missing OAuth code"}, status=400)
 
     # Exchange the temporary authorization code for an access token.
-    token = await client.get_token(code)
+    session = await client.exchange_token(code)
 
     # Fetch the current user and the user's guild list with that token.
-    me = await client.current_user(token)
-    guilds = await client.guilds(token)
+    me = await session.current_user()
+    guilds = await session.guilds()
 
     # Return one JSON payload so the OAuth result is easy to inspect.
     data = me.data

@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 class UserHTTPClientMixin(BaseHTTPClient):
     async def modify_current_user_account(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         global_name: str | None = NotSet,
     ) -> user_types.ModifyCurrentUserAccountResponse:
@@ -27,7 +27,7 @@ class UserHTTPClientMixin(BaseHTTPClient):
 
     async def get_current_user(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
     ) -> user_types.CurrentUserResponse:
         return await self.request(
             Route("GET", "/users/@me"),
@@ -36,7 +36,7 @@ class UserHTTPClientMixin(BaseHTTPClient):
 
     async def get_user_harvest(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
     ) -> user_types.GetUserHarvestResponse:
         return await self.request(
             Route("GET", "/users/@me/harvest"),
@@ -45,7 +45,7 @@ class UserHTTPClientMixin(BaseHTTPClient):
 
     async def create_user_harvest(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         backends: list[str] | None = None,
         email: str | None = None,

@@ -6,9 +6,10 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import aiohttp
 
+from ...errors import HTTPException, create_http_exception
+from ...utils import NotSet
 from ..access_token import AccessTokenResponse
 from ..enums import Scope
-from ..errors import HTTPException, create_http_exception
 from ._ratelimiter import HTTPRateLimiterMixin
 from .endpoints.application import ApplicationHTTPClientMixin
 from .endpoints.base import (
@@ -26,7 +27,7 @@ from .endpoints.token import TokenHTTPClientMixin
 from .endpoints.user import UserHTTPClientMixin
 
 if TYPE_CHECKING:
-    from ...client import OAuth2Cord
+    from ...client import Client
     from ..file import File
     from ._types import (
         components as component_types,
@@ -34,7 +35,12 @@ if TYPE_CHECKING:
     from ._types import (
         message as message_types,
     )
-    from .endpoints.base import ResponsePayload, ValidToken
+    from .endpoints.base import (
+        RefreshTokenAttr,
+        RefreshTokenDict,
+        ResponsePayload,
+        ValidToken,
+    )
 
 
 _log = logging.getLogger("http")
@@ -176,7 +182,7 @@ class OAuth2HTTPClient(
     RETRYABLE_SERVER_STATUSES = frozenset({500, 502, 503, 504, 521, 522, 523, 524})
     CONNECTION_RESET_ERRNOS = frozenset({54, 10054})
 
-    __get_client: Callable[[], OAuth2Cord]
+    __get_client: Callable[[], Client]
     __slots__ = (
         "__get_client",
         "__session",
@@ -197,34 +203,23 @@ class OAuth2HTTPClient(
 
     def __init__(
         self,
-        client: OAuth2Cord,
+        client: Client,
         *,
         client_id: int,
         client_secret: str,
-        redirect_uri: str,
-        state: str | None = None,
-        scopes: list[Scope] | None = None,
-        session: aiohttp.ClientSession | None = None,
-        auto_refresh_token: bool = False,
-        store_token: bool = False,
+        session: aiohttp.ClientSession = NotSet,
         max_retries: int = 5,
         max_ratelimit_timeout: float | None = None,
     ) -> None:
         self.__get_client = lambda: client
 
         self.client_id: int = client_id
-        self.redirect_uri: str = redirect_uri
-        self.state: str | None = state
         self.max_retries: int = max_retries
         self.max_ratelimit_timeout: float | None = max_ratelimit_timeout
 
-        self._store_token: bool = store_token
-        self._auto_refresh_token: bool = auto_refresh_token
-
         self._auth = aiohttp.BasicAuth(str(client_id), client_secret)
-        self.__session: aiohttp.ClientSession | None = session
+        self.__session: aiohttp.ClientSession | None = session or None
 
-        self.current_scopes: list[Scope] = scopes or []
         self._init_ratelimiter()
 
         self.token: AccessTokenResponse | None = None
@@ -233,21 +228,36 @@ class OAuth2HTTPClient(
         if self.__session and not self.__session.closed:
             await self.__session.close()
 
-    def get_url(
+    @staticmethod
+    def _get_retry_delay(attempt: int) -> int:
+        return 1 + attempt * 2
+
+    def _parse_token(
         self,
+        token: ValidToken | RefreshTokenAttr | RefreshTokenDict,
         *,
-        scopes: list[Scope] | None = None,
-        extra_scopes: list[str] | None = None,
+        refresh: bool = False,
     ) -> str:
-        self.current_scopes = scopes or self.current_scopes
+        key = "access_token" if not refresh else "refresh_token"
+        if isinstance(token, str):
+            return token
+        elif isinstance(token, dict) and key in token:
+            return token[key] # pyright: ignore[reportTypedDictNotRequiredAccess]
+        elif hasattr(token, key):
+            return getattr(token, key)  # type: ignore
+        else:
+            raise ValueError("Invalid token type")
 
-        scopes_ = [scope.value for scope in self.current_scopes]
-        if extra_scopes:
-            scopes_.extend(extra_scopes)
+    async def __get_session(self) -> aiohttp.ClientSession:
+        if not self.__session or self.__session.closed:
+            self.__session = aiohttp.ClientSession()
+        return self.__session
 
-        state: str = f"&state={self.state}" if self.state else ""
-
-        return f"{self.BASE_URL}?client_id={self.client_id}&response_type=code{state}&scope={'+'.join(scopes_)}&redirect_uri={self.redirect_uri}"
+    def __get_token_header(
+        self,
+        token: ValidToken | RefreshTokenAttr | RefreshTokenDict,
+    ) -> dict[Literal["Authorization"], str]:
+        return {"Authorization": f"Bearer {self._parse_token(token)}"}
 
     def has_scopes(self, *scopes: Scope) -> bool:
         return all(scope in self.current_scopes for scope in scopes)
@@ -269,13 +279,12 @@ class OAuth2HTTPClient(
         *,
         token: ValidToken | None = None,
         headers: dict[str, str] | None = None,
-        include_token: bool = True,
         **kwargs: Any,
     ) -> Any:
         session = await self.__get_session()
         prepared_headers = headers or {}
-        if include_token:
-            prepared_headers.update(await self.__get_token_header(token))  # type: ignore
+        if token:
+            prepared_headers.update(self.__get_token_header(token))  # type: ignore
         kwargs["headers"] = prepared_headers
 
         method = route.method
@@ -396,60 +405,3 @@ class OAuth2HTTPClient(
 
         _log.error("Max retries exceeded for %s %s", method, url)
         raise HTTPException(route=route, response="Max retries exceeded", status=429)
-
-    @staticmethod
-    def _get_retry_delay(attempt: int) -> int:
-        return 1 + attempt * 2
-
-    def _parse_token(self, token: ValidToken) -> str:
-        if isinstance(token, str):
-            return token
-        elif isinstance(token, dict) and "access_token" in token:
-            return token["access_token"]
-        elif hasattr(token, "access_token"):
-            return token.access_token  # type: ignore
-        else:
-            raise ValueError("Invalid token type")
-
-    def _last_stored_token(self) -> AccessTokenResponse | None:
-        return self.token if self._store_token else None
-
-    def _store_token_if_needed(self, token: AccessTokenResponse) -> None:
-        if self._store_token and isinstance(token, AccessTokenResponse):
-            self.token = token
-
-    async def __get_session(self) -> aiohttp.ClientSession:
-        if self.__session is None or self.__session.closed:
-            self.__session = aiohttp.ClientSession()
-        return self.__session
-
-    async def __get_token_header(
-        self,
-        token: ValidToken | None = None,
-    ) -> dict[Literal["Authorization"], str]:
-        token = await self._get_current_token(token)
-        return {"Authorization": f"Bearer {token.access_token}"}
-
-    async def _get_current_token(
-        self,
-        token: ValidToken | None = None,
-        *,
-        refresh: bool = True,
-        for_refresh: bool = False,
-    ) -> AccessTokenResponse:
-        token = token or self.token
-        if not token:
-            raise ValueError("No token provided or stored")
-
-        token = AccessTokenResponse._from_cheap(
-            http=self,
-            data=token,
-            for_refresh=for_refresh,
-        )
-        if refresh and self._auto_refresh_token:
-            try:
-                await token.refresh(check_exired=True)
-            except ValueError:
-                pass
-
-        return token

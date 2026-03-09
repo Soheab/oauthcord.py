@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 class GuildHTTPClientMixin(BaseHTTPClient):
     async def get_current_user_guilds(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         limit: int | None = None,
         with_counts: bool = False,

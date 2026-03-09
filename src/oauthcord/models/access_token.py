@@ -171,7 +171,7 @@ class AccessTokenResponse(
         return self._scope
 
     async def refresh(self, *, check_exired: bool = False) -> AccessTokenResponse:
-        """:class:`AccessTokenResponse`: Refresh this token.
+        """Refresh this token.
 
         This invalidates the current token and returns a new one.
 
@@ -181,6 +181,11 @@ class AccessTokenResponse(
             If ``True``, this method will raise a :class:`ValueError` if the token
             is not expired yet. By default, this is ``False`` and the token will be
             refreshed regardless of its expiration status.
+
+        Returns
+        -------
+        :class:`AccessTokenResponse`
+            The new access token response obtained from refreshing.
         """
         if not self.refresh_token:
             raise ValueError("Cannot refresh token without a refresh token.")
@@ -189,11 +194,8 @@ class AccessTokenResponse(
             raise ValueError("Token is not expired yet.")
 
         res = await self._http.refresh_token(self)
-        inst = self.__class__(http=self._http, data=res)
-        self._http._store_token_if_needed(inst)
-        return inst
+        return self.__class__(http=self._http, data=res)
 
     async def revoke(self) -> None:
-        """ "Revoke this token. This will invalidate the token and it can no longer be used for authorization."""
+        """Revoke this token. This will invalidate the token and it can no longer be used for authorization."""
         await self._http.revoke_token(self)
-        self._http.token = None

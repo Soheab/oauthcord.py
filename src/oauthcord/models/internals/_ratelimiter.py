@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 
 import aiohttp
 
-from ..errors import RateLimited
+from ...errors import RateLimited
 
 if TYPE_CHECKING:
     from .endpoints.base import Route

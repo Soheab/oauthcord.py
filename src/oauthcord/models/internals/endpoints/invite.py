@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 class InviteHTTPClientMixin(BaseHTTPClient):
     async def accept_invite(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         code: str,
         session_id: str | None = None,

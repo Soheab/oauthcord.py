@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 class MemberHTTPClientMixin(BaseHTTPClient):
     async def get_current_guild_member(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         guild_id: str | int,
     ) -> member_types.GuildMemberResponse:
@@ -22,7 +22,7 @@ class MemberHTTPClientMixin(BaseHTTPClient):
 
     async def add_user_to_guild(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         bot_token: str,
         guild_id: int,
@@ -34,7 +34,7 @@ class MemberHTTPClientMixin(BaseHTTPClient):
         bypass_verification: bool | None = None,
     ) -> member_types.AddGuildMemberResponse:
         data: member_types.AddGuildMemberRequest = {
-            "access_token": (await self._get_current_token(token)).access_token
+            "access_token": self._parse_token(token),
         }
         if nick is not None:
             data["nick"] = nick
@@ -53,5 +53,4 @@ class MemberHTTPClientMixin(BaseHTTPClient):
             Route("PUT", f"/guilds/{guild_id}/members/{user_id}"),
             data=data,
             headers={"Authorization": f"Bot {bot_token}"},
-            include_token=False,
         )

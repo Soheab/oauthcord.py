@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 class ChannelHTTPClientMixin(BaseHTTPClient):
     async def get_dm_channel(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         user_id: int | str,
     ) -> channels.DMChannelResponse:
@@ -21,7 +21,7 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
 
     async def create_private_channel(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         recipients: list[int | str] | None = None,
         access_tokens: list[ValidToken] | None = None,
@@ -47,7 +47,7 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
 
     async def get_guild_channels(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         guild_id: str | int,
         permissions: bool = False,
@@ -59,7 +59,7 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
         )
 
     async def get_call_eligibility(
-        self, token: ValidToken | None = None, *, channel_id: int | str
+        self, token: ValidToken, *, channel_id: int | str
     ) -> channels.CallEligibilityResponse:
         return await self.request(
             Route("GET", f"/channels/{channel_id}/call"),
@@ -68,7 +68,7 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
 
     async def ring_channel_recipients(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         channel_id: int | str,
         recipients: list[int | str] | None = None,
@@ -85,7 +85,7 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
 
     async def stop_ringing_channel_recipients(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         channel_id: int | str,
         recipients: list[int | str] | None = None,
@@ -102,7 +102,7 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
 
     async def get_channel_linked_accounts(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         channel_id: int | str,
         user_ids: list[int | str] | None = None,

@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 class MessageHTTPClientMixin(BaseHTTPClient):
     async def edit_dm_message(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         user_id: int | str,
         message_id: int | str,
@@ -30,7 +30,7 @@ class MessageHTTPClientMixin(BaseHTTPClient):
 
     async def delete_dm_message(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         user_id: int | str,
         message_id: int | str,
@@ -42,7 +42,7 @@ class MessageHTTPClientMixin(BaseHTTPClient):
 
     async def get_dm_messages(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         user_id: int | str,
         limit: int | None = None,
@@ -59,7 +59,7 @@ class MessageHTTPClientMixin(BaseHTTPClient):
 
     async def create_dm_message(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
         *,
         user_id: int | str,
         content: str | None = None,
@@ -94,53 +94,6 @@ class MessageHTTPClientMixin(BaseHTTPClient):
 
         return await self.request(
             Route("POST", f"/users/{user_id}/messages"),
-            token=token,
-            **kwargs,
-        )
-
-    async def create_message(
-        self,
-        token: ValidToken | None = None,
-        *,
-        channel_id: int | str,
-        content: str | None = None,
-        tts: bool | None = None,
-        nonce: int | str | None = None,
-        embeds: list[message_types.EmbedRequest] | None = None,
-        allowed_mentions: message_types.AllowedMentionsRequest | None = None,
-        message_reference: message_types.MessageReferenceRequest | None = None,
-        components: list[component_types.ComponentRequest] | None = None,
-        sticker_ids: list[int | str] | None = None,
-        activity: message_types.MessageActivityRequest | None = None,
-        application_id: int | str | None = None,
-        flags: int | None = None,
-        attachments: list[message_types.PartialAttachmentRequest] | None = None,
-        poll: dict[str, object] | None = None,
-        shared_client_theme: message_types.SharedClientThemeRequest | None = None,
-        files: list[File] | None = None,
-    ) -> message_types.CreateMessageResponse:
-        from ..http import get_message_create_payload
-
-        kwargs = get_message_create_payload(
-            content=content,
-            tts=tts,
-            nonce=nonce,
-            embeds=embeds,
-            allowed_mentions=allowed_mentions,
-            message_reference=message_reference,
-            components=components,
-            sticker_ids=sticker_ids,
-            attachments=attachments,
-            flags=flags,
-            files=files,
-            activity=activity,
-            application_id=application_id,
-            poll=poll,
-            shared_client_theme=shared_client_theme,
-        )
-
-        return await self.request(
-            Route("POST", f"/channels/{channel_id}/messages"),
             token=token,
             **kwargs,
         )

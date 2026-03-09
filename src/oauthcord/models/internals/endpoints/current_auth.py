@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 class CurrentAuthHTTPClientMixin(BaseHTTPClient):
     async def get_current_authorization_information(
         self,
-        token: ValidToken | None = None,
+        token: ValidToken,
     ) -> current_auth_types.CurrentAuthResponse:
         return await self.request(
             Route("GET", "/oauth2/@me"),

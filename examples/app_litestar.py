@@ -14,7 +14,7 @@ How to run
    - `DISCORD_REDIRECT_URI` (for example: `http://127.0.0.1:8000/callback`)
    - Optional: `DISCORD_OAUTH_STATE`
 6. Start the server:
-   - `python -m litestar --app examples.litestar:app run`
+   - `python -m litestar --app examples.app_litestar:app run`
 7. Open the printed authorize URL, approve scopes, and Discord will redirect to `/callback`.
 """
 
@@ -24,7 +24,7 @@ from typing import Any
 
 from litestar import Litestar, Response, get  # pyright: ignore[reportMissingImports]
 
-from oauthcord import OAuth2Cord, Scope
+from oauthcord import Client, Scope
 
 DISCORD_CLIENT_ID = 0
 DISCORD_CLIENT_SECRET = ""
@@ -32,16 +32,15 @@ DISCORD_REDIRECT_URI = ""
 DISCORD_OAUTH_STATE = None
 
 scopes = [Scope.IDENTIFY, Scope.GUILDS]
-client = OAuth2Cord(
+client = Client(
     client_id=DISCORD_CLIENT_ID,
     client_secret=DISCORD_CLIENT_SECRET,
     redirect_uri=DISCORD_REDIRECT_URI,
     scopes=scopes,
     state=DISCORD_OAUTH_STATE,
-    store_token=True,  # options for storing the token in memory, or you can implement your own storage mechanism
 )
 
-authorize_url = client.oauth2_url()
+authorize_url = client.get_authorization_url()
 print(f"Open this URL to authorize: {authorize_url}")
 
 
@@ -52,12 +51,12 @@ async def callback(code: str) -> Response[dict[str, Any]]:
         return Response({"error": "Missing OAuth code"}, status_code=400)
 
     # Exchange the temporary authorization code for an access token.
-    await client.get_token(code)
+    session = await client.exchange_token(code)
 
     # Fetch the current user and the user's guild list with that token.
     # don't need to pass the token here, it's stored after get_token() is called.
-    me = await client.current_user()
-    guilds = await client.guilds()
+    me = await session.current_user()
+    guilds = await session.guilds()
 
     # Return one JSON payload so the OAuth result is easy to inspect.
     data = dict(me.data)
