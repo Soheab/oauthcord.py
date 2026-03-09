@@ -70,6 +70,7 @@ async def main() -> None:
     print(me.username, me.id)
     print(f"Guilds: {len(guilds)}")
 
+    # Optional close the client session.
     await client.http.close()
 
 
@@ -101,15 +102,13 @@ If scopes are missing, the client raises `MissingRequiredScopes`.
 
 This project tracks Discord behavior as closely as possible using:
 
+- Unofficial docs: https://docs.discord.food/
 - Official docs: https://discord.com/developers/docs
-- Unofficial detail reference: https://docs.discord.food/
-- Discord Support Center: https://support.discord.com/hc/en-us
 
 ## Credits
 
-- Discord for API documentation and platform behavior
 - Rate-limit bucket design in `src/models/internals/_ratelimiter_.py` and `src/models/internals/http.py` are inspired by `discord.py` by Rapptz
 
 ## Status
 
-Active work in progress. Endpoints and models may continue to expand as coverage improves.
+This is an ongoing project.  Endpoints and models will probably grow as coverage improves.  A partial rewrite or refactor is also likely at the moment.
