@@ -214,15 +214,21 @@ class GuildMemberWithUser[D = GuildMemberWithUserResponse](PartialUser[D]):
 class CurrentUser(GuildMemberWithUser["CurrentUserResponse"]):
     """Represents the currently authorized Discord user."""
 
-    __slots__ = ("email", "locale", "mfa_enabled", "premium_type")
+    __slots__ = ("_email", "locale", "mfa_enabled", "premium_type")
 
     @override
     def _initialize(self, data: CurrentUserResponse) -> None:
         super()._initialize(data)
-        self.email: str | None = data.get("email")
+        self._email: str | None = data.get("email")
         self.mfa_enabled: bool = data["mfa_enabled"]
         self.locale: Locale = to_enum(Locale, data["locale"])
         self.premium_type: PremiumType = to_enum(PremiumType, data["premium_type"])
+
+    @property
+    def email(self) -> str: 
+        if not self._email:
+            raise ValueError("Email is not available. Have you requested the `email` scope?")
+        return self._email
 
 
 class HarvestMetadata(BaseModel["HarvestMetadataResponse"]):
