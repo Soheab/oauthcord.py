@@ -44,28 +44,28 @@ python -m pip install "oauthcord.py @ git+https://github.com/Soheab/oauthcord.py
 ```python
 import asyncio
 
-from oauthcord import OAuth2Cord, Scope
+from oauthcord import Client, Scope
 
 
 async def main() -> None:
-    client = OAuth2Cord(
+    client = Client(
         client_id=123456789012345678,
         client_secret="your-client-secret",
         redirect_uri="http://localhost:8000/callback",
         scopes=[Scope.IDENTIFY, Scope.GUILDS],
-        state="optional-csrf-state",
+        state="optional-csrf-state", # optional
     )
 
     # 1) Send the user to this URL
-    authorize_url = client.oauth2_url()
+    authorize_url = client.get_authorization_url()
     print(authorize_url)
 
-    # 2) In your callback, exchange the received ?code=... for a token
-    token = await client.get_token("authorization_code_here")
+    # 2) In your callback, exchange the received ?code=... for an authorized session
+    session = await client.exchange_token("authorization_code_here")
 
     # 3) Call OAuth-protected endpoints
-    me = await client.current_user(token)
-    guilds = await client.guilds(token)
+    me = await session.current_user()
+    guilds = await session.guilds()
 
     print(me.username, me.id)
     print(f"Guilds: {len(guilds)}")
@@ -77,15 +77,17 @@ async def main() -> None:
 asyncio.run(main())
 ```
 
+For complete web callback examples (Aiohttp and Litestar), see [examples/](./examples/).
+
 ## Typical OAuth flow
 
-1. Build the Discord authorize URL (`client.oauth2_url()`).
-2. Redirect the user to Discord.
+1. Build the Discord authorize URL (`client.get_authorization_url()`).
+2. Redirect the user to the URL and have them authorize your app.
 3. Receive `code` on your redirect URI.
-4. Exchange it with `client.get_token(code)`.
-5. Use the returned token in API calls.
-6. Refresh when needed with `refresh_token(...)`.
-7. Revoke when needed with `revoke_token(...)`.
+4. Exchange it with `client.exchange_token(code)`.
+5. Use the returned authorized session to make API calls.
+6. Refresh when needed with `session.refresh()`.
+7. Revoke when needed with `session.revoke()`.
 
 ## Scope behavior
 
@@ -103,7 +105,7 @@ If scopes are missing, the client raises `MissingRequiredScopes`.
 This project tracks Discord behavior as closely as possible using:
 
 - Unofficial docs: https://docs.discord.food/
-- Official docs: https://discord.com/developers/docs
+- Official docs: https://docs.discord.com/
 
 ## Credits
 
