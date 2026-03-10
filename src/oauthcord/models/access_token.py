@@ -1,5 +1,5 @@
 import datetime
-from typing import TYPE_CHECKING, Self, override
+from typing import TYPE_CHECKING, override
 
 from ._base import BaseModel
 from .enums import Scope
@@ -11,14 +11,6 @@ if TYPE_CHECKING:
     from .internals._types.token import (
         RefreshTokenResponse as RefreshTokenResponsePayload,
     )
-    from .internals.endpoints.base import (
-        AccessTokenAttr,
-        RefreshTokenAttr,
-        RefreshTokenDict,
-        RestTokenAttrs,
-        TokenDict,
-    )
-    from .internals.http import OAuth2HTTPClient
 
 
 __all__ = ("AccessTokenResponse",)
@@ -51,91 +43,6 @@ class AccessTokenResponse(
         self.refresh_token: str = data["refresh_token"]
         self._scope: str = data["scope"]
         self._expires_in: int = data["expires_in"]
-
-    @classmethod
-    def _from_cheap(
-        cls,
-        *,
-        http: OAuth2HTTPClient,
-        data: Self
-        | str
-        | AccessTokenAttr
-        | RestTokenAttrs
-        | TokenDict
-        | RefreshTokenDict
-        | RefreshTokenAttr,
-        for_refresh: bool = False,
-    ) -> Self:
-        if isinstance(data, AccessTokenResponse):
-            return data  # type: ignore
-
-        if isinstance(data, str):
-            return cls._from_str(http, data, is_refresh=for_refresh)
-
-        token_type = (
-            getattr(data, "token_type", None) or data.get("token_type", "Bearer")
-            if isinstance(data, dict)
-            else getattr(data, "token_type", "Bearer")
-        )
-        access_token = (
-            getattr(data, "access_token", None)
-            if not isinstance(data, dict)
-            else data.get("access_token")
-        )
-        refresh_token = (
-            getattr(data, "refresh_token", None)
-            if not isinstance(data, dict)
-            else data.get("refresh_token")
-        )
-        scope = (
-            (getattr(data, "_scope", None) or getattr(data, "scope", None))
-            if not isinstance(data, dict)
-            else data.get("scope", "")
-        )
-        expires_at = (
-            (getattr(data, "expires_at", None) or getattr(data, "_expires_in", None))
-            if not isinstance(data, dict)
-            else data.get("expires_at") or data.get("_expires_in")
-        )
-
-        if not for_refresh and access_token is None:
-            raise ValueError("Access token is required to create AccessTokenResponse.")
-
-        if for_refresh and refresh_token is None:
-            raise ValueError(
-                "Refresh token is required to create AccessTokenResponse for refresh."
-            )
-
-        if expires_at is not None:
-            now = datetime.datetime.now(datetime.UTC)
-            expires_in = max(0, int(expires_at - now.timestamp()))
-        else:
-            expires_in = 0
-
-        payload: AccessTokenResponsePayload = {
-            "token_type": token_type,
-            "access_token": access_token or "",
-            "refresh_token": refresh_token or "",
-            "scope": scope or "",
-            "expires_in": expires_in,
-        }
-        return cls(http=http, data=payload)
-
-    @classmethod
-    def _from_str(
-        cls, http: OAuth2HTTPClient, token: str, is_refresh: bool = False
-    ) -> Self:
-        if not token:
-            raise ValueError("Token string cannot be empty.")
-
-        payload = {
-            "token_type": "Bearer",
-            "access_token": token if not is_refresh else "",
-            "refresh_token": token if is_refresh else "",
-            "scope": "",
-            "expires_in": 0,
-        }
-        return cls(http=http, data=payload)  # type: ignore
 
     def expires_at(self) -> datetime.datetime:
         """:class:`datetime.datetime`: When the token expires, calculated from
