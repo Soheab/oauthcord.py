@@ -125,7 +125,7 @@ class AuthorisedSession:
         return self._current_authorization_information
 
     @current_authorization_information.setter
-    async def current_authorization_information(
+    def current_authorization_information(
         self, value: CurrentInformation
     ) -> None:
         if not isinstance(value, CurrentInformation):
