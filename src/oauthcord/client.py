@@ -125,9 +125,7 @@ class AuthorisedSession:
         return self._current_authorization_information
 
     @current_authorization_information.setter
-    def current_authorization_information(
-        self, value: CurrentInformation
-    ) -> None:
+    def current_authorization_information(self, value: CurrentInformation) -> None:
         if not isinstance(value, CurrentInformation):
             raise TypeError(
                 "current_authorization_information must be of type CurrentInformation"
@@ -139,13 +137,12 @@ class AuthorisedSession:
     async def refresh(
         self,
     ) -> AccessTokenResponse:
-        res = await self.client.http.refresh_token(self.token.refresh_token)
-        return self.client._with_http(AccessTokenResponse, res)
+        return await self.token.refresh()
 
     async def revoke(
         self,
     ) -> None:
-        await self.client.http.revoke_token(self.token.access_token)
+        await self.token.revoke()
 
     async def get_current_authorization_information(
         self,

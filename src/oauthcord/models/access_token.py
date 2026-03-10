@@ -1,5 +1,5 @@
 import datetime
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, Self, override
 
 from ._base import BaseModel
 from .enums import Scope
@@ -77,6 +77,12 @@ class AccessTokenResponse(
         """:class:`str`: The raw OAuth scope string as returned by Discord."""
         return self._scope
 
+    def _update(
+        self, data: AccessTokenResponsePayload | RefreshTokenResponsePayload
+    ) -> Self:
+        self._initialize(data)
+        return self
+
     async def refresh(self, *, check_exired: bool = False) -> AccessTokenResponse:
         """Refresh this token.
 
@@ -101,7 +107,7 @@ class AccessTokenResponse(
             raise ValueError("Token is not expired yet.")
 
         res = await self._http.refresh_token(self)
-        return self.__class__(http=self._http, data=res)
+        return self._update(res)
 
     async def revoke(self) -> None:
         """Revoke this token. This will invalidate the token and it can no longer be used for authorization."""
