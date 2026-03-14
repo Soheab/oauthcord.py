@@ -1,3 +1,9 @@
+> [!WARNING]
+> This library is under active development. APIs and internal structures may change or be rewritten at any time. Expect breaking changes and limited stability.
+> 
+> Use at your own risk. Not recommended for production use yet.
+
+
 # oauthcord.py
 
 `oauthcord.py` is an async Discord OAuth2 wrapper.
@@ -111,6 +117,3 @@ This project tracks Discord behavior as closely as possible using:
 
 - Rate-limit bucket design in `src/models/internals/_ratelimiter_.py` and `src/models/internals/http.py` are inspired by `discord.py` by Rapptz
 
-## Status
-
-This is an ongoing project.  Endpoints and models will probably grow as coverage improves.  A partial rewrite or refactor is also likely at the moment.
