@@ -59,7 +59,7 @@ async def main() -> None:
         client_secret="your-client-secret",
         redirect_uri="http://localhost:8000/callback",
         scopes=[Scope.IDENTIFY, Scope.GUILDS],
-        state="optional-csrf-state", # optional
+        state="optional-csrf-state",  # optional
     )
 
     # 1) Send the user to this URL
@@ -70,8 +70,8 @@ async def main() -> None:
     session = await client.exchange_token("authorization_code_here")
 
     # 3) Call OAuth-protected endpoints
-    me = await session.current_user()
-    guilds = await session.guilds()
+    me = await session.get_current_user()
+    guilds = await session.get_current_user_guilds()
 
     print(me.username, me.id)
     print(f"Guilds: {len(guilds)}")
@@ -95,6 +95,84 @@ For complete web callback examples (Aiohttp and Litestar), see [examples/](./exa
 6. Refresh when needed with `session.refresh()`.
 7. Revoke when needed with `session.revoke()`.
 
+## Implemented endpoints
+
+The wrapper currently implements these Discord API routes (including their matching
+typed models and request payloads). Most routes use Discord API v10, plus OAuth2
+token/revoke endpoints.
+
+- OAuth2
+    - `POST /oauth2/token` (authorization code exchange)
+    - `POST /oauth2/token` (refresh token)
+    - `POST /oauth2/token/revoke`
+    - `GET /oauth2/@me`
+- Users and profile
+    - `GET /users/@me`
+    - `PATCH /users/@me/account`
+    - `GET /users/@me/harvest`
+    - `POST /users/@me/harvest`
+- Guilds and members
+    - `GET /users/@me/guilds`
+    - `GET /users/@me/guilds/{guild_id}/member`
+    - `PUT /guilds/{guild_id}/members/{user_id}`
+    - `GET /guilds/{guild_id}/channels`
+- Connections
+    - `GET /users/@me/connections`
+    - `GET /users/@me/linked-connections`
+- Channels and calls
+    - `GET /users/@me/dms/{user_id}`
+    - `POST /users/@me/channels`
+    - `GET /channels/{channel_id}/call`
+    - `POST /channels/{channel_id}/call/ring`
+    - `POST /channels/{channel_id}/call/stop-ringing`
+    - `GET /channels/{channel_id}/linked-accounts`
+- Direct messages
+    - `GET /users/{user_id}/messages`
+    - `POST /users/{user_id}/messages`
+    - `PATCH /users/{user_id}/messages/{message_id}`
+    - `DELETE /users/{user_id}/messages/{message_id}`
+- Relationships
+    - `GET /users/@me/relationships`
+    - `POST /users/@me/relationships` (friend request)
+    - `PUT /users/@me/relationships/{user_id}`
+    - `DELETE /users/@me/relationships/{user_id}`
+    - `GET /users/@me/game-relationships`
+    - `PUT /users/@me/game-relationships/{user_id}`
+    - `DELETE /users/@me/game-relationships/{user_id}`
+- Invites
+    - `POST /invites/{code}`
+- Lobbies
+    - `PUT /lobbies`
+    - `DELETE /lobbies/{lobby_id}/members/{user_id}`
+    - `POST /lobbies/{lobby_id}/members/@me/invites`
+    - `PATCH /lobbies/{lobby_id}/channel-linking`
+    - `GET /lobbies/{lobby_id}/messages`
+    - `POST /lobbies/{lobby_id}/messages`
+- Applications
+    - `POST /applications/{application_id}/attachment`
+    - `GET /applications/{application_id}/partial`
+    - `GET /users/@me/applications/{application_id}/role-connection`
+    - `PUT /users/@me/applications/{application_id}/role-connection`
+    - `POST /applications/{application_id}/quick-links/`
+    - `POST /application-identities`
+    - `GET /applications/{application_id}/entitlements`
+    - `GET /applications/{application_id}/entitlements/{entitlement_id}`
+    - `POST /applications/{application_id}/entitlements/{entitlement_id}/consume`
+    - `DELETE /applications/{application_id}/entitlements/{entitlement_id}`
+- Store and SKUs
+    - `GET /applications/{application_id}/skus`
+    - `POST /store/skus`
+    - `GET /store/skus/{sku_id}`
+    - `PATCH /store/skus/{sku_id}`
+    - `GET /store/skus/{sku_id}/listings`
+    - `POST /store/listings`
+    - `GET /store/listings/{listing_id}`
+    - `PATCH /store/listings/{listing_id}`
+    - `DELETE /store/listings/{listing_id}`
+    - `GET /store/skus/{sku_id}/plans`
+    - `GET /store/applications/{application_id}/assets`
+    - `POST /store/applications/{application_id}/assets`
+    - `DELETE /store/applications/{application_id}/assets/{asset_id}`
 
 ## API references
 
@@ -103,14 +181,6 @@ This project tracks Discord behavior as closely as possible using:
 - Unofficial docs: https://docs.discord.food/
 - Official docs: https://docs.discord.com/
 
-## Documentation
-
-Build the Sphinx docs with Furo:
-
-```bash
-cd docs
-uv run --group docs sphinx-build -b html . _build/html
-```
 
 ## Credits
 
