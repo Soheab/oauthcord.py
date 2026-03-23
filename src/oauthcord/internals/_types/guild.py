@@ -21,3 +21,4 @@ class CurrentUserGuildsRequest(TypedDict):
     after: NotRequired[Snowflake | None]
     limit: NotRequired[int | None]
     with_counts: NotRequired[bool | None]
+

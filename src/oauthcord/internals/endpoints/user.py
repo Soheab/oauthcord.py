@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from ....utils import NotSet
+from ...utils import NotSet
 from .base import BaseHTTPClient, Route
 
 if TYPE_CHECKING:

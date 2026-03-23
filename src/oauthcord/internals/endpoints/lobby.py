@@ -1,10 +1,10 @@
 from typing import TYPE_CHECKING
 
-from ....utils import NotSet
+from ...utils import NotSet
 from .base import BaseHTTPClient, Route
 
 if TYPE_CHECKING:
-    from ...file import File
+    from ...models.file import File
     from .._types import (
         components as component_types,
     )
@@ -25,17 +25,17 @@ class LobbyHTTPClientMixin(BaseHTTPClient):
         secret: str,
         lobby_metadata: dict[str, str] | None = None,
         member_metadata: dict[str, str] | None = None,
-        idle_timeout_seconds: int | None = None,
-        flags: int | None = None,
+        idle_timeout_seconds: int = NotSet,
+        flags: int = NotSet,
     ) -> lobby_types.JoinOrCreateLobbyResponse:
         data: lobby_types.JoinOrCreateLobbyRequest = {"secret": secret}
         if lobby_metadata is not None:
             data["lobby_metadata"] = lobby_metadata
         if member_metadata is not None:
             data["member_metadata"] = member_metadata
-        if idle_timeout_seconds is not None:
+        if idle_timeout_seconds is not NotSet:
             data["idle_timeout_seconds"] = idle_timeout_seconds
-        if flags is not None:
+        if flags is not NotSet:
             data["flags"] = flags
 
         return await self.request(
@@ -49,9 +49,10 @@ class LobbyHTTPClientMixin(BaseHTTPClient):
         token: ValidToken,
         *,
         lobby_id: int | str,
+        user_id: int | str,
     ) -> None:
         await self.request(
-            Route("DELETE", f"/lobbies/{lobby_id}/members/@me"),
+            Route("DELETE", f"/lobbies/{lobby_id}/members/{user_id}"),
             token=token,
         )
 
@@ -60,7 +61,7 @@ class LobbyHTTPClientMixin(BaseHTTPClient):
         token: ValidToken,
         *,
         lobby_id: int | str,
-    ) -> lobby_types.CreateLobbyInviteResponse:
+    ) -> lobby_types.CreateLobbyInviteForCurrentUserResponse:
         return await self.request(
             Route("POST", f"/lobbies/{lobby_id}/members/@me/invites"),
             token=token,
@@ -113,11 +114,9 @@ class LobbyHTTPClientMixin(BaseHTTPClient):
         message_reference: message_types.MessageReferenceRequest | None = None,
         components: list[component_types.ComponentRequest] | None = None,
         sticker_ids: list[int | str] | None = None,
-        activity: message_types.MessageActivityRequest | None = None,
-        application_id: int | str | None = None,
         flags: int | None = None,
         attachments: list[message_types.PartialAttachmentRequest] | None = None,
-        poll: dict[str, object] | None = None,
+        poll: message_types.PollCreateRequest | None = None,
         shared_client_theme: message_types.SharedClientThemeRequest | None = None,
         metadata: dict[str, object] | None = None,
         files: list[File] | None = None,
@@ -138,7 +137,6 @@ class LobbyHTTPClientMixin(BaseHTTPClient):
             metadata=metadata,
             files=files,
             activity=activity,
-            application_id=application_id,
             poll=poll,
             shared_client_theme=shared_client_theme,
         )

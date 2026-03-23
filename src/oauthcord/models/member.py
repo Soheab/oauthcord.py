@@ -2,15 +2,15 @@ import datetime
 from typing import TYPE_CHECKING, override
 
 from ..utils import convert_snowflake, iso_to_datetime
-from ._base import BaseModel
+from ._base import BaseModelWithSession
 from .asset import Asset
 from .flags import MemberFlags, Permissions
 from .user import DisplayNameStyle, GuildMemberWithUser
 
 if TYPE_CHECKING:
-    from .internals._types.channels import ThreadMemberResponse
-    from .internals._types.member import GuildMemberResponse
-    from .internals.http import OAuth2HTTPClient
+    from ..client._client import AuthorisedSession
+    from ..internals._types.channels import ThreadMemberResponse
+    from ..internals._types.member import GuildMemberResponse
 
 
 __all__ = (
@@ -19,7 +19,7 @@ __all__ = (
 )
 
 
-class GuildMember(BaseModel["GuildMemberResponse"]):
+class GuildMember(BaseModelWithSession["GuildMemberResponse"]):
     """Represents a guild member payload for the authorized user."""
 
     __slots__ = (
@@ -46,18 +46,18 @@ class GuildMember(BaseModel["GuildMemberResponse"]):
     def __init__(
         self,
         *,
-        http: OAuth2HTTPClient,
+        session: AuthorisedSession,
         data: GuildMemberResponse,
         guild_id: int | None = None,
     ) -> None:
         """Initialize this object from explicit constructor arguments."""
         self.guild_id: int | None = guild_id
-        super().__init__(http=http, data=data)
+        super().__init__(session=session, data=data)
 
     @override
     def _initialize(self, data: GuildMemberResponse) -> None:
-        self.user: GuildMemberWithUser = self._initialize_subclass_with_http(
-            GuildMemberWithUser, data, "user"
+        self.user: GuildMemberWithUser = self._initialize_other(
+            GuildMemberWithUser, data, possible_keys="user"
         )
 
         avatar_hash = data.get("avatar")
@@ -92,10 +92,8 @@ class GuildMember(BaseModel["GuildMemberResponse"]):
         self.unusual_dm_activity_until: datetime.datetime | None = iso_to_datetime(
             data.get("unusual_dm_activity_until")
         )
-        self.display_name_styles: DisplayNameStyle | None = (
-            self._maybe_subclass_with_http(
-                DisplayNameStyle, data, "display_name_styles"
-            )
+        self.display_name_styles: DisplayNameStyle | None = self._initialize_other(
+            DisplayNameStyle, data, possible_keys="display_name_styles"
         )
         self.mute: bool = data.get("mute", False)
         self.deaf: bool = data.get("deaf", False)
@@ -105,7 +103,7 @@ class GuildMember(BaseModel["GuildMemberResponse"]):
         self.permissions: Permissions = Permissions(int(raw_permissions))
 
 
-class ThreadMember(BaseModel["ThreadMemberResponse"]):
+class ThreadMember(BaseModelWithSession["ThreadMemberResponse"]):
     """Represents a thread member payload."""
 
     __slots__ = (
@@ -123,13 +121,13 @@ class ThreadMember(BaseModel["ThreadMemberResponse"]):
     def __init__(
         self,
         *,
-        http: OAuth2HTTPClient,
+        session: AuthorisedSession,
         data: ThreadMemberResponse,
         guild_id: int | None = None,
     ) -> None:
         """Initialize this object from explicit constructor arguments."""
         self.guild_id: int | None = guild_id
-        super().__init__(http=http, data=data)
+        super().__init__(session=session, data=data)
 
     @override
     def _initialize(self, data: ThreadMemberResponse) -> None:
@@ -143,7 +141,7 @@ class ThreadMember(BaseModel["ThreadMemberResponse"]):
         self.mute_config: dict[str, object] | None = data.get("mute_config")
         member_data = data.get("member")
         self.member: GuildMember | None = (
-            GuildMember(http=self._http, data=member_data, guild_id=self.guild_id)
+            GuildMember(session=self._session, data=member_data, guild_id=self.guild_id)
             if member_data
             else None
         )

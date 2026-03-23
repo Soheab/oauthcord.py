@@ -95,16 +95,6 @@ For complete web callback examples (Aiohttp and Litestar), see [examples/](./exa
 6. Refresh when needed with `session.refresh()`.
 7. Revoke when needed with `session.revoke()`.
 
-## Scope behavior
-
-Many methods enforce scope requirements before making HTTP calls.
-
-Examples:
-- `current_user(...)` requires `Scope.IDENTIFY`
-- `guilds(...)` requires `Scope.GUILDS`
-- `connections(...)` requires `Scope.CONNECTIONS`
-
-If scopes are missing, the client raises `MissingRequiredScopes`.
 
 ## API references
 
@@ -112,6 +102,15 @@ This project tracks Discord behavior as closely as possible using:
 
 - Unofficial docs: https://docs.discord.food/
 - Official docs: https://docs.discord.com/
+
+## Documentation
+
+Build the Sphinx docs with Furo:
+
+```bash
+cd docs
+uv run --group docs sphinx-build -b html . _build/html
+```
 
 ## Credits
 

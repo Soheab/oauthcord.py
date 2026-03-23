@@ -47,6 +47,17 @@ class MessageHTTPClientMixin(BaseHTTPClient):
         user_id: int | str,
         limit: int | None = None,
     ) -> message_types.GetDMMessagesResponse:
+        """
+        Returns a list of partial message objects in the DM channel.
+
+        This endpoint is subject to the following limitations:
+
+        1. A DM channel must already exist between the user and the recipient
+        2. Both users must have authorized the OAuth2 application for message history to be retrievable
+        3. Only a maximum of 200 messages and up to 72 hours of history can be retrieved
+
+        Requires the `dm_channels.messages.read` scope.
+        """
         params: message_types.GetDMMessagesRequest = {}
         if limit is not None:
             params["limit"] = limit
@@ -72,6 +83,8 @@ class MessageHTTPClientMixin(BaseHTTPClient):
         sticker_ids: list[int | str] | None = None,
         attachments: list[message_types.PartialAttachmentRequest] | None = None,
         flags: int | None = None,
+        poll: message_types.PollCreateRequest | None = None,
+        shared_client_theme: message_types.SharedClientThemeRequest | None = None,
         metadata: dict[str, object] | None = None,
         files: list[File] | None = None,
     ) -> message_types.CreateDMMessageResponse:
@@ -90,6 +103,8 @@ class MessageHTTPClientMixin(BaseHTTPClient):
             flags=flags,
             metadata=metadata,
             files=files,
+            poll=poll,
+            shared_client_theme=shared_client_theme,
         )
 
         return await self.request(

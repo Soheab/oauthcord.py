@@ -1,18 +1,18 @@
 from typing import TYPE_CHECKING, override
 
 from ..utils import convert_snowflake
-from ._base import BaseModel
+from ._base import BaseModelWithSession
 from .enums import RelationshipType
 from .user import PartialUser, to_enum
 
 if TYPE_CHECKING:
-    from .internals._types.relationship import (
+    from ..internals._types.relationship import (
         GameRelationshipResponse as GameRelationshipPayload,
     )
-    from .internals._types.relationship import (
+    from ..internals._types.relationship import (
         RelationshipResponse as RelationshipPayload,
     )
-    from .internals._types.relationship import (
+    from ..internals._types.relationship import (
         _RelationshipBase as _RelationshipBasePayload,
     )
 
@@ -23,15 +23,15 @@ __all__ = (
 )
 
 
-class _RelationshipBase[D: _RelationshipBasePayload](BaseModel[D]):
+class _RelationshipBase[D: _RelationshipBasePayload](BaseModelWithSession[D]):
     __slots__ = ("id", "since", "type", "user")
 
     @override
     def _initialize(self, data: D) -> None:
         self.id: str = data["id"]
         self.type: RelationshipType = to_enum(RelationshipType, data["type"])
-        self.user: PartialUser = self._initialize_subclass_with_http(
-            PartialUser, data, "user"
+        self.user: PartialUser = self._initialize_other(
+            PartialUser, data, possible_keys="user"
         )
         self.since: str = data["since"]
 

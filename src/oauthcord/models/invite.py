@@ -2,7 +2,7 @@ import datetime
 from typing import TYPE_CHECKING, override
 
 from ..utils import convert_snowflake, iso_to_datetime
-from ._base import BaseModel
+from ._base import BaseModelWithSession
 from .application import PartialApplication
 from .asset import Asset
 from .channel import PartialChannel
@@ -10,7 +10,7 @@ from .enums import InviteTargetType, InviteType, to_enum
 from .user import PartialUser
 
 if TYPE_CHECKING:
-    from .internals._types.invite import (
+    from ..internals._types.invite import (
         InviteGuildResponse,
         InviteResponse,
     )
@@ -22,7 +22,7 @@ __all__ = (
 )
 
 
-class InviteGuild(BaseModel["InviteGuildResponse"]):
+class InviteGuild(BaseModelWithSession["InviteGuildResponse"]):
     """Represents Discord API data for `InviteGuild`."""
 
     __slots__ = (
@@ -64,7 +64,7 @@ class InviteGuild(BaseModel["InviteGuildResponse"]):
         self.nsfw_level: int = data["nsfw_level"]
 
 
-class Invite(BaseModel["InviteResponse"]):
+class Invite(BaseModelWithSession["InviteResponse"]):
     """Represents a Discord invite."""
 
     __slots__ = (
@@ -97,26 +97,24 @@ class Invite(BaseModel["InviteResponse"]):
         self.guild_id: int | None = convert_snowflake(
             data, "guild_id", always_available=False
         )
-        self.guild: InviteGuild | None = self._maybe_subclass_with_http(
-            InviteGuild, data, "guild"
+        self.guild: InviteGuild | None = self._initialize_other(
+            InviteGuild, data, possible_keys="guild"
         )
-        self.channel: PartialChannel | None = self._maybe_subclass_with_http(
-            PartialChannel, data, "channel"
+        self.channel: PartialChannel | None = self._initialize_other(
+            PartialChannel, data, possible_keys="channel"
         )
         self.profile: dict[str, object] | None = data.get("profile")
-        self.inviter: PartialUser | None = self._maybe_subclass_with_http(
-            PartialUser, data, "inviter"
+        self.inviter: PartialUser | None = self._initialize_other(
+            PartialUser, data, possible_keys="inviter"
         )
         self.target_type: InviteTargetType | None = to_enum(
             InviteTargetType, data.get("target_type")
         )
-        self.target_user: PartialUser | None = self._maybe_subclass_with_http(
-            PartialUser, data, "target_user"
+        self.target_user: PartialUser | None = self._initialize_other(
+            PartialUser, data, possible_keys="target_user"
         )
-        self.target_application: PartialApplication | None = (
-            self._maybe_subclass_with_http(
-                PartialApplication, data, "target_application"
-            )
+        self.target_application: PartialApplication | None = self._initialize_other(
+            PartialApplication, data, possible_keys="target_application"
         )
         self.roles: list[dict[str, object]] = data.get("roles", [])
         self.approximate_presence_count: int | None = data.get(

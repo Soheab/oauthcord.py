@@ -2,7 +2,7 @@ import datetime
 from typing import TYPE_CHECKING, override
 
 from ..utils import convert_snowflake, iso_to_datetime
-from ._base import BaseModel
+from ._base import BaseModelWithSession
 from .attachment import Attachment
 from .channel import BaseChannel, PartialChannel, _from_data
 from .components import BaseComponent, component_from_response
@@ -10,13 +10,13 @@ from .embeds import Embed
 from .user import PartialUser
 
 if TYPE_CHECKING:
-    from .internals._types.message import (
+    from ..internals._types.message import (
         MessageResponse as MessagePayload,
     )
-    from .internals._types.message import (
+    from ..internals._types.message import (
         PartialMessageResponse as PartialMessagePayload,
     )
-    from .internals._types.message import (
+    from ..internals._types.message import (
         ReactionResponse as ReactionPayload,
     )
 
@@ -27,7 +27,7 @@ __all__ = (
 )
 
 
-class PartialMessage(BaseModel["PartialMessagePayload"]):
+class PartialMessage(BaseModelWithSession["PartialMessagePayload"]):
     """Represents a partial Discord message payload."""
 
     __slots__ = (
@@ -53,8 +53,8 @@ class PartialMessage(BaseModel["PartialMessagePayload"]):
         self.channel_id: int = convert_snowflake(data, "channel_id")
         self.type: int | None = data.get("type")
         self.content: str = data.get("content", "")
-        self.author: PartialUser = self._initialize_subclass_with_http(
-            PartialUser, data, "author"
+        self.author: PartialUser = self._initialize_other(
+            PartialUser, data, possible_keys="author"
         )
         self.flags: int | None = data.get("flags")
         self.application_id: int | None = convert_snowflake(
@@ -73,7 +73,7 @@ class PartialMessage(BaseModel["PartialMessagePayload"]):
         )
 
 
-class Message(BaseModel["MessagePayload"]):
+class Message(BaseModelWithSession["MessagePayload"]):
     """Represents a full Discord message."""
 
     __slots__ = (
@@ -108,8 +108,8 @@ class Message(BaseModel["MessagePayload"]):
         self.lobby_id: int | None = convert_snowflake(
             data, "lobby_id", always_available=False
         )
-        self.author: PartialUser = self._initialize_subclass_with_http(
-            PartialUser, data, "author"
+        self.author: PartialUser = self._initialize_other(
+            PartialUser, data, possible_keys="author"
         )
         self.content: str = data.get("content", "")
         self.timestamp: datetime.datetime = iso_to_datetime(data["timestamp"])
@@ -119,18 +119,18 @@ class Message(BaseModel["MessagePayload"]):
         self.tts: bool = data.get("tts", False)
         self.mention_everyone: bool = data.get("mention_everyone", False)
         self.mentions: list[PartialUser] = [
-            self._initialize_subclass_with_http(PartialUser, mention)
+            self._initialize_other(PartialUser, mention)
             for mention in data.get("mentions", [])
         ]
         self.mention_roles: list[int] = [
             int(role_id) for role_id in data.get("mention_roles", [])
         ]
         self.mention_channels: list[PartialChannel] = [
-            self._initialize_subclass_with_http(PartialChannel, channel)
+            self._initialize_other(PartialChannel, channel)
             for channel in data.get("mention_channels", [])
         ]
         self.attachments: list[Attachment] = [
-            self._initialize_subclass_with_http(Attachment, attachment)
+            self._initialize_other(Attachment, attachment)
             for attachment in data.get("attachments", [])
         ]
         self.embeds: list[Embed] = [

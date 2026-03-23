@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from ...flags import MemberFlags
+from ...models.flags import MemberFlags
 from .base import BaseHTTPClient, Route
 
 if TYPE_CHECKING:
@@ -26,7 +26,7 @@ class MemberHTTPClientMixin(BaseHTTPClient):
         *,
         bot_token: str,
         guild_id: int,
-        user_id: int,
+        user_id: int | str,
         nick: str | None = None,
         roles: list[str | int] | None = None,
         deaf: bool | None = None,

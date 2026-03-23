@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING, Any
 
+from .models.enums import Scope
+
 if TYPE_CHECKING:
-    from .models.enums import Scope
-    from .models.internals.endpoints.base import Route
+    from .internals.endpoints.base import Route
 
 
 __all__ = (
@@ -26,12 +27,20 @@ class OauthCordException(Exception):
 
 class MissingRequiredScopes(OauthCordException):
     def __init__(
-        self, *, current_scopes: list[Scope], missing_scopes: list[Scope]
+        self,
+        *,
+        current_scopes: list[Scope | str],
+        missing_scopes: list[Scope | str],
     ) -> None:
-        self.current_scopes: list[Scope] = current_scopes
-        self.missing_scopes: list[Scope] = missing_scopes
+        self.current_scopes: list[Scope] = [Scope(scope) for scope in current_scopes]
+        self.missing_scopes: list[Scope] = [Scope(scope) for scope in missing_scopes]
 
-        msg = f"Missing required scopes: {', '.join(str(scope) for scope in missing_scopes)}. Current scopes: {', '.join(str(scope) for scope in current_scopes)}"
+        msg = (
+            "Missing required scopes: "
+            f"{', '.join(str(scope) for scope in self.missing_scopes)}. "
+            "Current scopes: "
+            f"{', '.join(str(scope) for scope in self.current_scopes)}"
+        )
         super().__init__(msg)
 
 

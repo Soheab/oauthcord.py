@@ -1,9 +1,10 @@
+from enum import Enum
 from reprlib import recursive_repr
 from typing import TYPE_CHECKING, Self
 
-from ..utils import _serialize_localizations
-from . import commands as command_models
-from .enums import (
+from ...utils import _serialize_localizations
+from .. import commands as command_models
+from ..enums import (
     ApplicationCommandHandlerType,
     ApplicationCommandOptionType,
     ApplicationCommandType,
@@ -11,11 +12,12 @@ from .enums import (
     IntegrationInstallType,
     InteractionContextType,
     Locale,
+    to_enum,
 )
-from .flags import Permissions
+from ..flags import Permissions
 
 if TYPE_CHECKING:
-    from .internals._types import commands as command_types
+    from ..internals._types import commands as command_types
 
 
 __all__ = (
@@ -29,16 +31,22 @@ __all__ = (
     "UserCommandBuilder",
 )
 
+type LocalizationsInput = dict[Locale | str, str]
+
 
 class WithContextsMixin:
     def __init__(
         self,
         *,
-        integration_types: list[IntegrationInstallType] | None = None,
-        contexts: list[InteractionContextType] | None = None,
+        integration_types: list[IntegrationInstallType | int] | None = None,
+        contexts: list[InteractionContextType | int] | None = None,
     ) -> None:
-        self.integration_types: list[IntegrationInstallType] | None = integration_types
-        self.contexts: list[InteractionContextType] | None = contexts
+        self.integration_types: list[IntegrationInstallType] | None = _coerce_enum_list(
+            IntegrationInstallType, integration_types
+        )
+        self.contexts: list[InteractionContextType] | None = _coerce_enum_list(
+            InteractionContextType, contexts
+        )
 
 
 class WithOptionsMixin:
@@ -52,27 +60,30 @@ class WithOptionsMixin:
     def add_option(
         self,
         *,
-        type: ApplicationCommandOptionType,
+        type: ApplicationCommandOptionType | int,
         name: str,
         description: str,
-        name_localizations: dict[Locale, str] | None = None,
-        description_localizations: dict[Locale, str] | None = None,
+        name_localizations: LocalizationsInput | None = None,
+        description_localizations: LocalizationsInput | None = None,
         required: bool = False,
         max_value: float | None = None,
         min_value: float | None = None,
         min_length: int | None = None,
         max_length: int | None = None,
         autocomplete: bool = False,
-        channel_types: list[ChannelType] | None = None,
+        channel_types: list[ChannelType | int] | None = None,
         choices: list[OptionChoiceBuilder] | None = None,
     ) -> Self:
         if type in (
             ApplicationCommandOptionType.SUB_COMMAND,
             ApplicationCommandOptionType.SUB_COMMAND_GROUP,
         ):
-            raise ValueError(
-                "Option type cannot be SUB_COMMAND or SUB_COMMAND_GROUP. Use ChatInputSubCommandBuilder or ChatInputGroupCommandBuilder instead."
+            msg = (
+                "Option type cannot be SUB_COMMAND or SUB_COMMAND_GROUP. "
+                "Use ChatInputSubCommandBuilder or "
+                "ChatInputGroupCommandBuilder instead."
             )
+            raise ValueError(msg)
         option = OptionBuilder(
             type=type,
             name=name,
@@ -92,16 +103,11 @@ class WithOptionsMixin:
 
 
 class WithNameLocalizationsMixin:
-    def __init__(self, *, name_localizations: dict[Locale, str] | None = None) -> None:
+    def __init__(self, *, name_localizations: LocalizationsInput | None = None) -> None:
         if name_localizations is not None:
             if not isinstance(name_localizations, dict):
                 raise ValueError(
                     "name_localizations must be a dictionary mapping Locale to str."
-                )
-
-            if not all(isinstance(locale, Locale) for locale in name_localizations):
-                raise ValueError(
-                    "All keys in name_localizations must be instances of the Locale enum."
                 )
 
             if not all(
@@ -109,24 +115,37 @@ class WithNameLocalizationsMixin:
                 for localized_name in (name_localizations).values()
             ):
                 raise ValueError("All values in name_localizations must be strings.")
-        self.name_localizations: dict[Locale, str] = name_localizations or {}
 
-    def add_name_localization(self, locale: Locale, localized_name: str) -> Self:
-        if not isinstance(locale, Locale):
-            msg = "Locale must be an instance of the Locale enum."
-            raise TypeError(msg)
+            try:
+                self.name_localizations: dict[Locale, str] = {
+                    _coerce_enum(Locale, locale): localized_name
+                    for locale, localized_name in name_localizations.items()
+                }
+            except ValueError as exc:
+                raise ValueError(
+                    "All keys in name_localizations must be valid Locale values."
+                ) from exc
+        else:
+            self.name_localizations = {}
+
+    def add_name_localization(self, locale: Locale | str, localized_name: str) -> Self:
+        try:
+            parsed_locale = _coerce_enum(Locale, locale)
+        except ValueError as exc:
+            msg = "Locale must be a Locale enum value or valid locale string."
+            raise TypeError(msg) from exc
 
         if not isinstance(localized_name, str):
             msg = "Localized name must be a string."
             raise TypeError(msg)
 
-        self.name_localizations[locale] = localized_name
+        self.name_localizations[parsed_locale] = localized_name
         return self
 
 
 class WithDescriptionLocalizationsMixin:
     def __init__(
-        self, *, description_localizations: dict[Locale, str] | None = None
+        self, *, description_localizations: LocalizationsInput | None = None
     ) -> None:
         if description_localizations is not None:
             if not isinstance(description_localizations, dict):
@@ -135,34 +154,39 @@ class WithDescriptionLocalizationsMixin:
                 )
 
             if not all(
-                isinstance(locale, Locale) for locale in description_localizations
-            ):
-                msg = "All keys in description_localizations must be instances of the Locale enum."
-                raise TypeError(msg)
-
-            if not all(
                 isinstance(localized_description, str)
                 for localized_description in (description_localizations).values()
             ):
                 msg = "All values in description_localizations must be strings."
                 raise TypeError(msg)
 
-        self.description_localizations: dict[Locale, str] = (
-            description_localizations or {}
-        )
+            try:
+                self.description_localizations: dict[Locale, str] = {
+                    _coerce_enum(Locale, locale): localized_description
+                    for locale, localized_description in description_localizations.items()
+                }
+            except ValueError as exc:
+                msg = (
+                    "All keys in description_localizations must be valid Locale values."
+                )
+                raise TypeError(msg) from exc
+        else:
+            self.description_localizations = {}
 
     def add_description_localization(
-        self, locale: Locale, localized_description: str
+        self, locale: Locale | str, localized_description: str
     ) -> Self:
-        if not isinstance(locale, Locale):
-            msg = "Locale must be an instance of the Locale enum."
-            raise TypeError(msg)
+        try:
+            parsed_locale = _coerce_enum(Locale, locale)
+        except ValueError as exc:
+            msg = "Locale must be a Locale enum value or valid locale string."
+            raise TypeError(msg) from exc
 
         if not isinstance(localized_description, str):
             msg = "Localized description must be a string."
             raise TypeError(msg)
 
-        self.description_localizations[locale] = localized_description
+        self.description_localizations[parsed_locale] = localized_description
         return self
 
 
@@ -172,7 +196,7 @@ class OptionChoiceBuilder(WithNameLocalizationsMixin):
         *,
         name: str,
         value: str | float,
-        name_localizations: dict[Locale, str] | None = None,
+        name_localizations: LocalizationsInput | None = None,
     ) -> None:
         super().__init__(name_localizations=name_localizations)
         self.name: str = name
@@ -248,20 +272,22 @@ class OptionBuilder(WithNameLocalizationsMixin, WithDescriptionLocalizationsMixi
     def __init__(
         self,
         *,
-        type: ApplicationCommandOptionType,
+        type: ApplicationCommandOptionType | int,
         name: str,
         description: str,
-        name_localizations: dict[Locale, str] | None = None,
-        description_localizations: dict[Locale, str] | None = None,
+        name_localizations: LocalizationsInput | None = None,
+        description_localizations: LocalizationsInput | None = None,
         required: bool = False,
         max_value: float | None = None,
         min_value: float | None = None,
         min_length: int | None = None,
         max_length: int | None = None,
         autocomplete: bool = False,
-        channel_types: list[ChannelType] | None = None,
+        channel_types: list[ChannelType | int] | None = None,
         choices: list[OptionChoiceBuilder] | None = None,
     ) -> None:
+        type = _coerce_enum(ApplicationCommandOptionType, type)
+
         if min_value is not None and max_value is not None:
             if type not in (
                 ApplicationCommandOptionType.INTEGER,
@@ -313,7 +339,11 @@ class OptionBuilder(WithNameLocalizationsMixin, WithDescriptionLocalizationsMixi
             ApplicationCommandOptionType.SUB_COMMAND,
             ApplicationCommandOptionType.SUB_COMMAND_GROUP,
         ):
-            msg = "Option type cannot be SUB_COMMAND or SUB_COMMAND_GROUP. Use ChatInputSubCommandBuilder or ChatInputGroupCommandBuilder instead."
+            msg = (
+                "Option type cannot be SUB_COMMAND or SUB_COMMAND_GROUP. "
+                "Use ChatInputSubCommandBuilder or "
+                "ChatInputGroupCommandBuilder instead."
+            )
             raise ValueError(msg)
 
         WithNameLocalizationsMixin.__init__(self, name_localizations=name_localizations)
@@ -329,7 +359,9 @@ class OptionBuilder(WithNameLocalizationsMixin, WithDescriptionLocalizationsMixi
         self.min_length: int | None = min_length
         self.max_length: int | None = max_length
         self.autocomplete: bool = autocomplete
-        self.channel_types: list[ChannelType] | None = channel_types
+        self.channel_types: list[ChannelType] | None = _coerce_enum_list(
+            ChannelType, channel_types
+        )
         self.choices: list[OptionChoiceBuilder] | None = choices
 
     def add_choice(
@@ -337,7 +369,7 @@ class OptionBuilder(WithNameLocalizationsMixin, WithDescriptionLocalizationsMixi
         *,
         name: str,
         value: str | float,
-        name_localizations: dict[Locale, str] | None = None,
+        name_localizations: LocalizationsInput | None = None,
     ) -> Self:
         if self.choices is None:
             self.choices = []
@@ -350,10 +382,10 @@ class OptionBuilder(WithNameLocalizationsMixin, WithDescriptionLocalizationsMixi
         self.choices.append(choice)
         return self
 
-    def add_channel_type(self, channel_type: ChannelType) -> Self:
+    def add_channel_type(self, channel_type: ChannelType | int) -> Self:
         if self.channel_types is None:
             self.channel_types = []
-        self.channel_types.append(channel_type)
+        self.channel_types.append(_coerce_enum(ChannelType, channel_type))
         return self
 
     def __repr__(self) -> str:
@@ -400,13 +432,13 @@ class _BaseApplicationCommandBuilder(WithNameLocalizationsMixin):
     def __init__(
         self,
         *,
-        type: ApplicationCommandType,
+        type: ApplicationCommandType | int,
         name: str,
-        name_localizations: dict[Locale, str] | None = None,
+        name_localizations: LocalizationsInput | None = None,
     ) -> None:
         super().__init__(name_localizations=name_localizations)
 
-        self.type: ApplicationCommandType = type
+        self.type: ApplicationCommandType = _coerce_enum(ApplicationCommandType, type)
         self.name: str = name
 
     @recursive_repr()
@@ -428,11 +460,11 @@ class _BaseChatInputCommandBuilder(
     def __init__(
         self,
         *,
-        type: ApplicationCommandType,
+        type: ApplicationCommandType | int,
         name: str,
         description: str,
-        name_localizations: dict[Locale, str] | None = None,
-        description_localizations: dict[Locale, str] | None = None,
+        name_localizations: LocalizationsInput | None = None,
+        description_localizations: LocalizationsInput | None = None,
         options: list[OptionBuilder] | None = None,
     ) -> None:
         super().__init__(
@@ -454,12 +486,12 @@ class ChatInputCommandBuilder(_BaseChatInputCommandBuilder, WithContextsMixin):
         *,
         name: str,
         description: str,
-        name_localizations: dict[Locale, str] | None = None,
-        description_localizations: dict[Locale, str] | None = None,
+        name_localizations: LocalizationsInput | None = None,
+        description_localizations: LocalizationsInput | None = None,
         options: list[OptionBuilder] | None = None,
-        integration_types: list[IntegrationInstallType] | None = None,
-        contexts: list[InteractionContextType] | None = None,
-        default_member_permissions: Permissions | None = None,
+        integration_types: list[IntegrationInstallType | int] | None = None,
+        contexts: list[InteractionContextType | int] | None = None,
+        default_member_permissions: Permissions | int | None = None,
         nsfw: bool = False,
     ) -> None:
         super().__init__(
@@ -475,7 +507,9 @@ class ChatInputCommandBuilder(_BaseChatInputCommandBuilder, WithContextsMixin):
             integration_types=integration_types,
             contexts=contexts,
         )
-        self.default_member_permissions: Permissions | None = default_member_permissions
+        self.default_member_permissions: Permissions | None = _coerce_permissions(
+            default_member_permissions
+        )
         self.nsfw: bool = nsfw
 
     def to_request(self) -> command_types._ChatInputApplicationCommandRequest:
@@ -517,8 +551,8 @@ class ChatInputSubCommandBuilder(_BaseChatInputCommandBuilder):
         *,
         name: str,
         description: str,
-        name_localizations: dict[Locale, str] | None = None,
-        description_localizations: dict[Locale, str] | None = None,
+        name_localizations: LocalizationsInput | None = None,
+        description_localizations: LocalizationsInput | None = None,
         options: list[OptionBuilder] | None = None,
     ) -> None:
         super().__init__(
@@ -571,11 +605,11 @@ class ChatInputGroupCommandBuilder(_BaseApplicationCommandBuilder):
         *,
         name: str,
         description: str,
-        name_localizations: dict[Locale, str] | None = None,
-        description_localizations: dict[Locale, str] | None = None,
-        integration_types: list[IntegrationInstallType] | None = None,
-        contexts: list[InteractionContextType] | None = None,
-        default_member_permissions: Permissions | None = None,
+        name_localizations: LocalizationsInput | None = None,
+        description_localizations: LocalizationsInput | None = None,
+        integration_types: list[IntegrationInstallType | int] | None = None,
+        contexts: list[InteractionContextType | int] | None = None,
+        default_member_permissions: Permissions | int | None = None,
         nsfw: bool = False,
         groups: list[ChatInputGroupCommandBuilder] | None = None,
         subcommands: list[ChatInputSubCommandBuilder] | None = None,
@@ -587,12 +621,23 @@ class ChatInputGroupCommandBuilder(_BaseApplicationCommandBuilder):
         )
         self.description: str = description
         self.description_localizations: dict[Locale, str] | None = (
-            description_localizations
+            {
+                _coerce_enum(Locale, locale): localized_description
+                for locale, localized_description in description_localizations.items()
+            }
+            if description_localizations is not None
+            else None
         )
         self.parent: ChatInputGroupCommandBuilder | None = None
-        self._integration_types: list[IntegrationInstallType] | None = integration_types
-        self._contexts: list[InteractionContextType] | None = contexts
-        self.default_member_permissions: Permissions | None = default_member_permissions
+        self._integration_types: list[IntegrationInstallType] | None = (
+            _coerce_enum_list(IntegrationInstallType, integration_types)
+        )
+        self._contexts: list[InteractionContextType] | None = _coerce_enum_list(
+            InteractionContextType, contexts
+        )
+        self.default_member_permissions: Permissions | None = _coerce_permissions(
+            default_member_permissions
+        )
         self.nsfw: bool = nsfw
         self.groups: list[ChatInputGroupCommandBuilder] = groups or []
         self.subcommands: list[ChatInputSubCommandBuilder] = subcommands or []
@@ -626,8 +671,8 @@ class ChatInputGroupCommandBuilder(_BaseApplicationCommandBuilder):
         *,
         name: str,
         description: str,
-        name_localizations: dict[Locale, str] | None = None,
-        description_localizations: dict[Locale, str] | None = None,
+        name_localizations: LocalizationsInput | None = None,
+        description_localizations: LocalizationsInput | None = None,
         groups: list[ChatInputGroupCommandBuilder] | None = None,
         subcommands: list[ChatInputSubCommandBuilder] | None = None,
     ) -> ChatInputGroupCommandBuilder:
@@ -652,8 +697,8 @@ class ChatInputGroupCommandBuilder(_BaseApplicationCommandBuilder):
         *,
         name: str,
         description: str,
-        name_localizations: dict[Locale, str] | None = None,
-        description_localizations: dict[Locale, str] | None = None,
+        name_localizations: LocalizationsInput | None = None,
+        description_localizations: LocalizationsInput | None = None,
         options: list[OptionBuilder] | None = None,
     ) -> ChatInputSubCommandBuilder:
         command = ChatInputSubCommandBuilder(
@@ -737,11 +782,12 @@ class PrimaryEntryPointCommandBuilder(
         *,
         name: str,
         description: str,
-        handler: ApplicationCommandHandlerType = ApplicationCommandHandlerType.APP_HANDLER,
-        name_localizations: dict[Locale, str] | None = None,
-        description_localizations: dict[Locale, str] | None = None,
-        integration_types: list[IntegrationInstallType] | None = None,
-        contexts: list[InteractionContextType] | None = None,
+        handler: ApplicationCommandHandlerType
+        | int = ApplicationCommandHandlerType.APP_HANDLER,
+        name_localizations: LocalizationsInput | None = None,
+        description_localizations: LocalizationsInput | None = None,
+        integration_types: list[IntegrationInstallType | int] | None = None,
+        contexts: list[InteractionContextType | int] | None = None,
     ) -> None:
         super().__init__(
             type=ApplicationCommandType.PRIMARY_ENTRY_POINT,
@@ -759,7 +805,9 @@ class PrimaryEntryPointCommandBuilder(
         )
 
         self.description: str = description
-        self.handler: ApplicationCommandHandlerType = handler
+        self.handler: ApplicationCommandHandlerType = _coerce_enum(
+            ApplicationCommandHandlerType, handler
+        )
 
     def to_request(self) -> command_types._PrimaryEntryPointApplicationCommandRequest:
         model_data: command_types.ApplicationCommandRequest = {
@@ -791,11 +839,11 @@ class _BaseContextMenuCommandBuilder(_BaseApplicationCommandBuilder, WithContext
     def __init__(
         self,
         *,
-        type: ApplicationCommandType,
+        type: ApplicationCommandType | int,
         name: str,
-        name_localizations: dict[Locale, str] | None = None,
-        integration_types: list[IntegrationInstallType] | None = None,
-        contexts: list[InteractionContextType] | None = None,
+        name_localizations: LocalizationsInput | None = None,
+        integration_types: list[IntegrationInstallType | int] | None = None,
+        contexts: list[InteractionContextType | int] | None = None,
     ) -> None:
         super().__init__(
             type=type,
@@ -814,9 +862,9 @@ class MessageCommandBuilder(_BaseContextMenuCommandBuilder):
         self,
         *,
         name: str,
-        name_localizations: dict[Locale, str] | None = None,
-        contexts: list[InteractionContextType] | None = None,
-        integration_types: list[IntegrationInstallType] | None = None,
+        name_localizations: LocalizationsInput | None = None,
+        contexts: list[InteractionContextType | int] | None = None,
+        integration_types: list[IntegrationInstallType | int] | None = None,
     ) -> None:
         super().__init__(
             type=ApplicationCommandType.MESSAGE,
@@ -849,9 +897,9 @@ class UserCommandBuilder(_BaseContextMenuCommandBuilder):
         self,
         *,
         name: str,
-        name_localizations: dict[Locale, str] | None = None,
-        contexts: list[InteractionContextType] | None = None,
-        integration_types: list[IntegrationInstallType] | None = None,
+        name_localizations: LocalizationsInput | None = None,
+        contexts: list[InteractionContextType | int] | None = None,
+        integration_types: list[IntegrationInstallType | int] | None = None,
     ) -> None:
         super().__init__(
             type=ApplicationCommandType.USER,
@@ -877,3 +925,21 @@ class UserCommandBuilder(_BaseContextMenuCommandBuilder):
         if self.contexts is not None:
             model_data["contexts"] = [context.value for context in self.contexts]
         return command_models.RequestCommand(data=model_data)._to_request()
+
+
+def _coerce_enum[E: Enum](enum_cls: type[E], value: E | int | str) -> E:
+    return value if isinstance(value, enum_cls) else to_enum(enum_cls, value)
+
+
+def _coerce_enum_list[E: Enum](
+    enum_cls: type[E], values: list[E | int | str] | None
+) -> list[E] | None:
+    if values is None:
+        return None
+    return [_coerce_enum(enum_cls, value) for value in values]
+
+
+def _coerce_permissions(value: Permissions | int | None) -> Permissions | None:
+    if value is None or isinstance(value, Permissions):
+        return value
+    return Permissions(value)

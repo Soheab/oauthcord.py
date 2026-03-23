@@ -1,11 +1,11 @@
 from typing import Any, override
 
-from ._base import StatelessBaseModel
+from ._base import BaseModel
 
 __all__ = ("Emoji",)
 
 
-class Emoji(StatelessBaseModel[Any, Any]):
+class Emoji(BaseModel[None, dict[str, Any]]):
     """Represents an emoji payload used in Discord request and response models."""
 
     __slots__ = ("animated", "id", "name")

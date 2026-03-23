@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Self
 
 import aiohttp
 import yarl
@@ -19,7 +19,6 @@ from .models.channel import (
     ChannelLinkedAccounts,
     DMChannel,
     GroupDMChannel,
-    _from_data,
 )
 from .models.components import BaseComponent
 from .models.connection import Connection
@@ -37,7 +36,6 @@ from .models.relationships import GameRelationship, Relationship
 from .models.user import CurrentUser, Harvest, PartialUser
 
 if TYPE_CHECKING:
-    from .models._base import BaseModel
     from .models.internals._types import components as component_types
     from .models.internals._types import message as message_types
     from .models.internals.http import ValidToken
@@ -50,7 +48,7 @@ class Client:
         client_id: int | str,
         client_secret: str,
         redirect_uri: str,
-        scopes: list[Scope],
+        scopes: list[Scope | str],
         session: aiohttp.ClientSession = utils.NotSet,
         state: str | None = None,
     ) -> None:
@@ -61,19 +59,17 @@ class Client:
             session=session,
         )
 
-        if not isinstance(scopes, list) or not all(
-            isinstance(scope, Scope) for scope in scopes
-        ):
-            raise ValueError("scopes must be a list of Scope")
+        if not isinstance(scopes, list):
+            raise ValueError("scopes must be a list of Scope or str")
 
-        self._scopes: list[Scope] = scopes or []
+        try:
+            parsed_scopes = [Scope(scope) for scope in scopes]
+        except ValueError as exc:
+            raise ValueError("scopes must be a list of valid Scope values") from exc
+
+        self._scopes: list[Scope] = parsed_scopes
         self._redirect_uri: str = redirect_uri
         self._state: str | None = state
-
-    def _with_http[T: BaseModel[Any, Any]](
-        self, cls: type[T], data: Any, **extras: Any
-    ) -> T:
-        return cls(http=self.http, data=data, **extras)
 
     def get_authorization_url(
         self,
@@ -96,7 +92,7 @@ class Client:
         code: str,
     ) -> AuthorisedSession:
         res = await self.http.exchange_token(code, redirect_uri=self._redirect_uri)
-        res = self._with_http(AccessTokenResponse, res)
+        res = utils._construct_model(AccessTokenResponse, data=res, http=self.http)
         return AuthorisedSession(self, token=res)
 
 
@@ -148,8 +144,8 @@ class AuthorisedSession:
         self,
     ) -> CurrentInformation:
         res = await self.client.http.get_current_authorization_information(self.token)
-        self.current_authorization_information = self.client._with_http(
-            CurrentInformation, res
+        self.current_authorization_information = utils._construct_model(
+            CurrentInformation, data=res, session=self
         )
         return self.current_authorization_information  # type: ignore
 
@@ -164,7 +160,7 @@ class AuthorisedSession:
             )
 
         res = await self.client.http.get_current_user(self.token)
-        return self.client._with_http(CurrentUser, res)
+        return utils._construct_model(CurrentUser, data=res, session=self)
 
     async def user_harvest(
         self,
@@ -173,7 +169,7 @@ class AuthorisedSession:
         res = await self.client.http.get_user_harvest(self.token)
         if res is None:
             return None
-        return self.client._with_http(Harvest, res)
+        return utils._construct_model(Harvest, data=res)
 
     async def create_user_harvest(
         self,
@@ -187,7 +183,7 @@ class AuthorisedSession:
             backends=backends,
             email=email,
         )
-        return self.client._with_http(Harvest, res)
+        return utils._construct_model(Harvest, data=res)
 
     async def guilds(
         self,
@@ -211,7 +207,9 @@ class AuthorisedSession:
         res = await self.client.http.get_current_user_guilds(
             self.token, limit=limit, with_counts=with_counts
         )
-        return [self.client._with_http(Guild, guild) for guild in res]
+        return [
+            utils._construct_model(Guild, data=guild, session=self) for guild in res
+        ]
 
     async def connections(
         self,
@@ -224,7 +222,10 @@ class AuthorisedSession:
             )
 
         res = await self.client.http.get_current_user_connections(self.token)
-        return [self.client._with_http(Connection, connection) for connection in res]
+        return [
+            utils._construct_model(Connection, data=connection, http=self.client.http)
+            for connection in res
+        ]
 
     async def guild_member(self, *, guild_id: int) -> GuildMember:
         """Fetch the current user's member object for a specific guild. Requires OAuth scope(s): GUILDS_MEMBERS_READ."""
@@ -237,7 +238,7 @@ class AuthorisedSession:
         res = await self.client.http.get_current_guild_member(
             self.token, guild_id=guild_id
         )
-        return self.client._with_http(GuildMember, res, guild_id=guild_id)
+        return GuildMember(session=self, data=res, guild_id=guild_id)
 
     async def add_user_to_guild(
         self,
@@ -266,7 +267,7 @@ class AuthorisedSession:
         if res is None:
             return None
 
-        return self.client._with_http(GuildMember, res, guild_id=guild_id)
+        return GuildMember(session=self, data=res, guild_id=guild_id)
 
     async def modify_current_user_account(
         self,
@@ -277,12 +278,12 @@ class AuthorisedSession:
         res = await self.client.http.modify_current_user_account(
             self.token, global_name=global_name
         )
-        return self.client._with_http(PartialUser, res)
+        return utils._construct_model(PartialUser, data=res, session=self)
 
-    async def dm_channel(self, token: ValidToken, *, user_id: int) -> DMChannel:
+    async def dm_channel(self, *, user_id: int) -> DMChannel:
         """Get or create a DM channel with the given user."""
         res = await self.client.http.get_dm_channel(self.token, user_id=user_id)
-        return self.client._with_http(DMChannel, res)
+        return utils._construct_model(DMChannel, data=res, session=self)
 
     async def create_private_channel(
         self,
@@ -298,7 +299,7 @@ class AuthorisedSession:
             access_tokens=access_tokens,
             nicks=nicks,
         )
-        return _from_data(self.client.http, res)  # type: ignore
+        return utils._construct_model(DMChannel, data=res, session=self)
 
     async def dm_messages(
         self,
@@ -316,7 +317,10 @@ class AuthorisedSession:
         res = await self.client.http.get_dm_messages(
             self.token, user_id=user_id, limit=limit
         )
-        return [self.client._with_http(PartialMessage, message) for message in res]
+        return [
+            utils._construct_model(PartialMessage, data=message, session=self)
+            for message in res
+        ]
 
     async def create_dm_message(
         self,
@@ -368,7 +372,7 @@ class AuthorisedSession:
             metadata=metadata,
             files=files,
         )
-        return self.client._with_http(Message, res)
+        return utils._construct_model(Message, data=res, session=self)
 
     async def edit_dm_message(
         self,
@@ -390,7 +394,7 @@ class AuthorisedSession:
             message_id=message_id,
             content=content,
         )
-        return self.client._with_http(Message, res)
+        return utils._construct_model(Message, data=res, session=self)
 
     async def delete_dm_message(
         self,
@@ -429,17 +433,19 @@ class AuthorisedSession:
             guild_id=guild_id,
             permissions=permissions,
         )
-        return [_from_data(self.client.http, channel) for channel in res]  # type: ignore
+        return [
+            utils._construct_model(GuildChannel, data=channel, session=self)
+            for channel in res
+        ]
 
-    async def call_eligibility(
-        self, token: ValidToken, *, channel_id: int | str
-    ) -> CallEligibility:
+    async def call_eligibility(self, *, channel_id: int | str) -> CallEligibility:
         """Fetch call eligibility information for the current user in a specific channel."""
-        return self.client._with_http(
+        return utils._construct_model(
             CallEligibility,
-            await self.client.http.get_call_eligibility(
+            data=await self.client.http.get_call_eligibility(
                 self.token, channel_id=channel_id
             ),
+            http=self.client.http,
         )
 
     async def ring_channel_recipients(
@@ -482,7 +488,10 @@ class AuthorisedSession:
             channel_id=channel_id,
             user_ids=user_ids,
         )
-        return self.client._with_http(ChannelLinkedAccounts, res)
+        return utils._construct_model(
+            ChannelLinkedAccounts,
+            data=res,
+        )
 
     async def join_or_create_lobby(
         self,
@@ -502,7 +511,7 @@ class AuthorisedSession:
             idle_timeout_seconds=idle_timeout_seconds,
             flags=flags,
         )
-        return self.client._with_http(Lobby, res)
+        return utils._construct_model(Lobby, data=res, http=self.client.http)
 
     async def leave_lobby(
         self,
@@ -553,7 +562,7 @@ class AuthorisedSession:
             lobby_id=lobby_id,
             channel_id=channel_id,
         )
-        return self.client._with_http(Lobby, res)
+        return utils._construct_model(Lobby, data=res, http=self.client.http)
 
     async def lobby_messages(
         self,
@@ -571,7 +580,10 @@ class AuthorisedSession:
         res = await self.client.http.get_lobby_messages(
             self.token, lobby_id=lobby_id, limit=limit
         )
-        return [self.client._with_http(PartialMessage, message) for message in res]
+        return [
+            utils._construct_model(PartialMessage, data=message, session=self)
+            for message in res
+        ]
 
     async def create_lobby_message(
         self,
@@ -631,13 +643,14 @@ class AuthorisedSession:
             metadata=metadata,
             files=files,
         )
-        return self.client._with_http(PartialMessage, res)
+        return utils._construct_model(PartialMessage, data=res, session=self)
 
     async def relationships(self, token: ValidToken) -> list[Relationship]:
         """Fetch the current user's relationships."""
         res = await self.client.http.get_relationships(token)
         return [
-            self.client._with_http(Relationship, relationship) for relationship in res
+            utils._construct_model(Relationship, data=relationship, session=self)
+            for relationship in res
         ]
 
     async def create_relationship(
@@ -669,7 +682,7 @@ class AuthorisedSession:
         """Fetch game/social-layer relationships."""
         res = await self.client.http.get_game_relationships(token)
         return [
-            self.client._with_http(GameRelationship, relationship)
+            utils._construct_model(GameRelationship, data=relationship, session=self)
             for relationship in res
         ]
 
@@ -706,7 +719,7 @@ class AuthorisedSession:
             application_id=application_id,
             file=file,
         )
-        return self.client._with_http(Attachment, res["attachment"])
+        return utils._construct_model(Attachment, data=res["attachment"])
 
     async def partial_application(
         self,
@@ -718,7 +731,7 @@ class AuthorisedSession:
             self.token,
             application_id=application_id,
         )
-        return self.client._with_http(PartialApplication, res)
+        return utils._construct_model(PartialApplication, data=res, session=self)
 
     async def user_application_role_connection(
         self,
@@ -736,7 +749,7 @@ class AuthorisedSession:
             self.token,
             application_id=application_id,
         )
-        return self.client._with_http(ApplicationRoleConnection, res)
+        return utils._construct_model(ApplicationRoleConnection, data=res, session=self)
 
     async def edit_user_application_role_connection(
         self,
@@ -760,7 +773,7 @@ class AuthorisedSession:
             platform_username=platform_username,
             metadata=metadata,
         )
-        return self.client._with_http(ApplicationRoleConnection, res)
+        return utils._construct_model(ApplicationRoleConnection, data=res, session=self)
 
     async def create_application_quick_link(
         self,
@@ -780,7 +793,10 @@ class AuthorisedSession:
             image=image,
             custom_id=custom_id,
         )
-        return self.client._with_http(ActivityLink, res)
+        return utils._construct_model(
+            ActivityLink,
+            data=res,
+        )
 
     async def bulk_application_identities(
         self,
@@ -791,7 +807,10 @@ class AuthorisedSession:
             self.token, user_ids=user_ids
         )
         return [
-            self.client._with_http(PartialApplicationIdentity, identity)
+            utils._construct_model(
+                PartialApplicationIdentity,
+                data=identity,
+            )
             for identity in res
         ]
 
@@ -827,7 +846,10 @@ class AuthorisedSession:
             after=after,
             limit=limit,
         )
-        return [self.client._with_http(Entitlement, entitlement) for entitlement in res]
+        return [
+            utils._construct_model(Entitlement, data=entitlement, session=self)
+            for entitlement in res
+        ]
 
     async def application_entitlement(
         self,
@@ -847,7 +869,7 @@ class AuthorisedSession:
             application_id=application_id,
             entitlement_id=entitlement_id,
         )
-        return self.client._with_http(Entitlement, res)
+        return utils._construct_model(Entitlement, data=res, session=self)
 
     async def consume_application_entitlement(
         self,
@@ -897,4 +919,4 @@ class AuthorisedSession:
             code=code,
             session_id=session_id,
         )
-        return self.client._with_http(Invite, res)
+        return utils._construct_model(Invite, data=res, session=self)

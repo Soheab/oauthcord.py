@@ -8,9 +8,8 @@ Repository-wide instructions for any AI assistant working on this project.
 ## Source of truth
 Use these references for API behavior, payload shapes, and field semantics. If sources disagree, follow the official Discord documentation.
 
+- Unofficial docs (preffered): https://docs.discord.food/
 - Official docs: https://discord.com/developers/docs
-- Community docs (useful detail): https://docs.discord.food/
-- Discord Support Center: https://support.discord.com/hc/en-us
 
 ## Core engineering rules
 - Keep models, payload `TypedDict`s, and parsing logic in sync.
@@ -25,22 +24,30 @@ Use these references for API behavior, payload shapes, and field semantics. If s
 - Prefer `TypedDict` payloads with `NotRequired` for optional keys.
 - Avoid no-op payload subclasses. If a subtype adds no fields, use an alias instead.
   - Example: `SpecificPayload = BasePayload`
+- Do not add ad hoc standalone helper functions for one-off serialization or coercion logic.
+  - Prefer existing shared utilities, model methods, or method-local logic unless the helper is broadly reusable.
 - Any request payload (`params`, `data`, `json`) must have a matching `TypedDict` ending in `Request`.
 - Any response payload `TypedDict` must end in `Response`.
 - Avoid `Any` unless data is genuinely unstructured.
+- `typing.cast` is forbidden. Prefer fixing types at the source with precise annotations, narrowing, overloads, or helper types.
 - In model parsing, use `convert_snowflake`, `iso_to_datetime`, and `maybe_available` from `utils` where appropriate.
 - Keep model `__slots__` declarations accurate and synchronized with attributes.
 - Use walrus assignment for mapping lookups when it improves clarity, e.g.:
   - `if (value := data.get("key")) is not None:`
 - For library methods, prefer `edit_*` naming over `modify_*`.
   - `Modify*` type/payload names are acceptable when they mirror API terminology.
+- For method parameters that take enum/flags models, also accept raw serialized values.
+  - Use unions such as `MyIntEnum | int` for integer enums, `MyStrEnum | str` for string enums, and `MyFlags | int` for bitflags.
 - If strict typing/linting becomes noisy on a specific line, use targeted ignores:
   - `# pyright: ignore[...]`
   - `# noqa: ...`
 
 ## Slots and model decorator rules
-- Use `@(Stateless)BaseModel.add_slots(...)` only for classes inheriting from `(Stateless)BaseModel`.
-- For non-`(Stateless)BaseModel` classes, define `__slots__` manually.
+- Define `__slots__` for all models and keep them in sync with attributes.
+- If a model has no attributes, set `__slots__ = ()` to prevent accidental attribute creation.
+- If a model has attributes but no `__slots__`, add a `__slots__` declaration.
+- If a model has `__slots__` but no attributes, remove the `__slots__` declaration or add attributes.
+- If a model has `__slots__` that do not match its attributes, update `__slots__` to match the attributes.
 
 Validate with:
 - `uv run python scripts/check_slots_decorator_usage.py`

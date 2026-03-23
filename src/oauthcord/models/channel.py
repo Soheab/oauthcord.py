@@ -2,7 +2,7 @@ import datetime
 from typing import TYPE_CHECKING, Any, override
 
 from ..utils import convert_snowflake, iso_to_datetime
-from ._base import BaseModel
+from ._base import BaseModel, BaseModelWithHTTP, BaseModelWithSession
 from .asset import Asset
 from .emoji import Emoji
 from .enums import (
@@ -19,7 +19,8 @@ from .member import GuildMember, ThreadMember
 from .user import PartialUser
 
 if TYPE_CHECKING:
-    from .internals._types.channels import (
+    from ..client import AuthorisedSession
+    from ..internals._types.channels import (
         CallEligibilityResponse,
         ChannelNickResponse,
         DefaultReactionResponse,
@@ -43,7 +44,6 @@ if TYPE_CHECKING:
         _ThreadChannelResponse,
         _VoiceChannelResponse,
     )
-    from .internals.http import OAuth2HTTPClient, ValidToken
 
     type EmojiPayload = DefaultReactionResponse | IconEmojiResponse
 else:
@@ -185,7 +185,7 @@ class ChannelLinkedAccounts(BaseModel["GetChannelLinkedAccountsResponse"]):
     def _initialize(self, data: GetChannelLinkedAccountsResponse) -> None:
         self.linked_accounts: dict[int, list[LinkedAccount]] = {
             int(user_id): [
-                LinkedAccount(http=self._http, data=linked_account)
+                self._initialize_other(LinkedAccount, linked_account)
                 for linked_account in linked_accounts
             ]
             for user_id, linked_accounts in data["linked_accounts"].items()
@@ -218,7 +218,7 @@ class SafetyWarning(BaseModel["SafetyWarningResponse"]):
         )
 
 
-class BaseChannel[D: Any = "_BaseChannelResponse"](BaseModel[D], check_slots=False):
+class BaseChannel[D: Any = "_BaseChannelResponse"](BaseModelWithSession[D]):
     """Represents Discord API data for `BaseChannel`."""
 
     __slots__ = ("flags", "id", "last_message_id", "type")
@@ -252,27 +252,27 @@ class GuildChannel[D: Any = _GuildChannelResponse](BaseChannel[D]):
     @override
     def _initialize(self, data: D) -> None:
         super()._initialize(data)
-        _data: _GuildChannelResponse = data  # type: ignore
+        data_: _GuildChannelResponse = data  # type: ignore
         self.guild_id: int | None = convert_snowflake(
-            _data, "guild_id", always_available=False
+            data_, "guild_id", always_available=False
         )
-        self.position: int | None = _data.get("position")
+        self.position: int | None = data_.get("position")
         self.permission_overwrites: list[PermissionOverwrite] = [
-            self._initialize_subclass_with_http(PermissionOverwrite, overwrite)
-            for overwrite in _data.get("permission_overwrites", [])
+            self._initialize_other(PermissionOverwrite, overwrite)
+            for overwrite in data_.get("permission_overwrites", [])
         ]
-        self.name: str | None = _data.get("name")
+        self.name: str | None = data_.get("name")
         self.parent_id: int | None = convert_snowflake(
-            _data, "parent_id", always_available=False
+            data_, "parent_id", always_available=False
         )
-        raw_permissions = _data.get("permissions")
+        raw_permissions = data_.get("permissions")
         self.permissions: Permissions | None = (
             Permissions(int(raw_permissions)) if raw_permissions is not None else None
         )
         self.icon_emoji: Emoji | None = (
-            Emoji(**ie) if (ie := _data.get("icon_emoji")) else None
+            Emoji(**ie) if (ie := data_.get("icon_emoji")) else None
         )
-        self.theme_color: int | None = _data.get("theme_color")
+        self.theme_color: int | None = data_.get("theme_color")
 
 
 class TextChannel(GuildChannel["_TextChannelResponse"]):
@@ -347,8 +347,8 @@ class VoiceChannel(GuildChannel["_VoiceChannelResponse"]):
         self.hd_streaming_buyer_id: int | None = convert_snowflake(
             data, "hd_streaming_buyer_id", always_available=False
         )
-        self.linked_lobby: LinkedLobby | None = self._maybe_subclass_with_http(
-            LinkedLobby, data, "linked_lobby"
+        self.linked_lobby: LinkedLobby | None = self._initialize_other(
+            LinkedLobby, data, possible_keys="linked_lobby"
         )
 
 
@@ -385,7 +385,7 @@ class ForumChannel(GuildChannel["_ForumChannelResponse"]):
             "default_thread_rate_limit_per_user"
         )
         self.available_tags: list[ForumTag] = [
-            self._initialize_subclass_with_http(ForumTag, tag)
+            self._initialize_other(ForumTag, tag)
             for tag in data.get("available_tags", [])
         ]
         self.default_reaction_emoji: Emoji | None = (
@@ -443,7 +443,7 @@ class ThreadChannel(BaseChannel["_ThreadChannelResponse"]):
         )
         owner_data = data.get("owner")
         self.owner: GuildMember | None = (
-            GuildMember(http=self._http, data=owner_data, guild_id=self.guild_id)
+            GuildMember(session=self._session, data=owner_data, guild_id=self.guild_id)
             if owner_data
             else None
         )
@@ -451,12 +451,14 @@ class ThreadChannel(BaseChannel["_ThreadChannelResponse"]):
         self.message_count: int | None = data.get("message_count")
         self.member_count: int | None = data.get("member_count")
         self.total_message_sent: int | None = data.get("total_message_sent")
-        self.thread_metadata: ThreadMetadata | None = self._maybe_subclass_with_http(
-            ThreadMetadata, data, "thread_metadata"
+        self.thread_metadata: ThreadMetadata | None = self._initialize_other(
+            ThreadMetadata, data, possible_keys="thread_metadata"
         )
         member_data = data.get("member")
         self.member: ThreadMember | None = (
-            ThreadMember(http=self._http, data=member_data, guild_id=self.guild_id)
+            ThreadMember(
+                session=self._session, data=member_data, guild_id=self.guild_id
+            )
             if member_data
             else None
         )
@@ -478,26 +480,22 @@ class PrivateChannel[D = PrivateChannelResponse](BaseChannel[D]):
     @override
     def _initialize(self, data: D) -> None:
         super()._initialize(data)
-        _data: PrivateChannelResponse = data  # type: ignore
+        data_: PrivateChannelResponse = data  # type: ignore
         self.recipients: list[PartialUser] = [
-            self._initialize_subclass_with_http(PartialUser, user)
-            for user in _data.get("recipients", [])
+            self._initialize_other(PartialUser, user)
+            for user in data_.get("recipients", [])
         ]
 
-    async def ring(
-        self, token: ValidToken, *, recipients: list[int | str] | None = None
-    ) -> None:
+    async def ring(self, *, recipients: list[int | str] | None = None) -> None:
         """Ring the recipients of this DM channel."""
-        await self._http.__get_client().ring_channel_recipients(
-            token=token, channel_id=self.id, recipients=recipients
+        await self._session.ring_channel_recipients(
+            channel_id=self.id, recipients=recipients
         )
 
-    async def stop_ringing(
-        self, token: ValidToken, *, recipients: list[int | str] | None = None
-    ) -> None:
+    async def stop_ringing(self, *, recipients: list[int | str] | None = None) -> None:
         """Stop ringing the recipients of this DM channel."""
-        await self._http.__get_client().stop_ringing_channel_recipients(
-            token=token, channel_id=self.id, recipients=recipients
+        await self._session.stop_ringing_channel_recipients(
+            channel_id=self.id, recipients=recipients
         )
 
 
@@ -524,15 +522,13 @@ class DMChannel(PrivateChannel["DMChannelResponse"]):
         )
         self.is_spam: bool = data.get("is_spam", False)
         self.safety_warnings: list[SafetyWarning] = [
-            self._initialize_subclass_with_http(SafetyWarning, warning)
+            self._initialize_other(SafetyWarning, warning)
             for warning in data.get("safety_warnings", [])
         ]
 
-    async def get_call_eligibility(self, token: ValidToken) -> CallEligibility:
+    async def get_call_eligibility(self) -> CallEligibility:
         """Get the call eligibility for this DM channel."""
-        return await self._http.__get_client().call_eligibility(
-            token=token, channel_id=self.id
-        )
+        return await self._session.call_eligibility(channel_id=self.id)
 
 
 class GroupDMChannel(PrivateChannel["GroupDMChannelResponse"]):
@@ -576,8 +572,7 @@ class GroupDMChannel(PrivateChannel["GroupDMChannelResponse"]):
             data.get("recipient_flags", 0)
         )
         self.nicks: list[ChannelNick] = [
-            self._initialize_subclass_with_http(ChannelNick, nick)
-            for nick in data.get("nicks", [])
+            self._initialize_other(ChannelNick, nick) for nick in data.get("nicks", [])
         ]
         self.blocked_user_warning_dismissed: bool = data.get(
             "blocked_user_warning_dismissed", False
@@ -588,16 +583,16 @@ class GroupDMChannel(PrivateChannel["GroupDMChannelResponse"]):
         )
         self.is_spam: bool = data.get("is_spam", False)
         self.safety_warnings: list[SafetyWarning] = [
-            self._initialize_subclass_with_http(SafetyWarning, warning)
+            self._initialize_other(SafetyWarning, warning)
             for warning in data.get("safety_warnings", [])
         ]
 
     async def get_linked_accounts(
-        self, token: ValidToken, *, user_ids: list[int | str]
+        self, *, user_ids: list[int | str]
     ) -> ChannelLinkedAccounts:
         """Get the linked accounts for this group DM channel."""
-        return await self._http.__get_client().channel_linked_accounts(
-            token=token, channel_id=self.id, user_ids=user_ids
+        return await self._session.channel_linked_accounts(
+            channel_id=self.id, user_ids=user_ids
         )
 
 
@@ -605,7 +600,7 @@ class EphemeralDMChannel(PrivateChannel["EphemeralDMChannelResponse"]):
     """Represents Discord API data for `EphemeralDMChannel`."""
 
 
-class PartialChannel(BaseModel["PartialChannelResponse"]):
+class PartialChannel(BaseModelWithSession["PartialChannelResponse"]):
     """Represents Discord API data for `PartialChannel`."""
 
     __slots__ = ("guild_id", "icon", "id", "name", "recipients", "type")
@@ -616,7 +611,7 @@ class PartialChannel(BaseModel["PartialChannelResponse"]):
         self.type: ChannelType = to_enum(ChannelType, data["type"])
         self.name: str | None = data["name"]
         self.recipients: list[PartialUser] = [
-            self._initialize_subclass_with_http(PartialUser, user)
+            self._initialize_other(PartialUser, user)
             for user in data.get("recipients", [])
         ]
 
@@ -642,15 +637,15 @@ class CallEligibility(BaseModel["CallEligibilityResponse"]):
 
 
 def _from_data(  # type: ignore
-    http: OAuth2HTTPClient, data: _BaseChannelResponse | PartialChannelResponse
+    session: AuthorisedSession, data: _BaseChannelResponse | PartialChannelResponse
 ) -> BaseChannel | PartialChannel:
     match to_enum(ChannelType, data["type"]):
         case ChannelType.DM:
-            return DMChannel(http=http, data=data)  # type: ignore
+            return DMChannel(session=session, data=data)  # type: ignore
         case ChannelType.GROUP_DM | ChannelType.LFG_GROUP_DM:
-            return GroupDMChannel(http=http, data=data)  # type: ignore
+            return GroupDMChannel(session=session, data=data)  # type: ignore
         case ChannelType.EPHEMERAL_DM:
-            return EphemeralDMChannel(http=http, data=data)  # type: ignore
+            return EphemeralDMChannel(session=session, data=data)  # type: ignore
         case (
             ChannelType.GUILD_TEXT
             | ChannelType.GUILD_ANNOUNCEMENT
@@ -658,19 +653,19 @@ def _from_data(  # type: ignore
             | ChannelType.GUILD_LFG
             | ChannelType.GUILD_DIRECTORY
         ):
-            return TextChannel(http=http, data=data)  # type: ignore
+            return TextChannel(session=session, data=data)  # type: ignore
         case ChannelType.GUILD_CATEGORY | ChannelType.LOBBY:
-            return GuildChannel(http=http, data=data)  # type: ignore
+            return GuildChannel(session=session, data=data)  # type: ignore
         case ChannelType.GUILD_VOICE | ChannelType.GUILD_STAGE_VOICE:
-            return VoiceChannel(http=http, data=data)  # type: ignore
+            return VoiceChannel(session=session, data=data)  # type: ignore
         case ChannelType.GUILD_FORUM | ChannelType.GUILD_MEDIA:
-            return ForumChannel(http=http, data=data)  # type: ignore
+            return ForumChannel(session=session, data=data)  # type: ignore
         case (
             ChannelType.ANNOUNCEMENT_THREAD
             | ChannelType.PUBLIC_THREAD
             | ChannelType.PRIVATE_THREAD
             | ChannelType.THREAD_ALPHA
         ):
-            return ThreadChannel(http=http, data=data)  # type: ignore
+            return ThreadChannel(session=session, data=data)  # type: ignore
         case _:
-            return PartialChannel(http=http, data=data)  # type: ignore
+            return PartialChannel(session=session, data=data)  # type: ignore

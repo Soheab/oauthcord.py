@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Self
 from .emoji import Emoji
 
 if TYPE_CHECKING:
-    from .internals._types import components as component_types
+    from ..internals._types import components as component_types
 
 
 __all__ = (

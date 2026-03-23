@@ -40,3 +40,10 @@ class CreateGameRelationshipRequest(TypedDict):
     type: NotRequired[
         RelationshipType | Literal[-1]
     ]  # -1 = accept an existing or create
+
+
+class SendFriendRequestRequest(TypedDict):
+    username: str
+
+
+SendFriendRequestResponse = None

@@ -83,3 +83,18 @@ class RelationshipHTTPClientMixin(BaseHTTPClient):
             Route("DELETE", f"/users/@me/game-relationships/{user_id}"),
             token=token,
         )
+
+    async def send_friend_request(
+        self,
+        token: ValidToken,
+        *,
+        username: str,
+    ) -> None:
+        data: relationship_types.SendFriendRequestRequest = {
+            "username": username,
+        }
+        await self.request(
+            Route("POST", "/users/@me/relationships"),
+            token=token,
+            json=data,
+        )

@@ -1,14 +1,14 @@
 import datetime
 from typing import TYPE_CHECKING, Self, override
 
-from ._base import BaseModel
+from ._base import BaseModelWithHTTP
 from .enums import Scope
 
 if TYPE_CHECKING:
-    from .internals._types.token import (
+    from ..internals._types.token import (
         AccessTokenResponse as AccessTokenResponsePayload,
     )
-    from .internals._types.token import (
+    from ..internals._types.token import (
         RefreshTokenResponse as RefreshTokenResponsePayload,
     )
 
@@ -17,7 +17,7 @@ __all__ = ("AccessTokenResponse",)
 
 
 class AccessTokenResponse(
-    BaseModel["AccessTokenResponsePayload | RefreshTokenResponsePayload"]
+    BaseModelWithHTTP["AccessTokenResponsePayload | RefreshTokenResponsePayload"]
 ):
     """Represents an OAuth2 access token response from Discord.
 

@@ -2,7 +2,7 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, override
 
 from ..utils import _serialize_localizations, convert_snowflake
-from ._base import BaseModel, StatelessBaseModel
+from ._base import BaseModel, BaseModelWithHTTP
 from .enums import (
     ApplicationCommandHandlerType,
     ApplicationCommandOptionType,
@@ -17,8 +17,8 @@ from .enums import (
 from .flags import Permissions
 
 if TYPE_CHECKING:
-    from .internals._types import commands
-    from .internals.http import OAuth2HTTPClient
+    from ..internals._types import commands
+    from ..internals.http import OAuth2HTTPClient
 
 __all__ = (
     "ApplicationCommandPermission",
@@ -33,7 +33,7 @@ __all__ = (
 
 
 class OptionChoice(
-    StatelessBaseModel[
+    BaseModel[
         "commands._StringApplicationCommandOptionChoiceResponse | commands.ApplicationCommandOptionChoiceRequest",
     ]
 ):
@@ -67,7 +67,7 @@ class OptionChoice(
 
 
 class Option(
-    StatelessBaseModel[
+    BaseModel[
         "commands.ApplicationCommandOptionResponse | commands.ApplicationCommandOptionRequest",
     ]
 ):
@@ -121,15 +121,12 @@ class Option(
 
         self.required: bool | None = data.get("required", None)
         self.choices: list[OptionChoice] | None = (
-            [
-                self._initialize_subclass(OptionChoice, choice)
-                for choice in data["choices"]
-            ]
+            [self._initialize_other(OptionChoice, choice) for choice in data["choices"]]
             if "choices" in data
             else None
         )
         self.options: list[Option] | None = (
-            [self._initialize_subclass(Option, option) for option in data["options"]]
+            [self._initialize_other(Option, option) for option in data["options"]]
             if "options" in data
             else None
         )
@@ -185,7 +182,7 @@ class Option(
         return payload
 
 
-class RequestCommand(StatelessBaseModel["commands.ApplicationCommandRequest"]):
+class RequestCommand(BaseModel["commands.ApplicationCommandRequest"]):
     __slots__ = (
         "contexts",
         "default_member_permissions",
@@ -242,7 +239,7 @@ class RequestCommand(StatelessBaseModel["commands.ApplicationCommandRequest"]):
             else None
         )
         self.options: list[Option] | None = (
-            [self._initialize_subclass(Option, option) for option in options]
+            [self._initialize_other(Option, option) for option in options]
             if (options := data.get("options")) is not None
             else None
         )
@@ -285,7 +282,7 @@ class RequestCommand(StatelessBaseModel["commands.ApplicationCommandRequest"]):
 
 class Command[
     D = commands.ApplicationCommandResponse | commands.GuildApplicationCommandResponse
-](BaseModel[D]):
+](BaseModelWithHTTP[D]):
     __slots__ = (
         "application_id",
         "contexts",
@@ -346,12 +343,12 @@ class Command[
         )
 
         self.options: list[Option] = [
-            self._initialize_subclass(Option, option)
+            self._initialize_other(Option, option)
             for option in data_.get("options", [])
         ]
 
 
-class Subcommand[D = commands._SubCommandCommandOptionResponse](BaseModel[D]):
+class Subcommand[D = commands._SubCommandCommandOptionResponse](BaseModelWithHTTP[D]):
     __slots__ = (
         "description",
         "description_localizations",
@@ -392,7 +389,7 @@ class Subcommand[D = commands._SubCommandCommandOptionResponse](BaseModel[D]):
         )
 
         self.options: list[Option] = [
-            self._initialize_subclass(Option, option)
+            self._initialize_other(Option, option)
             for option in data_.get("options", [])
         ]
 
@@ -420,7 +417,7 @@ class Group(
 
 
 class ApplicationCommandPermission(
-    BaseModel["commands.ApplicationCommandPermissionsResponse"]
+    BaseModelWithHTTP["commands.ApplicationCommandPermissionsResponse"]
 ):
     __slots__ = ("id", "permission", "type")
 
@@ -434,7 +431,7 @@ class ApplicationCommandPermission(
 
 
 class GuildApplicationCommandPermissions(
-    BaseModel["commands.GuildApplicationCommandPermissionsResponse"]
+    BaseModelWithHTTP["commands.GuildApplicationCommandPermissionsResponse"]
 ):
     __slots__ = ("application_id", "guild_id", "id", "permissions")
 
@@ -446,7 +443,7 @@ class GuildApplicationCommandPermissions(
         self.application_id: int = convert_snowflake(data, "application_id")
         self.guild_id: int = convert_snowflake(data, "guild_id")
         self.permissions: list[ApplicationCommandPermission] = [
-            self._initialize_subclass_with_http(ApplicationCommandPermission, perm)
+            self._initialize_other(ApplicationCommandPermission, perm)
             for perm in data["permissions"]
         ]
 

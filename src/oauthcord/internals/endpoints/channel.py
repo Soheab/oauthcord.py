@@ -24,18 +24,11 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
         token: ValidToken,
         *,
         recipients: list[int | str] | None = None,
-        access_tokens: list[ValidToken] | None = None,
         nicks: dict[str | int, str] | None = None,
     ) -> channels.PrivateChannelResponse:
-        current_access_token = (await self._get_current_token(token)).access_token
-
         data: channels.CreatePrivateChannelRequest = {}
         if recipients is not None:
             data["recipients"] = recipients
-        if access_tokens is not None:
-            data["access_tokens"] = [
-                self._parse_token(token) for token in access_tokens
-            ] + [current_access_token]
         if nicks is not None:
             data["nicks"] = nicks
 
@@ -51,11 +44,15 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
         *,
         guild_id: str | int,
         permissions: bool = False,
+        with_can_link_lobby: bool = False,
     ) -> list[channels.GuildChannelResponse]:
         return await self.request(
             Route("GET", f"/guilds/{guild_id}/channels"),
             token=token,
-            params={"permissions": int(permissions)},
+            params={
+                "permissions": int(permissions),
+                "with_can_link_lobby": int(with_can_link_lobby),
+            },
         )
 
     async def get_call_eligibility(

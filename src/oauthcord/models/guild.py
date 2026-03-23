@@ -1,20 +1,19 @@
 from typing import TYPE_CHECKING, override
 
 from ..utils import convert_snowflake
-from ._base import BaseModel
+from ._base import BaseModelWithSession
 from .asset import Asset
 from .flags import Permissions
 
 if TYPE_CHECKING:
     from .channel import GuildChannel
-    from .internals._types.guild import CurrentUserGuildResponse as GuildPayload
-    from .internals.http import ValidToken
+    from ..internals._types.guild import CurrentUserGuildResponse as GuildPayload
 
 
 __all__ = ("Guild",)
 
 
-class Guild(BaseModel["GuildPayload"]):
+class Guild(BaseModelWithSession["GuildPayload"]):
     """Represents a Discord guild available to the authorized user."""
 
     __slots__ = ("banner", "features", "icon", "id", "name", "owner", "permissions")
@@ -40,9 +39,7 @@ class Guild(BaseModel["GuildPayload"]):
         self.permissions: Permissions = Permissions(int(data["permissions"]))
         self.features: list[str] = data["features"]
 
-    async def get_channels(
-        self, token: ValidToken, *, permissions: bool = False
-    ) -> list[GuildChannel]:
-        return await self._http.__get_client().guild_channels(
-            token=token, guild_id=self.id, permissions=permissions
+    async def channels(self, *, permissions: bool = False) -> list[GuildChannel]:
+        return await self._session.guild_channels(
+            guild_id=self.id, permissions=permissions
         )

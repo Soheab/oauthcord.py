@@ -11,7 +11,8 @@ requires-python = ">=3.14"
 dependencies = ["aiohttp>=3.13.3"]
 
 [dependency-groups]
-dev = ["ruff==0.15.2", "pyright==1.1.408"]
+dev = ["pyright==1.1.408", "ruff==0.15.2"]
+docs = ["furo>=2025.9.25", "sphinx>=9.1.0,<9.2.0"]
 
 [tool.pyright]
 extraPaths = ["src"]
@@ -21,8 +22,10 @@ reportPrivateUsage = false
 reportUnnecessaryIsInstance = false
 
 [tool.ruff.lint]
+select = ["E", "F", "I", "RUF", "TC"]
 extend-select = ["I", "RUF"]
-ignore = ["E402", "TC001", "TC002", "TC003", "TC004"]
+ignore = ["E402", "TC001", "TC002", "TC003", "TC004", "F405", "F403"]
+fixable = ["ALL"]
 
 [tool.ruff.lint.per-file-ignores]
 "src/oauthcord/__init__.py" = ["F403", "F405"]

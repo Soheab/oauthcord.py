@@ -36,7 +36,14 @@ class JoinOrCreateLobbyRequest(TypedDict):
     flags: NotRequired[int]
 
 
-class CreateLobbyInviteResponse(TypedDict):
+class CreateLobbyRequest(TypedDict):
+    metadata: NotRequired[dict[str, str] | None]
+    members: NotRequired[list[LobbyMemberResponse]]
+    idle_timeout_seconds: NotRequired[int]
+    flags: NotRequired[int]
+
+
+class CreateLobbyInviteForCurrentUserResponse(TypedDict):
     code: str
 
 
@@ -67,6 +74,7 @@ class CreateLobbyMessageRequest(TypedDict):
 
 
 JoinOrCreateLobbyResponse = LobbyResponse
+LeaveLobbyResponse = None
 ModifyLobbyLinkedChannelResponse = LobbyResponse
 GetLobbyMessagesResponse = list[PartialMessageResponse]
 CreateLobbyMessageResponse = PartialMessageResponse

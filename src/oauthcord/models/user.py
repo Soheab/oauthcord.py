@@ -2,7 +2,7 @@ import datetime
 from typing import TYPE_CHECKING, Any, override
 
 from ..utils import convert_snowflake, iso_to_datetime, maybe_available
-from ._base import BaseModel
+from ._base import BaseModel, BaseModelWithHTTP, BaseModelWithSession
 from .asset import Asset
 from .enums import (
     CollectibleNameplatePalette,
@@ -16,7 +16,7 @@ from .flags import UserFlags
 
 if TYPE_CHECKING:
     from .channel import DMChannel
-    from .internals._types.user import (
+    from ..internals._types.user import (
         AvatarDecorationDataResponse,
         CollectablesResponse,
         CurrentUserResponse,
@@ -27,13 +27,12 @@ if TYPE_CHECKING:
         PartialUserResponse,
         PrimaryGuildResponse,
     )
-    from .internals._types.user import (
+    from ..internals._types.user import (
         _CollectibleNameplateResponse as CollectibleNameplateResponse,
     )
-    from .internals._types.user import (
+    from ..internals._types.user import (
         _CollectibleResponse as BaseCollectibleResponse,
     )
-    from .internals.http import ValidToken
 
 
 __all__ = (
@@ -51,7 +50,7 @@ __all__ = (
 )
 
 
-class BaseCollectable[D: Any = BaseCollectibleResponse](BaseModel[D]):
+class BaseCollectable[D: Any = BaseCollectibleResponse](BaseModelWithHTTP[D]):
     __slots__ = ("asset", "label", "sku_id")
 
     @override
@@ -72,19 +71,21 @@ class CollectibleNameplate(BaseCollectable["CollectibleNameplateResponse"]):
         )
 
 
-class Collectible(BaseModel["CollectablesResponse"]):
+class Collectible(BaseModelWithHTTP["CollectablesResponse"]):
     """Represents Discord API data for `Collectible`."""
 
     __slots__ = ("nameplate",)
 
     @override
     def _initialize(self, data: CollectablesResponse) -> None:
-        self.nameplate = self._maybe_subclass_with_http(
-            CollectibleNameplate, data, "nameplate"
+        self.nameplate: CollectibleNameplate | None = self._initialize_other(
+            CollectibleNameplate,
+            data,
+            possible_keys="nameplate",
         )
 
 
-class PrimaryGuild(BaseModel["PrimaryGuildResponse"]):
+class PrimaryGuild(BaseModelWithHTTP["PrimaryGuildResponse"]):
     """Represents Discord API data for `PrimaryGuild`."""
 
     __slots__ = ("badge", "identity_enabled", "identity_guild_id", "tag")
@@ -107,7 +108,7 @@ class PrimaryGuild(BaseModel["PrimaryGuildResponse"]):
             self.badge = None
 
 
-class AvatarDecorationData(BaseModel["AvatarDecorationDataResponse"]):
+class AvatarDecorationData(BaseModelWithHTTP["AvatarDecorationDataResponse"]):
     """Represents Discord API data for `AvatarDecorationData`."""
 
     __slots__ = ("asset", "sku_id")
@@ -130,7 +131,7 @@ class DisplayNameStyle(BaseModel["DisplayNameStyleResponse"]):
         self.colors: list[int] = data["colors"]
 
 
-class PartialUser[D = PartialUserResponse](BaseModel[D]):
+class PartialUser[D = PartialUserResponse](BaseModelWithSession[D]):
     """Represents a partial Discord user payload."""
 
     __slots__ = (
@@ -144,11 +145,11 @@ class PartialUser[D = PartialUserResponse](BaseModel[D]):
 
     @override
     def _initialize(self, data: D) -> None:  # type: ignore
-        _data: PartialUserResponse = data  # pyright: ignore[reportAssignmentType]
+        data_: PartialUserResponse = data  # pyright: ignore[reportAssignmentType]
 
         self.id: int = convert_snowflake(data, "id")
-        self.username: str = _data["username"]
-        avatar: str | None = _data["avatar"]
+        self.username: str = data_["username"]
+        avatar: str | None = data_["avatar"]
         if avatar:
             self.avatar = self.get_asset(Asset._from_avatar, self.id, avatar)
         else:
@@ -156,13 +157,13 @@ class PartialUser[D = PartialUserResponse](BaseModel[D]):
                 Asset._from_default_avatar, (self.id >> 22) % 6
             )
 
-        self.discriminator: str = _data["discriminator"]
-        self.public_flags: int = _data["public_flags"]
-        self.global_name: str | None = _data["global_name"]
+        self.discriminator: str = data_["discriminator"]
+        self.public_flags: int = data_["public_flags"]
+        self.global_name: str | None = data_["global_name"]
 
-    async def get_dm_channel(self, token: ValidToken) -> DMChannel:
+    async def dm_channel(self) -> DMChannel:
         """Get a DM channel with this user."""
-        return await self._http.__get_client().dm_channel(token=token, user_id=self.id)
+        return await self._session.dm_channel(user_id=self.id)
 
 
 class GuildMemberWithUser[D = GuildMemberWithUserResponse](PartialUser[D]):
@@ -181,33 +182,34 @@ class GuildMemberWithUser[D = GuildMemberWithUserResponse](PartialUser[D]):
     def _initialize(self, data: D) -> None:  # type: ignore
         super()._initialize(data)
 
-        _data: GuildMemberWithUserResponse = data  # pyright: ignore[reportAssignmentType]
+        data_: GuildMemberWithUserResponse = data  # pyright: ignore[reportAssignmentType]
 
-        self.flags: UserFlags = UserFlags(_data["flags"])
+        self.flags: UserFlags = UserFlags(data_["flags"])
         self.banner: Asset | None = (
-            self.get_asset(Asset._from_user_banner, self.id, _data["banner"])
-            if _data["banner"]
+            self.get_asset(Asset._from_user_banner, self.id, data_["banner"])
+            if data_["banner"]
             else None
         )
-        self.accent_color: int | None = _data["accent_color"]
-        self.banner_color: str | None = _data["banner_color"]
+        self.accent_color: int | None = data_["accent_color"]
+        self.banner_color: str | None = data_["banner_color"]
 
         self.avatar_decoration_data: AvatarDecorationData | None = (
-            self._maybe_subclass_with_http(
-                AvatarDecorationData, _data, "avatar_decoration_data"
+            self._initialize_other(
+                AvatarDecorationData,
+                data_,
+                possible_keys="avatar_decoration_data",
+                optional=True,
             )
         )
 
-        self.collectibles: Collectible = self._initialize_subclass_with_http(
-            Collectible, _data, "collectibles", on_key_error={}
+        self.collectibles: Collectible | None = self._initialize_other(
+            Collectible, data_, possible_keys="collectibles", optional=True
         )
-        self.display_name_styles: DisplayNameStyle | None = (
-            self._maybe_subclass_with_http(
-                DisplayNameStyle, _data, "display_name_styles"
-            )
+        self.display_name_styles: DisplayNameStyle | None = self._initialize_other(
+            DisplayNameStyle, data_, possible_keys="display_name_styles", optional=True
         )
-        self.primary_guild = self._maybe_subclass_with_http(
-            PrimaryGuild, _data, "primary_guild"
+        self.primary_guild: PrimaryGuild | None = self._initialize_other(
+            PrimaryGuild, data_, possible_keys="primary_guild", optional=True
         )
 
 
@@ -225,9 +227,11 @@ class CurrentUser(GuildMemberWithUser["CurrentUserResponse"]):
         self.premium_type: PremiumType = to_enum(PremiumType, data["premium_type"])
 
     @property
-    def email(self) -> str: 
+    def email(self) -> str:
         if not self._email:
-            raise ValueError("Email is not available. Have you requested the `email` scope?")
+            raise ValueError(
+                "Email is not available. Have you requested the `email` scope?"
+            )
         return self._email
 
 
@@ -284,6 +288,8 @@ class Harvest(BaseModel["HarvestResponse"]):
         self.backends: dict[str, str] = data["backends"]
         self.updated_at: datetime.datetime = iso_to_datetime(data["updated_at"])
         self.shadow_run: bool = data["shadow_run"]
-        self.harvest_metadata: HarvestMetadata = self._initialize_subclass_with_http(
-            HarvestMetadata, data, "harvest_metadata"
+        self.harvest_metadata: HarvestMetadata = self._initialize_other(
+            HarvestMetadata,
+            data,
+            possible_keys="harvest_metadata",
         )

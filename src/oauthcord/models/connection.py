@@ -1,22 +1,22 @@
 from typing import TYPE_CHECKING, override
 
 from ..utils import convert_snowflake
-from ._base import BaseModel
+from ._base import BaseModel, BaseModelWithHTTP
 from .asset import Asset
 from .enums import IntegrationType, Service, Visibility
 from .user import to_enum
 
 if TYPE_CHECKING:
-    from .internals._types.connections import (
+    from ..internals._types.connections import (
         ConnectionResponse as ConnectionPayload,
     )
-    from .internals._types.connections import (
+    from ..internals._types.connections import (
         IntegrationAccountResponse as IntegrationAccountResponsePayload,
     )
-    from .internals._types.connections import (
+    from ..internals._types.connections import (
         IntegrationGuildResponse as IntegrationGuildResponsePayload,
     )
-    from .internals._types.connections import (
+    from ..internals._types.connections import (
         IntegrationResponse as IntegrationResponsePayload,
     )
 
@@ -29,7 +29,7 @@ __all__ = (
 )
 
 
-class Connection(BaseModel["ConnectionPayload"]):
+class Connection(BaseModelWithHTTP["ConnectionPayload"]):
     """Represents a Discord user connection."""
 
     __slots__ = (
@@ -54,7 +54,7 @@ class Connection(BaseModel["ConnectionPayload"]):
         self.revoked: bool = data.get("revoked", False)
 
         self.integrations: list[Integration] = [
-            self._initialize_subclass_with_http(Integration, integration_data)
+            self._initialize_other(Integration, integration_data)
             for integration_data in data.get("integrations", [])
         ]
         self.verified: bool = data["verified"]
@@ -65,18 +65,18 @@ class Connection(BaseModel["ConnectionPayload"]):
         self.visibility: Visibility = to_enum(Visibility, data["visibility"])
 
 
-class Integration(BaseModel["IntegrationResponsePayload"]):
+class Integration(BaseModelWithHTTP["IntegrationResponsePayload"]):
     __slots__ = ("account", "guild", "id", "type")
 
     @override
     def _initialize(self, data: IntegrationResponsePayload) -> None:
         self.id: str = str(data["id"])
         self.type: IntegrationType = to_enum(IntegrationType, data["type"])
-        self.account: IntegrationAccount = self._initialize_subclass_with_http(
-            IntegrationAccount, data, "account"
+        self.account: IntegrationAccount = self._initialize_other(
+            IntegrationAccount, data, possible_keys="account"
         )
-        self.guild: IntegrationGuild = self._initialize_subclass_with_http(
-            IntegrationGuild, data, "guild"
+        self.guild: IntegrationGuild = self._initialize_other(
+            IntegrationGuild, data, possible_keys="guild"
         )
 
 
@@ -89,7 +89,7 @@ class IntegrationAccount(BaseModel["IntegrationAccountResponsePayload"]):
         self.name: str = data["name"]
 
 
-class IntegrationGuild(BaseModel["IntegrationGuildResponsePayload"]):
+class IntegrationGuild(BaseModelWithHTTP["IntegrationGuildResponsePayload"]):
     __slots__ = ("icon", "id", "name")
 
     @override

@@ -16,3 +16,13 @@ class ConnectionHTTPClientMixin(BaseHTTPClient):
             Route("GET", "/users/@me/connections"),
             token=token,
         )
+
+    # connections scope
+    async def get_user_linked_connections(
+        self,
+        token: ValidToken,
+    ) -> list[connection_types.ConnectionResponse]:
+        return await self.request(
+            Route("GET", "/users/@me/linked-connections"),
+            token=token,
+        )

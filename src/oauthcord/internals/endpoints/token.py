@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from ... import Scope
+from ...models.enums import Scope
 from .base import Route
 from .current_auth import CurrentAuthHTTPClientMixin
 

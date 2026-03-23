@@ -518,6 +518,54 @@ class PartialMessageResponse(TypedDict):
     recipient_id: NotRequired[Snowflake]
 
 
+PollLayoutType = Literal[1]
+
+
+class PollQuestion(TypedDict):
+    text: str
+
+
+class PollAnswerPollMedia(TypedDict):
+    text: str
+    emoji: NotRequired[PartialEmojiResponse]
+
+
+class PollAnswerRequest(TypedDict):
+    poll_media: PollAnswerPollMedia
+
+
+class PollAnswerResponse(PollAnswerRequest):
+    answer_id: int
+
+
+class PollCreateRequest(TypedDict):
+    question: PollQuestion
+    answers: list[PollAnswerRequest]
+    duration: int
+    allow_multiselect: NotRequired[bool]
+    layout_type: NotRequired[PollLayoutType]
+
+
+class PollAnswerCountResponse(TypedDict):
+    id: int
+    count: int
+    me_voted: bool
+
+
+class PollResultResponse(TypedDict):
+    is_finalized: bool
+    answers_counts: list[PollAnswerCountResponse]
+
+
+class PollResponse(TypedDict):
+    question: PollQuestion
+    answers: list[PollAnswerResponse]
+    expiry: str | None  # iso 8601 timestamp
+    allow_multiselect: bool
+    layout_type: PollLayoutType
+    results: NotRequired[PollResultResponse]
+
+
 class MessageResponse(TypedDict):
     id: Snowflake
     channel_id: Snowflake
@@ -556,7 +604,7 @@ class MessageResponse(TypedDict):
     components: list[component_types.ComponentResponse]
     sticker_items: NotRequired[list[dict[str, object]]]
     stickers: NotRequired[list[dict[str, object]]]
-    poll: NotRequired[dict[str, object]]
+    poll: NotRequired[PollResponse]
     changelog_id: NotRequired[Snowflake]
     soundboard_sounds: NotRequired[list[dict[str, object]]]
     potions: NotRequired[list[dict[str, object]]]
@@ -595,10 +643,9 @@ class CreateMessageRequest(TypedDict):
     components: NotRequired[list[component_types.ComponentRequest]]
     sticker_ids: NotRequired[list[Snowflake]]
     activity: NotRequired[MessageActivityRequest]
-    application_id: NotRequired[Snowflake]
     flags: NotRequired[int]
     attachments: NotRequired[list[PartialAttachmentRequest]]
-    poll: NotRequired[dict[str, object]]
+    poll: NotRequired[PollCreateRequest]
     shared_client_theme: NotRequired[SharedClientThemeRequest]
     with_checkpoint: NotRequired[bool]
 

@@ -11,8 +11,11 @@ __all__ = (
     "ApplicationType",
     "ChannelType",
     "CollectibleNameplatePalette",
+    "ContentRatingAgency",
     "DisplayNameEffect",
     "DisplayNameFont",
+    "ESRBContentDescriptor",
+    "ESRBContentRating",
     "EmbedType",
     "EmbeddedActivityLabelType",
     "EmbeddedActivityOrientationLockStateType",
@@ -22,8 +25,10 @@ __all__ = (
     "EntitlementFulfillmentStatus",
     "EntitlementSourceType",
     "EntitlementType",
+    "ExternalSKUStrategyType",
     "ForumLayoutType",
     "GiftStyle",
+    "GuildPowerupCategoryType",
     "IntegrationInstallType",
     "IntegrationType",
     "InteractionContextType",
@@ -31,13 +36,25 @@ __all__ = (
     "InviteTargetUsersJobStatus",
     "InviteType",
     "Locale",
+    "OperatingSystem",
+    "PEGIContentDescriptor",
+    "PEGIContentRating",
     "PermissionOverwriteType",
+    "PollLayoutType",
     "PremiumType",
     "RelationshipType",
+    "SKUAccessType",
+    "SKUFeature",
+    "SKUGenre",
+    "SKUProductLine",
+    "SKUType",
     "SafetyWarningType",
     "Scope",
     "Service",
     "SortOrderType",
+    "StoreListingIconType",
+    "SubscriptionInterval",
+    "SubscriptionPlanPurchaseType",
     "VideoQualityMode",
     "Visibility",
 )
@@ -48,7 +65,8 @@ class Scope(StrEnum):
     # OAuth2 Scopes
     # These are all the OAuth2 scopes that Discord supports.
     # Some scopes require approval from Discord to use.
-    # Requesting them from a user without approval from Discord will lead to unexpected error behavior in the OAuth2 flow.
+    # Requesting them from a user without approval from Discord
+    # can lead to unexpected OAuth2 flow errors.
     # bot and guilds.join require you to have a bot account linked to your application.
     # In order to add a user to a guild, your bot has to already belong to that guild.
 
@@ -104,7 +122,8 @@ class Scope(StrEnum):
     LOBBIES_WRITE = "lobbies.write"
     # Allows retrieving the current user (Public: Yes)
     IDENTIFY = "identify"
-    # When using RPC, allows reading messages from all client channels (otherwise restricted to application-managed group DMs) (Public: Yes)
+    # When using RPC, allows reading messages from all client channels.
+    # Otherwise this is restricted to application-managed group DMs. (Public: Yes)
     MESSAGES_READ = "messages.read"
     # Allows retrieving basic user information and includes an ID token in the token exchange (Public: Yes)
     OPENID = "openid"
@@ -120,7 +139,8 @@ class Scope(StrEnum):
     # RELATIONSHIPS_WRITE = "relationships.write"
     # Allows updating a user's connection and application-specific metadata (Public: Yes)
     ROLE_CONNECTIONS_WRITE = "role_connections.write"
-    # When using RPC, allows controlling the local Discord client; also encompasses all of the below RPC scopes in the majority of scenarios (Public: No)
+    # When using RPC, allows controlling the local Discord client.
+    # This also encompasses most RPC scopes below. (Public: No)
     # RPC = "rpc"
     # When using RPC, allows updating a user's activity (Public: Yes)
     RPC_ACTIVITIES_WRITE = "rpc.activities.write"
@@ -144,9 +164,13 @@ class Scope(StrEnum):
     # VOICE = "voice"
     # Creates an application-owned webhook in a user-selected channel and returns it in the token exchange (Public: Yes)
     WEBHOOK_INCOMING = "webhook.incoming"
-    # Includes: activities.invites.write, activities.read, activities.write, application_identities.write, gateway.connect, identify, relationships.read, relationships.write (Public: No)
+    # Includes: activities.invites.write, activities.read, activities.write,
+    # application_identities.write, gateway.connect, identify, relationships.read,
+    # relationships.write. (Public: No)
     SDK_SOCIAL_LAYER_PRESENCE = "sdk.social_layer_presence"
-    # Includes everything in sdk.social_layer_presence, plus dm_channels.read, dm_channels.messages.read, dm_channels.messages.write, guilds, guilds.channels.read, lobbies.write (Public: No)
+    # Includes all sdk.social_layer_presence scopes plus:
+    # dm_channels.read, dm_channels.messages.read, dm_channels.messages.write,
+    # guilds, guilds.channels.read, and lobbies.write. (Public: No)
     SDK_SOCIAL_LAYER = "sdk.social_layer"
 
     @classmethod
@@ -160,9 +184,9 @@ class Scope(StrEnum):
         return cls.from_list([scope])
 
     @classmethod
-    def to_str(cls, scopes: list[Scope], /) -> str:
+    def to_str(cls, scopes: list[Scope | str], /) -> str:
         """Convert this object into a serialized or display-friendly representation."""
-        return " ".join(scope.value for scope in scopes)
+        return " ".join(cls(scope).value for scope in scopes)
 
 
 class Locale(StrEnum):
@@ -365,6 +389,258 @@ class ApplicationSKUDistributor(StrEnum):
     GDCO = "gdco"
     XBOX = "xbox"
     PLAYSTATION = "playstation"
+
+
+class SKUType(IntEnum):
+    DURABLE_PRIMARY = 1
+    DURABLE = 2
+    CONSUMABLE = 3
+    BUNDLE = 4
+    SUBSCRIPTION = 5
+    SUBSCRIPTION_GROUP = 6
+
+
+class SKUProductLine(IntEnum):
+    PREMIUM = 1
+    PREMIUM_GUILD = 2
+    ACTIVITY_IAP = 3
+    GUILD_ROLE = 4
+    GUILD_PRODUCT = 5
+    APPLICATION = 6
+    COLLECTIBLES = 7
+    QUEST_IN_GAME_REWARD = 9
+    QUEST_REWARD_CODE = 10
+    FRACTIONAL_PREMIUM = 11
+    VIRTUAL_CURRENCY = 12
+    GUILD_POWERUP = 13
+    SOCIAL_LAYER_GAME_ITEM = 14
+
+
+class SKUAccessType(IntEnum):
+    FULL = 1
+    EARLY_ACCESS = 2
+    VIP_ACCESS = 3
+
+
+class SKUFeature(IntEnum):
+    SINGLE_PLAYER = 1
+    ONLINE_MULTIPLAYER = 2
+    LOCAL_MULTIPLAYER = 3
+    PVP = 4
+    LOCAL_COOP = 5
+    CROSS_PLATFORM = 6
+    RICH_PRESENCE = 7
+    DISCORD_GAME_INVITES = 8
+    SPECTATOR_MODE = 9
+    CONTROLLER_SUPPORT = 10
+    CLOUD_SAVES = 11
+    ONLINE_COOP = 12
+    SECURE_NETWORKING = 13
+
+
+class SKUGenre(IntEnum):
+    ACTION = 1
+    ACTION_RPG = 2
+    BRAWLER = 3
+    HACK_AND_SLASH = 4
+    PLATFORMER = 5
+    STEALTH = 6
+    SURVIVAL = 7
+    ADVENTURE = 8
+    ACTION_ADVENTURE = 9
+    METROIDVANIA = 10
+    OPEN_WORLD = 11
+    PSYCHOLOGICAL_HORROR = 12
+    SANDBOX = 13
+    SURVIVAL_HORROR = 14
+    VISUAL_NOVEL = 15
+    DRIVING_RACING = 16
+    VEHICULAR_COMBAT = 17
+    MASSIVELY_MULTIPLAYER = 18
+    MMORPG = 19
+    ROLE_PLAYING = 20
+    DUNGEON_CRAWLER = 21
+    ROGUELIKE = 22
+    SHOOTER = 23
+    LIGHT_GUN = 24
+    SHOOT_EM_UP = 25
+    FPS = 26
+    DUAL_JOYSTICK_SHOOTER = 27
+    SIMULATION = 28
+    FLIGHT_SIMULATOR = 29
+    TRAIN_SIMULATOR = 30
+    LIFE_SIMULATOR = 31
+    FISHING = 32
+    SPORTS = 33
+    BASEBALL = 34
+    BASKETBALL = 35
+    BILLIARDS = 36
+    BOWLING = 37
+    BOXING = 38
+    FOOTBALL = 39
+    GOLF = 40
+    HOCKEY = 41
+    SKATEBOARDING_SKATING = 42
+    SNOWBOARDING_SKIING = 43
+    SOCCER = 44
+    TRACK_FIELD = 45
+    SURFING_WAKEBOARDING = 46
+    WRESTLING = 47
+    STRATEGY = 48
+    FOUR_X = 49
+    ARTILLERY = 50
+    RTS = 51
+    TOWER_DEFENSE = 52
+    TURN_BASED_STRATEGY = 53
+    WARGAME = 54
+    MOBA = 55
+    FIGHTING = 56
+    PUZZLE = 57
+    CARD_GAME = 58
+    EDUCATION = 59
+    FITNESS = 60
+    GAMBLING = 61
+    MUSIC_RHYTHM = 62
+    PARTY_MINI_GAME = 63
+    PINBALL = 64
+    TRIVIA_BOARD_GAME = 65
+    TACTICAL = 66
+    INDIE = 67
+    ARCADE = 68
+    POINT_AND_CLICK = 69
+
+
+class ContentRatingAgency(IntEnum):
+    ESRB = 1
+    PEGI = 2
+
+    @property
+    def content_rating_type(self) -> type[ESRBContentRating | PEGIContentRating]:
+        """Return a derived value from the current object."""
+        if self is ContentRatingAgency.ESRB:
+            return ESRBContentRating
+        elif self is ContentRatingAgency.PEGI:
+            return PEGIContentRating
+        else:
+            raise ValueError(f"Invalid content rating agency: {self}")
+
+    @property
+    def content_descriptor_type(
+        self,
+    ) -> type[ESRBContentDescriptor | PEGIContentDescriptor]:
+        """Return a derived value from the current object."""
+        if self is ContentRatingAgency.ESRB:
+            return ESRBContentDescriptor
+        elif self is ContentRatingAgency.PEGI:
+            return PEGIContentDescriptor
+        else:
+            raise ValueError(f"Invalid content rating agency: {self}")
+
+
+class ESRBContentRating(IntEnum):
+    EVERYONE = 1
+    EVERYONE_TEN_PLUS = 2
+    TEEN = 3
+    MATURE = 4
+    ADULTS_ONLY = 5
+    RATING_PENDING = 6
+
+
+class PEGIContentRating(IntEnum):
+    THREE = 1
+    SEVEN = 2
+    TWELVE = 3
+    SIXTEEN = 4
+    EIGHTEEN = 5
+
+
+class ESRBContentDescriptor(IntEnum):
+    ALCOHOL_REFERENCE = 1
+    ANIMATED_BLOOD = 2
+    BLOOD = 3
+    BLOOD_AND_GORE = 4
+    CARTOON_VIOLENCE = 5
+    COMIC_MISCHIEF = 6
+    CRUDE_HUMOR = 7
+    DRUG_REFERENCE = 8
+    FANTASY_VIOLENCE = 9
+    INTENSE_VIOLENCE = 10
+    LANGUAGE = 11
+    LYRICS = 12
+    MATURE_HUMOR = 13
+    NUDITY = 14
+    PARTIAL_NUDITY = 15
+    REAL_GAMBLING = 16
+    SEXUAL_CONTENT = 17
+    SEXUAL_THEMES = 18
+    SEXUAL_VIOLENCE = 19
+    SIMULATED_GAMBLING = 20
+    STRONG_LANGUAGE = 21
+    STRONG_LYRICS = 22
+    STRONG_SEXUAL_CONTENT = 23
+    SUGGESTIVE_THEMES = 24
+    TOBACCO_REFERENCE = 25
+    USE_OF_ALCOHOL = 26
+    USE_OF_DRUGS = 27
+    USE_OF_TOBACCO = 28
+    VIOLENCE = 29
+    VIOLENT_REFERENCES = 30
+    IN_GAME_PURCHASES = 31
+    USERS_INTERACT = 32
+    SHARES_LOCATION = 33
+    UNRESTRICTED_INTERNET = 34
+    MILD_BLOOD = 35
+    MILD_CARTOON_VIOLENCE = 36
+    MILD_FANTASY_VIOLENCE = 37
+    MILD_LANGUAGE = 38
+    MILD_LYRICS = 39
+    MILD_SEXUAL_THEMES = 40
+    MILD_SUGGESTIVE_THEMES = 41
+    MILD_VIOLENCE = 42
+    ANIMATED_VIOLENCE = 43
+
+
+class PEGIContentDescriptor(IntEnum):
+    VIOLENCE = 1
+    BAD_LANGUAGE = 2
+    FEAR = 3
+    GAMBLING = 4
+    SEX = 5
+    DRUGS = 6
+    DISCRIMINATION = 7
+
+
+class OperatingSystem(IntEnum):
+    WINDOWS = 1
+    MACOS = 2
+    LINUX = 3
+
+
+class ExternalSKUStrategyType(IntEnum):
+    CONSTANT = 1
+    APPLE_STICKER = 2
+
+
+class StoreListingIconType(IntEnum):
+    STORE_ASSET = 1
+    EMOJI = 2
+
+
+class SubscriptionInterval(IntEnum):
+    MONTH = 1
+    YEAR = 2
+    DAY = 3
+
+
+class SubscriptionPlanPurchaseType(IntEnum):
+    DEFAULT = 0
+    GIFT = 1
+    SALE = 2
+    PREMIUM_TIER_1 = 3
+    PREMIUM_TIER_2 = 4
+    MOBILE = 5
+    PREMIUM_TIER_0 = 6
+    MOBILE_PREMIUM_TIER_2 = 7
 
 
 class EmbeddedActivityPlatformType(StrEnum):
@@ -629,6 +905,16 @@ class RelationshipType(IntEnum):
     OUTGOING_REQUEST = 4
     IMPLICIT = 5
     SUGGESTION = 6
+
+
+class PollLayoutType(IntEnum):
+    DEFAULT = 1
+
+
+class GuildPowerupCategoryType(StrEnum):
+    level = "level"
+    perk = "perk"
+    game_server = "game_server"
 
 
 @overload

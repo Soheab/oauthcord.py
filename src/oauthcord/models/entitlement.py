@@ -2,7 +2,7 @@ import datetime
 from typing import TYPE_CHECKING, override
 
 from ..utils import convert_snowflake, iso_to_datetime
-from ._base import BaseModel
+from ._base import BaseModel, BaseModelWithSession
 from .enums import (
     EntitlementFulfillmentStatus,
     EntitlementSourceType,
@@ -13,7 +13,7 @@ from .enums import (
 from .user import PartialUser
 
 if TYPE_CHECKING:
-    from .internals._types.entitlement import (
+    from ..internals._types.entitlement import (
         EntitlementResponse,
         QuestRewardsMetadataResponse,
         TenantMetadataResponse,
@@ -45,12 +45,12 @@ class TenantMetadata(BaseModel["TenantMetadataResponse"]):
 
     @override
     def _initialize(self, data: TenantMetadataResponse) -> None:
-        self.quest_rewards: QuestRewardsMetadata | None = (
-            self._maybe_subclass_with_http(QuestRewardsMetadata, data, "quest_rewards")
+        self.quest_rewards: QuestRewardsMetadata | None = self._initialize_other(
+            QuestRewardsMetadata, data, possible_keys="quest_rewards"
         )
 
 
-class Entitlement(BaseModel["EntitlementResponse"]):
+class Entitlement(BaseModelWithSession["EntitlementResponse"]):
     """Represents a Discord application entitlement."""
 
     __slots__ = (
@@ -88,8 +88,8 @@ class Entitlement(BaseModel["EntitlementResponse"]):
         self.sku_id: int = convert_snowflake(data, "sku_id")
         self.application_id: int = convert_snowflake(data, "application_id")
         self.user_id: int = convert_snowflake(data, "user_id")
-        self.user: PartialUser | None = self._maybe_subclass_with_http(
-            PartialUser, data, "user"
+        self.user: PartialUser | None = self._initialize_other(
+            PartialUser, data, possible_keys="user"
         )
         self.guild_id: int | None = convert_snowflake(
             data, "guild_id", always_available=False
@@ -125,8 +125,8 @@ class Entitlement(BaseModel["EntitlementResponse"]):
         self.source_type: EntitlementSourceType | None = to_enum(
             EntitlementSourceType, data.get("source_type")
         )
-        self.tenant_metadata: TenantMetadata | None = self._maybe_subclass_with_http(
-            TenantMetadata, data, "tenant_metadata"
+        self.tenant_metadata: TenantMetadata | None = self._initialize_other(
+            TenantMetadata, data, possible_keys="tenant_metadata"
         )
         self.sku: dict[str, object] | None = data.get("sku")
         self.subscription_plan: dict[str, object] | None = data.get("subscription_plan")

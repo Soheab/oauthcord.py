@@ -6,10 +6,10 @@ from typing import TYPE_CHECKING, Any, Literal
 
 import aiohttp
 
-from ...errors import HTTPException, create_http_exception
-from ...utils import NotSet
-from ..access_token import AccessTokenResponse
-from ..enums import Scope
+from ..errors import HTTPException, create_http_exception
+from ..models.access_token import AccessTokenResponse
+from ..models.enums import Scope
+from ..utils import NotSet
 from ._ratelimiter import HTTPRateLimiterMixin
 from .endpoints.application import ApplicationHTTPClientMixin
 from .endpoints.base import (
@@ -23,12 +23,13 @@ from .endpoints.lobby import LobbyHTTPClientMixin
 from .endpoints.member import MemberHTTPClientMixin
 from .endpoints.message import MessageHTTPClientMixin
 from .endpoints.relationship import RelationshipHTTPClientMixin
+from .endpoints.store import StoreHTTPClientMixin
 from .endpoints.token import TokenHTTPClientMixin
 from .endpoints.user import UserHTTPClientMixin
 
 if TYPE_CHECKING:
-    from ...client import Client
-    from ..file import File
+    from ..client import Client
+    from ..models.file import File
     from ._types import (
         components as component_types,
     )
@@ -127,7 +128,6 @@ def get_message_create_payload(
     message_reference: message_types.MessageReferenceRequest | None = None,
     components: list[component_types.ComponentRequest] | None = None,
     sticker_ids: list[int | str] | None = None,
-    attachments: list[message_types.PartialAttachmentRequest] | None = None,
     flags: int | None = None,
     metadata: dict[str, object] | None = None,
     files: list[File] | None = None,
@@ -159,7 +159,7 @@ def get_message_create_payload(
         if v:
             data[k] = v
 
-    return get_multipart_payload(attachments=attachments, files=files, data=data)  # pyright: ignore[reportArgumentType]
+    return get_multipart_payload(files=files, data=data)  # pyright: ignore[reportArgumentType]
 
 
 class OAuth2HTTPClient(
@@ -173,6 +173,7 @@ class OAuth2HTTPClient(
     MemberHTTPClientMixin,
     MessageHTTPClientMixin,
     RelationshipHTTPClientMixin,
+    StoreHTTPClientMixin,
     TokenHTTPClientMixin,
     UserHTTPClientMixin,
 ):
@@ -242,7 +243,7 @@ class OAuth2HTTPClient(
         if isinstance(token, str):
             return token
         elif isinstance(token, dict) and key in token:
-            return token[key] # pyright: ignore[reportTypedDictNotRequiredAccess]
+            return token[key]  # pyright: ignore[reportTypedDictNotRequiredAccess]
         elif hasattr(token, key):
             return getattr(token, key)  # type: ignore
         else:
@@ -259,8 +260,8 @@ class OAuth2HTTPClient(
     ) -> dict[Literal["Authorization"], str]:
         return {"Authorization": f"Bearer {self._parse_token(token)}"}
 
-    def has_scopes(self, *scopes: Scope) -> bool:
-        return all(scope in self.current_scopes for scope in scopes)
+    def has_scopes(self, *scopes: Scope | str) -> bool:
+        return all(Scope(scope) in self.current_scopes for scope in scopes)
 
     async def get_from_cdn(
         self,

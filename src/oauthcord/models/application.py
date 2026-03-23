@@ -2,7 +2,7 @@ import datetime
 from typing import TYPE_CHECKING, override
 
 from ..utils import convert_snowflake, iso_to_datetime
-from ._base import BaseModel
+from ._base import *
 from .enums import (
     ActivityLinkType,
     ApplicationSKUDistributor,
@@ -15,11 +15,12 @@ from .enums import (
     IntegrationInstallType,
     to_enum,
 )
-from .internals.mixins import ApplicationHTTPMixin
 from .user import PartialUser
 
 if TYPE_CHECKING:
-    from .internals._types.application import (
+    from .attachment import Attachment
+    from .file import File
+    from ..internals._types.application import (
         ActivityLinkResponse,
         ApplicationExecutableResponse,
         ApplicationInstallParamsResponse,
@@ -170,9 +171,7 @@ class ApplicationIntegrationTypeConfiguration(
         self, data: ApplicationIntegrationTypeConfigurationResponse
     ) -> None:
         self.oauth2_install_params: ApplicationInstallParams | None = (
-            self._maybe_subclass_with_http(
-                ApplicationInstallParams, data, "oauth2_install_params"
-            )
+            self._initialize_other(ApplicationInstallParams, data, optional=True)
         )
 
 
@@ -314,9 +313,9 @@ class EmbeddedActivityConfig(BaseModel["EmbeddedActivityConfigResponse"]):
         self.client_platform_config: dict[
             EmbeddedActivityPlatformType, EmbeddedActivityPlatformConfig
         ] = {
-            to_enum(
-                EmbeddedActivityPlatformType, platform
-            ): EmbeddedActivityPlatformConfig(http=self._http, data=cfg)
+            to_enum(EmbeddedActivityPlatformType, platform): self._initialize_other(
+                EmbeddedActivityPlatformConfig, cfg
+            )
             for platform, cfg in data["client_platform_config"].items()
         }
         self.shelf_rank: int = data["shelf_rank"]
@@ -370,7 +369,9 @@ class ApplicationRoleConnectionMetadata(
         )
 
 
-class ApplicationRoleConnection(BaseModel["ApplicationRoleConnectionResponse"]):
+class ApplicationRoleConnection(
+    BaseModelWithSession["ApplicationRoleConnectionResponse"]
+):
     """A user's application role connection payload.
 
     This model includes the connected platform identity metadata and may also
@@ -403,11 +404,14 @@ class ApplicationRoleConnection(BaseModel["ApplicationRoleConnectionResponse"]):
         self.platform_name: str | None = data.get("platform_name")
         self.platform_username: str | None = data.get("platform_username")
         self.metadata: dict[str, str] = data["metadata"]
-        self.application: PartialApplication | None = self._maybe_subclass_with_http(
-            PartialApplication, data, "application"
+        self.application: PartialApplication = self._initialize_other(
+            PartialApplication,
+            data,
+            possible_keys="application",
         )
+
         self.application_metadata: list[ApplicationRoleConnectionMetadata] = [
-            ApplicationRoleConnectionMetadata(http=self._http, data=metadata)
+            self._initialize_other(ApplicationRoleConnectionMetadata, metadata)
             for metadata in data.get("application_metadata", [])
         ]
 
@@ -491,7 +495,7 @@ class PartialApplicationIdentity(BaseModel["PartialApplicationIdentityResponse"]
         self.external_user_id: str = data["external_user_id"]
 
 
-class PartialApplication(BaseModel["PartialApplicationResponse"], ApplicationHTTPMixin):
+class PartialApplication(BaseModelWithSession["PartialApplicationResponse"]):
     """Partial Discord application metadata payload.
 
     This model aggregates core application identity, bot/install settings,
@@ -656,11 +660,11 @@ class PartialApplication(BaseModel["PartialApplicationResponse"], ApplicationHTT
         self.slug: str | None = data.get("slug")
         self.aliases: list[str] = data.get("aliases", [])
         self.executables: list[ApplicationExecutable] = [
-            ApplicationExecutable(http=self._http, data=executable)
+            self._initialize_other(ApplicationExecutable, executable)
             for executable in data.get("executables", [])
         ]
         self.third_party_skus: list[ApplicationSKU] = [
-            ApplicationSKU(http=self._http, data=sku)
+            self._initialize_other(ApplicationSKU, sku)
             for sku in data.get("third_party_skus", [])
         ]
         self.hook: bool = data["hook"]
@@ -670,15 +674,15 @@ class PartialApplication(BaseModel["PartialApplicationResponse"], ApplicationHTT
         self.overlay_compatibility_hook: bool | None = data.get(
             "overlay_compatibility_hook"
         )
-        self.bot: PartialUser | None = self._maybe_subclass_with_http(
-            PartialUser, data, "bot"
+        self.bot: PartialUser | None = self._initialize_other(
+            PartialUser, data, possible_keys="bot"
         )
         self.developers: list[Company] = [
-            Company(http=self._http, data=company)
+            self._initialize_other(Company, company)
             for company in data.get("developers", [])
         ]
         self.publishers: list[Company] = [
-            Company(http=self._http, data=company)
+            self._initialize_other(Company, company)
             for company in data.get("publishers", [])
         ]
         self.rpc_origins: list[str] = data.get("rpc_origins", [])
@@ -692,10 +696,11 @@ class PartialApplication(BaseModel["PartialApplicationResponse"], ApplicationHTT
         self.terms_of_service_url: str | None = data.get("terms_of_service_url")
         self.privacy_policy_url: str | None = data.get("privacy_policy_url")
         self.tags: list[str] = data.get("tags", [])
-        self.install_params: ApplicationInstallParams | None = (
-            self._maybe_subclass_with_http(
-                ApplicationInstallParams, data, "install_params"
-            )
+        self.install_params: ApplicationInstallParams | None = self._initialize_other(
+            ApplicationInstallParams,
+            data,
+            possible_keys="install_params",
+            optional=True,
         )
         self.custom_install_url: str | None = data.get("custom_install_url")
         config: dict[
@@ -711,9 +716,10 @@ class PartialApplication(BaseModel["PartialApplicationResponse"], ApplicationHTT
                 config[key] = None
                 continue
 
-            config[key] = ApplicationIntegrationTypeConfiguration(
-                http=self._http, data=raw_value
+            config[key] = self._initialize_other(
+                ApplicationIntegrationTypeConfiguration, raw_value
             )
+
         self.integration_types_config = config
         self.connection_entrypoint_url: str | None = data.get(
             "connection_entrypoint_url"
@@ -724,11 +730,56 @@ class PartialApplication(BaseModel["PartialApplicationResponse"], ApplicationHTT
         self.storefront_available: bool = data["storefront_available"]
         self.max_participants: int | None = data.get("max_participants")
         self.embedded_activity_config: EmbeddedActivityConfig | None = (
-            self._maybe_subclass_with_http(
-                EmbeddedActivityConfig, data, "embedded_activity_config"
+            self._initialize_other(
+                EmbeddedActivityConfig,
+                data,
+                possible_keys="embedded_activity_config",
+                optional=True,
             )
         )
         self.parent_id: int | None = convert_snowflake(
             data, "parent_id", always_available=False
         )
         self.summary: str | None = data.get("summary")
+
+    async def create_attachment(self, file: File) -> Attachment:
+        return await self._session.create_application_attachment(
+            application_id=self.id, file=file
+        )
+
+    async def get_user_role_connection(
+        self,
+    ) -> ApplicationRoleConnection:
+        return await self._session.user_application_role_connection(
+            application_id=self.id
+        )
+
+    async def edit_user_role_connection(
+        self,
+        *,
+        platform_name: str | None = None,
+        platform_username: str | None = None,
+        metadata: dict[str, str] | None = None,
+    ) -> ApplicationRoleConnection:
+        return await self._session.edit_user_application_role_connection(
+            application_id=self.id,
+            platform_name=platform_name,
+            platform_username=platform_username,
+            metadata=metadata,
+        )
+
+    async def create_quick_link(
+        self,
+        *,
+        description: str,
+        image: File,
+        title: str,
+        custom_id: str | None = None,
+    ) -> ActivityLink:
+        return await self._session.create_application_quick_link(
+            application_id=self.id,
+            description=description,
+            image=image,
+            title=title,
+            custom_id=custom_id,
+        )

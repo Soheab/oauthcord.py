@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Any, Literal, NotRequired, Protocol, TypedDict
 import aiohttp
 
 if TYPE_CHECKING:
-    from ...access_token import AccessTokenResponse
+    from ...models.access_token import AccessTokenResponse
 
 
 class AccessTokenAttr(Protocol):

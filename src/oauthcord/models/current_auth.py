@@ -2,15 +2,16 @@ import datetime
 from typing import TYPE_CHECKING, Any, override
 
 from ..utils import convert_snowflake
-from ._base import BaseModel
+from ._base import BaseModelWithSession
+from .application import PartialApplication
 from .enums import Scope
 from .user import PartialUser
 
 if TYPE_CHECKING:
-    from .internals._types.current_auth_info import (
+    from ..internals._types.current_auth_info import (
         CurrentAuthApplicationResponse as CurrentAuthorizationInformationApplicationResponsePayload,
     )
-    from .internals._types.current_auth_info import (
+    from ..internals._types.current_auth_info import (
         CurrentAuthResponse as CurrentAuthorizationInformationResponsePayload,
     )
 
@@ -22,7 +23,7 @@ __all__ = (
 
 
 class CurrentApplication(
-    BaseModel["CurrentAuthorizationInformationApplicationResponsePayload"]
+    BaseModelWithSession["CurrentAuthorizationInformationApplicationResponsePayload"]
 ):
     """Represents Discord API data for `CurrentApplication`."""
 
@@ -98,8 +99,15 @@ class CurrentApplication(
     ) -> None:
         pass
 
+    async def get_partial(
+        self,
+    ) -> PartialApplication:
+        return await self._session.partial_application(application_id=self.id)
 
-class CurrentInformation(BaseModel["CurrentAuthorizationInformationResponsePayload"]):
+
+class CurrentInformation(
+    BaseModelWithSession["CurrentAuthorizationInformationResponsePayload"]
+):
     """Represents Discord API data for `CurrentInformation`."""
 
     __slots__ = ("_expires", "application", "scopes", "user")
@@ -110,11 +118,11 @@ class CurrentInformation(BaseModel["CurrentAuthorizationInformationResponsePaylo
         )
 
         self.scopes: list[Scope] = Scope.from_list(data["scopes"])
-        self.application = self._initialize_subclass_with_http(
-            CurrentApplication, data, "application"
+        self.application = self._initialize_other(
+            CurrentApplication, data, possible_keys="application"
         )
-        self.user: PartialUser | None = self._maybe_subclass_with_http(
-            PartialUser, data, "user"
+        self.user: PartialUser | None = self._initialize_other(
+            PartialUser, data, possible_keys="user"
         )
 
     @property

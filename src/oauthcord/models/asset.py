@@ -3,7 +3,7 @@ import os
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, Self
 
 if TYPE_CHECKING:
-    from .internals.http import OAuth2HTTPClient
+    from ..internals.http import OAuth2HTTPClient
 
 __all__ = ("Asset",)
 

@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, Self, override
 
-from ._base import StatelessBaseModel
+from ._base import BaseModel
 
 if TYPE_CHECKING:
-    from .internals._types import message as message_types
+    from ..internals._types import message as message_types
 
 __all__ = (
     "Embed",
@@ -15,9 +15,7 @@ __all__ = (
 
 
 class EmbedFooter(
-    StatelessBaseModel[
-        "message_types.EmbedFooterResponse", "message_types.EmbedFooterRequest"
-    ]
+    BaseModel["message_types.EmbedFooterResponse", "message_types.EmbedFooterRequest"]
 ):
     __slots__ = ("icon_url", "proxy_icon_url", "text")
 
@@ -56,9 +54,7 @@ class EmbedFooter(
 
 
 class EmbedMedia(
-    StatelessBaseModel[
-        "message_types.EmbedMediaResponse", "message_types.EmbedMediaRequest"
-    ]
+    BaseModel["message_types.EmbedMediaResponse", "message_types.EmbedMediaRequest"]
 ):
     """Builder and serializer for Discord embed payload data."""
 
@@ -127,9 +123,7 @@ class EmbedMedia(
 
 
 class EmbedAuthor(
-    StatelessBaseModel[
-        "message_types.EmbedAuthorResponse", "message_types.EmbedAuthorRequest"
-    ]
+    BaseModel["message_types.EmbedAuthorResponse", "message_types.EmbedAuthorRequest"]
 ):
     __slots__ = ("icon_url", "name", "proxy_icon_url", "url")
 
@@ -170,9 +164,7 @@ class EmbedAuthor(
 
 
 class EmbedField(
-    StatelessBaseModel[
-        "message_types.EmbedFieldResponse", "message_types.EmbedFieldRequest"
-    ]
+    BaseModel["message_types.EmbedFieldResponse", "message_types.EmbedFieldRequest"]
 ):
     """Builder and serializer for Discord embed payload data."""
 
@@ -202,9 +194,7 @@ class EmbedField(
         return cls(data["name"], data["value"], inline=data.get("inline"))
 
 
-class Embed(
-    StatelessBaseModel["message_types.EmbedResponse", "message_types.EmbedRequest"]
-):
+class Embed(BaseModel["message_types.EmbedResponse", "message_types.EmbedRequest"]):
     __slots__ = (
         "author",
         "color",

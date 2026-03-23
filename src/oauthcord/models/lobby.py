@@ -1,12 +1,15 @@
 from typing import TYPE_CHECKING, override
 
 from ..utils import convert_snowflake
-from ._base import BaseModel
+from ._base import BaseModel, BaseModelWithSession
 from .channel import GuildChannel, _from_data
 from .flags import LobbyFlags, LobbyMemberFlags
 
 if TYPE_CHECKING:
-    from .internals._types.lobby import LobbyMemberResponse, LobbyResponse
+    from ..internals._types.lobby import (
+        LobbyMemberResponse,
+        LobbyResponse,
+    )
 
 
 __all__ = (
@@ -31,7 +34,7 @@ class LobbyMember(BaseModel["LobbyMemberResponse"]):
         )
 
 
-class Lobby(BaseModel["LobbyResponse"]):
+class Lobby(BaseModelWithSession["LobbyResponse"]):
     """Represents a Discord lobby payload."""
 
     __slots__ = (
@@ -49,7 +52,7 @@ class Lobby(BaseModel["LobbyResponse"]):
         self.application_id: int = convert_snowflake(data, "application_id")
         self.metadata: dict[str, str] | None = data.get("metadata")
         self.members: list[LobbyMember] = [
-            self._initialize_subclass_with_http(LobbyMember, member)
+            self._initialize_other(LobbyMember, member)
             for member in data.get("members", [])
         ]
         self.flags: LobbyFlags | None = (
@@ -60,6 +63,8 @@ class Lobby(BaseModel["LobbyResponse"]):
 
         linked_channel_data = data.get("linked_channel")
         parsed = (
-            _from_data(self._http, linked_channel_data) if linked_channel_data else None
+            _from_data(self._session, linked_channel_data)
+            if linked_channel_data
+            else None
         )
         self.linked_channel: GuildChannel | None = parsed  # type: ignore

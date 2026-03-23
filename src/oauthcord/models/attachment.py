@@ -5,8 +5,8 @@ from ._base import BaseModel
 from .flags import AttachmentFlags
 
 if TYPE_CHECKING:
-    from .internals._types.attachment import Attachment as AttachmentPayload
-    from .internals._types.message import PartialAttachmentRequest
+    from ..internals._types.attachment import Attachment as AttachmentPayload
+    from ..internals._types.message import PartialAttachmentRequest
 
 __all__ = ("Attachment",)
 

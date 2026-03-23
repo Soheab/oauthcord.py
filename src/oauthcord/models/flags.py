@@ -170,6 +170,20 @@ if TYPE_CHECKING:
         parent: bool
         disable_relationship_access: bool
 
+    class _SKUFlagsKwargs(TypedDict, total=False):
+        premium_purchase: bool
+        has_free_premium_content: bool
+        available: bool
+        premium_and_distribution: bool
+        sticker: bool
+        guild_role: bool
+        available_for_subscription_gifting: bool
+        application_guild_subscription: bool
+        application_user_subscription: bool
+        creator_monetization: bool
+        guild_product: bool
+        available_for_application_gifting: bool
+
     class _LobbyFlagsKwargs(TypedDict, total=False):
         require_application_authorization: bool
 
@@ -191,6 +205,7 @@ __all__ = (
     "MessageFlags",
     "Permissions",
     "RecipientFlags",
+    "SKUFlags",
     "UserFlags",
 )
 
@@ -262,6 +277,20 @@ class BaseFlags(metaclass=FlagsMeta):
                 else:
                     raise ValueError(f"Unknown flag: {flag_name}")
 
+    @staticmethod
+    def _resolve_value(other: int | Flag | BaseFlags) -> int:
+        if isinstance(other, int):
+            return other
+        if isinstance(other, Flag):
+            return other.value
+        if isinstance(other, BaseFlags):
+            return other.value
+
+        other_type = type(other).__name__
+        raise TypeError(
+            f"unsupported operand type(s) for flags operation: {other_type!r}"
+        )
+
     def __iter__(self) -> Iterator[Flag]:
         for flag in self._flags.values():
             if self.value & flag.value:
@@ -269,6 +298,14 @@ class BaseFlags(metaclass=FlagsMeta):
 
     def __contains__(self, flag: Flag) -> bool:
         return bool(self.value & flag.value)
+
+    def __ior__(self, other: int | Flag | BaseFlags) -> BaseFlags:
+        self.value |= self._resolve_value(other)
+        return self
+
+    def __imod__(self, other: int | Flag | BaseFlags) -> BaseFlags:
+        self.value &= ~self._resolve_value(other)
+        return self
 
     def __repr__(self) -> str:
         set_flags = ", ".join(f.name for f in self)
@@ -501,6 +538,27 @@ class ApplicationFlags(BaseFlags):
     partner = Flag(1 << 30)
     parent = Flag(1 << 33)
     disable_relationship_access = Flag(1 << 34)
+
+
+class SKUFlags(BaseFlags):
+    if TYPE_CHECKING:
+
+        def __init__(
+            self, value: int | None = None, /, **flags: Unpack[_SKUFlagsKwargs]
+        ) -> None: ...
+
+    premium_purchase = Flag(1 << 0)
+    has_free_premium_content = Flag(1 << 1)
+    available = Flag(1 << 2)
+    premium_and_distribution = Flag(1 << 3)
+    sticker = Flag(1 << 4)
+    guild_role = Flag(1 << 5)
+    available_for_subscription_gifting = Flag(1 << 6)
+    application_guild_subscription = Flag(1 << 7)
+    application_user_subscription = Flag(1 << 8)
+    creator_monetization = Flag(1 << 9)
+    guild_product = Flag(1 << 10)
+    available_for_application_gifting = Flag(1 << 11)
 
 
 class LobbyFlags(BaseFlags):

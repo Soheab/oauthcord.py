@@ -32,4 +32,5 @@ class AddGuildMemberRequest(TypedDict):
     flags: NotRequired[int]
 
 
+# already in guild = 204
 AddGuildMemberResponse = GuildMemberResponse | None

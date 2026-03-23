@@ -2,11 +2,11 @@ from typing import TYPE_CHECKING
 
 import aiohttp
 
-from ....utils import NotSet
+from ...utils import NotSet
 from .base import BaseHTTPClient, Route
 
 if TYPE_CHECKING:
-    from ...file import File
+    from ...models.file import File
     from .._types import (
         application as application_types,
     )
@@ -26,7 +26,6 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
         application_id: int | str,
         file: File,
     ) -> application_types.CreateApplicationAttachmentResponse:
-
         form = aiohttp.FormData()
         form.add_field(
             "file",
