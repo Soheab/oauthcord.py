@@ -17,6 +17,7 @@ from .endpoints.base import (
 )
 from .endpoints.channel import ChannelHTTPClientMixin
 from .endpoints.connection import ConnectionHTTPClientMixin
+from .endpoints.current_auth import CurrentAuthHTTPClientMixin
 from .endpoints.guild import GuildHTTPClientMixin
 from .endpoints.invite import InviteHTTPClientMixin
 from .endpoints.lobby import LobbyHTTPClientMixin
@@ -167,6 +168,7 @@ class OAuth2HTTPClient(
     ApplicationHTTPClientMixin,
     ChannelHTTPClientMixin,
     ConnectionHTTPClientMixin,
+    CurrentAuthHTTPClientMixin,
     GuildHTTPClientMixin,
     InviteHTTPClientMixin,
     LobbyHTTPClientMixin,

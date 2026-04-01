@@ -15,6 +15,7 @@ from ._guild import GuildClient
 from ._invite import InviteClient
 from ._lobby import LobbyClient
 from ._message import MessageClient
+from ._oauth2 import Oauth2Client
 from ._relationship import RelationshipClient
 from ._store import StoreClient
 from ._user import UserClient
@@ -83,6 +84,7 @@ class AuthorisedSession(
     InviteClient,
     LobbyClient,
     MessageClient,
+    Oauth2Client,
     RelationshipClient,
     StoreClient,
     UserClient,
