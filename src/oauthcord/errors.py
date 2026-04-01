@@ -12,7 +12,6 @@ __all__ = (
     "DiscordServerError",
     "Forbidden",
     "HTTPException",
-    "MissingRequiredScopes",
     "NotFound",
     "OauthCordException",
     "RateLimited",
@@ -23,25 +22,6 @@ __all__ = (
 
 class OauthCordException(Exception):
     pass
-
-
-class MissingRequiredScopes(OauthCordException):
-    def __init__(
-        self,
-        *,
-        current_scopes: list[Scope | str],
-        missing_scopes: list[Scope | str],
-    ) -> None:
-        self.current_scopes: list[Scope] = [Scope(scope) for scope in current_scopes]
-        self.missing_scopes: list[Scope] = [Scope(scope) for scope in missing_scopes]
-
-        msg = (
-            "Missing required scopes: "
-            f"{', '.join(str(scope) for scope in self.missing_scopes)}. "
-            "Current scopes: "
-            f"{', '.join(str(scope) for scope in self.current_scopes)}"
-        )
-        super().__init__(msg)
 
 
 class HTTPException(OauthCordException):

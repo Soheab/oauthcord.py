@@ -196,7 +196,6 @@ class OAuth2HTTPClient(
         "_global_over",
         "_store_token",
         "client_id",
-        "current_scopes",
         "max_ratelimit_timeout",
         "max_retries",
         "redirect_uri",
@@ -261,9 +260,6 @@ class OAuth2HTTPClient(
         token: ValidToken | RefreshTokenAttr | RefreshTokenDict,
     ) -> dict[Literal["Authorization"], str]:
         return {"Authorization": f"Bearer {self._parse_token(token)}"}
-
-    def has_scopes(self, *scopes: Scope | str) -> bool:
-        return all(Scope(scope) in self.current_scopes for scope in scopes)
 
     async def get_from_cdn(
         self,

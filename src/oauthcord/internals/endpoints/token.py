@@ -1,15 +1,13 @@
 from typing import TYPE_CHECKING
 
-from ...models.enums import Scope
-from .base import Route
-from .current_auth import CurrentAuthHTTPClientMixin
+from .base import BaseHTTPClient, Route
 
 if TYPE_CHECKING:
     from .._types import token as token_types
     from .base import ValidToken
 
 
-class TokenHTTPClientMixin(CurrentAuthHTTPClientMixin):
+class TokenHTTPClientMixin(BaseHTTPClient):
     TOKEN_URL = "https://discord.com/api/oauth2/token"
     REVOKE_URL = "https://discord.com/api/oauth2/token/revoke"
 
@@ -21,17 +19,11 @@ class TokenHTTPClientMixin(CurrentAuthHTTPClientMixin):
             "code": str(code),
             "redirect_uri": redirect_uri,
         }
-        res = await self.request(
+        return await self.request(
             Route("POST", self.TOKEN_URL),
             data=data,
             auth=self._auth,
         )
-
-        current_auth_info = await self.get_current_authorization_information(
-            res["access_token"]
-        )
-        self.current_scopes = Scope.from_list(current_auth_info["scopes"])
-        return res
 
     async def refresh_token(
         self, refresh_token: ValidToken

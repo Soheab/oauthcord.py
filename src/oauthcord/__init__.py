@@ -132,7 +132,6 @@ __all__ = (
     "Message",
     "MessageCommandBuilder",
     "MessageFlags",
-    "MissingRequiredScopes",
     "NotFound",
     "OauthCordException",
     "OperatingSystem",
