@@ -83,7 +83,7 @@ class AccessTokenResponse(
         self._initialize(data)
         return self
 
-    async def refresh(self, *, check_exired: bool = False) -> AccessTokenResponse:
+    async def refresh(self, *, check_expired: bool = False) -> AccessTokenResponse:
         """Refresh this token.
 
         This invalidates the current token and returns a new one.
@@ -103,7 +103,7 @@ class AccessTokenResponse(
         if not self.refresh_token:
             raise ValueError("Cannot refresh token without a refresh token.")
 
-        if check_exired and not self.is_expired():
+        if check_expired and not self.is_expired():
             raise ValueError("Token is not expired yet.")
 
         res = await self._http.refresh_token(self)
