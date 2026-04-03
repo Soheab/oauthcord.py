@@ -27,7 +27,7 @@ class InviteClientMixin:
         ----------
         invite_code: :class:`str`
             The invite code of the invite to accept. This is the part after ``discord.gg/`` in the invite URL.
-        session_id: :class:`str` | ``None``
+        session_id: :class:`str` | :data:`None`
             The session ID that is accepting the invite. This is only required for guest invites.
 
         Returns

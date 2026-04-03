@@ -38,11 +38,11 @@ class StoreClientMixin:
         ----------
         application_id: :class:`int` | :class:`str`
             The application ID to fetch SKUs for.
-        country_code: :class:`str` | ``None``
+        country_code: :class:`str` | :data:`None`
             ISO 3166-1 alpha-2 country code used for localization.
-        localize: :class:`bool` | ``None``
+        localize: :class:`bool` | :data:`None`
             Whether to localize SKU strings and prices for the request context.
-        with_bundled_skus: :class:`bool` | ``None``
+        with_bundled_skus: :class:`bool` | :data:`None`
             Whether bundled SKU objects should be included in each SKU payload.
 
         Returns
@@ -109,37 +109,37 @@ class StoreClientMixin:
             The application ID that owns the SKU.
         name: :class:`store_types.LocalizedString`
             Localized SKU name.
-        flags: :class:`int` | ``None``
+        flags: :class:`int` | :data:`None`
             SKU flag bitfield.
-        legal_notice: :class:`store_types.LocalizedString` | ``None``
+        legal_notice: :class:`store_types.LocalizedString` | :data:`None`
             Localized legal notice.
-        dependent_sku_id: :class:`int` | :class:`str` | ``None``
+        dependent_sku_id: :class:`int` | :class:`str` | :data:`None`
             Prerequisite SKU ID required for purchase.
-        bundled_skus: list[:class:`int` | :class:`str`] | ``None``
+        bundled_skus: list[:class:`int` | :class:`str`] | :data:`None`
             Included SKU IDs for bundle purchases.
-        access_type: :class:`store_types.SKUAccessType` | :class:`int` | ``None``
+        access_type: :class:`store_types.SKUAccessType` | :class:`int` | :data:`None`
             Access type of the SKU.
-        manifest_labels: list[:class:`int` | :class:`str`] | ``None``
+        manifest_labels: list[:class:`int` | :class:`str`] | :data:`None`
             Manifest label IDs associated with the SKU.
-        features: list[:class:`store_types.SKUFeature` | :class:`int`] | ``None``
+        features: list[:class:`store_types.SKUFeature` | :class:`int`] | :data:`None`
             Feature identifiers for the SKU.
-        locales: list[:class:`str`] | ``None``
+        locales: list[:class:`str`] | :data:`None`
             Locale codes where the SKU is available.
-        genres: list[:class:`store_types.SKUGenre` | :class:`int`] | ``None``
+        genres: list[:class:`store_types.SKUGenre` | :class:`int`] | :data:`None`
             Genre identifiers for the SKU.
-        content_ratings: :class:`dict` | ``None``
+        content_ratings: :class:`dict` | :data:`None`
             Mapping of content-rating agency values (enum or int) to rating payloads.
-        system_requirements: :class:`dict` | ``None``
+        system_requirements: :class:`dict` | :data:`None`
             Mapping of operating-system values (enum or int) to system requirement payloads.
-        price_tier: :class:`int` | ``None``
+        price_tier: :class:`int` | :data:`None`
             Base price tier.
-        price: dict[:class:`str`, :class:`int`] | ``None``
+        price: dict[:class:`str`, :class:`int`] | :data:`None`
             Currency-to-price overrides.
-        sale_price_tier: :class:`int` | ``None``
+        sale_price_tier: :class:`int` | :data:`None`
             Sale price tier.
-        sale_price: dict[:class:`str`, :class:`int`] | ``None``
+        sale_price: dict[:class:`str`, :class:`int`] | :data:`None`
             Currency-to-sale-price overrides.
-        release_date: :class:`datetime.date` | :class:`str` | ``None``
+        release_date: :class:`datetime.date` | :class:`str` | :data:`None`
             Release date in ISO format.
 
         Returns
@@ -188,9 +188,9 @@ class StoreClientMixin:
         ----------
         sku_id: :class:`int` | :class:`str`
             The SKU ID.
-        country_code: :class:`str` | ``None``
+        country_code: :class:`str` | :data:`None`
             ISO 3166-1 alpha-2 country code used for localization.
-        localize: :class:`bool` | ``None``
+        localize: :class:`bool` | :data:`None`
             Whether to localize SKU strings and prices for the request context.
 
         Returns
@@ -247,39 +247,39 @@ class StoreClientMixin:
         ----------
         sku_id: :class:`int` | :class:`str`
             The SKU ID.
-        name: :class:`store_types.LocalizedString` | ``None``
+        name: :class:`store_types.LocalizedString` | :data:`None`
             Localized SKU name.
-        flags: :class:`int` | ``None``
+        flags: :class:`int` | :data:`None`
             SKU flag bitfield.
-        legal_notice: :class:`store_types.LocalizedString` | ``None``
+        legal_notice: :class:`store_types.LocalizedString` | :data:`None`
             Localized legal notice.
-        dependent_sku_id: :class:`int` | :class:`str` | ``None``
+        dependent_sku_id: :class:`int` | :class:`str` | :data:`None`
             Prerequisite SKU ID required for purchase.
-        bundled_skus: list[:class:`int` | :class:`str`] | ``None``
+        bundled_skus: list[:class:`int` | :class:`str`] | :data:`None`
             Included SKU IDs for bundle purchases.
-        access_type: :class:`store_types.SKUAccessType` | :class:`int` | ``None``
+        access_type: :class:`store_types.SKUAccessType` | :class:`int` | :data:`None`
             Access type of the SKU.
-        manifest_labels: list[:class:`int` | :class:`str`] | ``None``
+        manifest_labels: list[:class:`int` | :class:`str`] | :data:`None`
             Manifest label IDs associated with the SKU.
-        features: list[:class:`store_types.SKUFeature` | :class:`int`] | ``None``
+        features: list[:class:`store_types.SKUFeature` | :class:`int`] | :data:`None`
             Feature identifiers for the SKU.
-        locales: list[:class:`str`] | ``None``
+        locales: list[:class:`str`] | :data:`None`
             Locale codes where the SKU is available.
-        genres: list[:class:`store_types.SKUGenre` | :class:`int`] | ``None``
+        genres: list[:class:`store_types.SKUGenre` | :class:`int`] | :data:`None`
             Genre identifiers for the SKU.
-        content_ratings: :class:`dict` | ``None``
+        content_ratings: :class:`dict` | :data:`None`
             Mapping of content-rating agency values (enum or int) to rating payloads.
-        system_requirements: :class:`dict` | ``None``
+        system_requirements: :class:`dict` | :data:`None`
             Mapping of operating-system values (enum or int) to system requirement payloads.
-        price_tier: :class:`int` | ``None``
+        price_tier: :class:`int` | :data:`None`
             Base price tier.
-        price: dict[:class:`str`, :class:`int`] | ``None``
+        price: dict[:class:`str`, :class:`int`] | :data:`None`
             Currency-to-price overrides.
-        sale_price_tier: :class:`int` | ``None``
+        sale_price_tier: :class:`int` | :data:`None`
             Sale price tier.
-        sale_price: dict[:class:`str`, :class:`int`] | ``None``
+        sale_price: dict[:class:`str`, :class:`int`] | :data:`None`
             Currency-to-sale-price overrides.
-        release_date: :class:`datetime.date` | :class:`str` | ``None``
+        release_date: :class:`datetime.date` | :class:`str` | :data:`None`
             Release date in ISO format.
 
         Returns
@@ -327,9 +327,9 @@ class StoreClientMixin:
         ----------
         sku_id: :class:`int` | :class:`str`
             The SKU ID.
-        country_code: :class:`str` | ``None``
+        country_code: :class:`str` | :data:`None`
             ISO 3166-1 alpha-2 country code used for localization.
-        localize: :class:`bool` | ``None``
+        localize: :class:`bool` | :data:`None`
             Whether to localize listing strings and prices for the request context.
 
         Returns
@@ -383,31 +383,31 @@ class StoreClientMixin:
             Localized listing summary.
         description: :class:`store_types.LocalizedString`
             Localized listing description.
-        child_sku_ids: list[:class:`int` | :class:`str`] | ``None``
+        child_sku_ids: list[:class:`int` | :class:`str`] | :data:`None`
             Child SKU IDs for category listings.
-        tagline: :class:`store_types.LocalizedString` | ``None``
+        tagline: :class:`store_types.LocalizedString` | :data:`None`
             Localized listing tagline.
-        published: :class:`bool` | ``None``
+        published: :class:`bool` | :data:`None`
             Whether the listing is published.
-        carousel_items: list[:class:`store_types.StoreCarouselItemResponse`] | ``None``
+        carousel_items: list[:class:`store_types.StoreCarouselItemResponse`] | :data:`None`
             Carousel media items.
-        guild_id: :class:`int` | :class:`str` | ``None``
+        guild_id: :class:`int` | :class:`str` | :data:`None`
             Public guild ID associated with the listing.
-        thumbnail_asset_id: :class:`int` | :class:`str` | ``None``
+        thumbnail_asset_id: :class:`int` | :class:`str` | :data:`None`
             Store asset ID for thumbnail.
-        preview_video_asset_id: :class:`int` | :class:`str` | ``None``
+        preview_video_asset_id: :class:`int` | :class:`str` | :data:`None`
             Store asset ID for preview video.
-        header_background_asset_id: :class:`int` | :class:`str` | ``None``
+        header_background_asset_id: :class:`int` | :class:`str` | :data:`None`
             Store asset ID for header background.
-        header_logo_dark_theme_asset_id: :class:`int` | :class:`str` | ``None``
+        header_logo_dark_theme_asset_id: :class:`int` | :class:`str` | :data:`None`
             Store asset ID for dark-theme header logo.
-        header_logo_light_theme_asset_id: :class:`int` | :class:`str` | ``None``
+        header_logo_light_theme_asset_id: :class:`int` | :class:`str` | :data:`None`
             Store asset ID for light-theme header logo.
-        box_art_asset_id: :class:`int` | :class:`str` | ``None``
+        box_art_asset_id: :class:`int` | :class:`str` | :data:`None`
             Store asset ID for box art.
-        hero_background_asset_id: :class:`int` | :class:`str` | ``None``
+        hero_background_asset_id: :class:`int` | :class:`str` | :data:`None`
             Store asset ID for hero background.
-        hero_video_asset_id: :class:`int` | :class:`str` | ``None``
+        hero_video_asset_id: :class:`int` | :class:`str` | :data:`None`
             Store asset ID for hero video.
 
         Returns
@@ -451,9 +451,9 @@ class StoreClientMixin:
         ----------
         listing_id: :class:`int` | :class:`str`
             The store listing ID.
-        country_code: :class:`str` | ``None``
+        country_code: :class:`str` | :data:`None`
             ISO 3166-1 alpha-2 country code used for localization.
-        localize: :class:`bool` | ``None``
+        localize: :class:`bool` | :data:`None`
             Whether to localize listing strings and prices for the request context.
 
         Returns
@@ -497,35 +497,35 @@ class StoreClientMixin:
         ----------
         listing_id: :class:`int` | :class:`str`
             The store listing ID.
-        child_sku_ids: list[:class:`int` | :class:`str`] | ``None``
+        child_sku_ids: list[:class:`int` | :class:`str`] | :data:`None`
             Child SKU IDs for category listings.
-        summary: :class:`store_types.LocalizedString` | ``None``
+        summary: :class:`store_types.LocalizedString` | :data:`None`
             Localized listing summary.
-        description: :class:`store_types.LocalizedString` | ``None``
+        description: :class:`store_types.LocalizedString` | :data:`None`
             Localized listing description.
-        tagline: :class:`store_types.LocalizedString` | ``None``
+        tagline: :class:`store_types.LocalizedString` | :data:`None`
             Localized listing tagline.
-        published: :class:`bool` | ``None``
+        published: :class:`bool` | :data:`None`
             Whether the listing is published.
-        carousel_items: list[:class:`store_types.StoreCarouselItemResponse`] | ``None``
+        carousel_items: list[:class:`store_types.StoreCarouselItemResponse`] | :data:`None`
             Carousel media items.
-        guild_id: :class:`int` | :class:`str` | ``None``
+        guild_id: :class:`int` | :class:`str` | :data:`None`
             Public guild ID associated with the listing.
-        thumbnail_asset_id: :class:`int` | :class:`str` | ``None``
+        thumbnail_asset_id: :class:`int` | :class:`str` | :data:`None`
             Store asset ID for thumbnail.
-        preview_video_asset_id: :class:`int` | :class:`str` | ``None``
+        preview_video_asset_id: :class:`int` | :class:`str` | :data:`None`
             Store asset ID for preview video.
-        header_background_asset_id: :class:`int` | :class:`str` | ``None``
+        header_background_asset_id: :class:`int` | :class:`str` | :data:`None`
             Store asset ID for header background.
-        header_logo_dark_theme_asset_id: :class:`int` | :class:`str` | ``None``
+        header_logo_dark_theme_asset_id: :class:`int` | :class:`str` | :data:`None`
             Store asset ID for dark-theme header logo.
-        header_logo_light_theme_asset_id: :class:`int` | :class:`str` | ``None``
+        header_logo_light_theme_asset_id: :class:`int` | :class:`str` | :data:`None`
             Store asset ID for light-theme header logo.
-        box_art_asset_id: :class:`int` | :class:`str` | ``None``
+        box_art_asset_id: :class:`int` | :class:`str` | :data:`None`
             Store asset ID for box art.
-        hero_background_asset_id: :class:`int` | :class:`str` | ``None``
+        hero_background_asset_id: :class:`int` | :class:`str` | :data:`None`
             Store asset ID for hero background.
-        hero_video_asset_id: :class:`int` | :class:`str` | ``None``
+        hero_video_asset_id: :class:`int` | :class:`str` | :data:`None`
             Store asset ID for hero video.
 
         Returns

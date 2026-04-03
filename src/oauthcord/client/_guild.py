@@ -77,13 +77,13 @@ class GuildClientMixin:
             The ID of the guild to add the user to.
         bot_token: :class:`str`
             Bot token for the application.
-        nick: :class:`str` | ``None``
+        nick: :class:`str` | :data:`None`
             A nickname to assign to the user upon joining.
 
             This requires the bot to have the ``MANAGE_NICKNAMES`` permission.
 
             Must be between 1 and 32 characters in length.
-        roles: list[:class:`int` | :class:`str`] | ``None``
+        roles: list[:class:`int` | :class:`str`] | :data:`None`
             A list of role IDs to assign to the user upon joining.
 
             This requires the bot to have the ``MANAGE_ROLES`` permission.
@@ -109,9 +109,9 @@ class GuildClientMixin:
 
         Returns
         -------
-        :class:`GuildMember` | ``None``
+        :class:`GuildMember` | :data:`None`
             Object representing the joined member, if the user was successfully added to the guild.
-              If the user is already a member of the guild, ``None`` is returned instead.
+              If the user is already a member of the guild, :data:`None` is returned instead.
         """
         try:
             user_id = user_id or self.current_authorization_information.user.id  # pyright: ignore[reportOptionalMemberAccess]

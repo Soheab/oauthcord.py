@@ -33,12 +33,12 @@ class LobbyClientMixin:
         ----------
         secret: :class:`str`
             The lobby secret. Maximum 250 characters.
-        lobby_metadata: :class:`dict`\\[:class:`str`, :class:`str`] | ``None``
+        lobby_metadata: :class:`dict`\\[:class:`str`, :class:`str`] | :data:`None`
             The lobby metadata.
 
             Supports up to 25 keys, with up to 1024 characters per key and
             value.
-        member_metadata: :class:`dict`\\[:class:`str`, :class:`str`] | ``None``
+        member_metadata: :class:`dict`\\[:class:`str`, :class:`str`] | :data:`None`
             The member metadata for the lobby.
 
             Supports up to 25 keys, with up to 1024 characters per key and
@@ -135,8 +135,8 @@ class LobbyClientMixin:
         ----------
         lobby_id: :class:`int` | :class:`str`
             The ID of the lobby to edit the linked channel of.
-        channel_id: :class:`int` | :class:`str` | ``None``
-            The ID of the channel to link to the lobby, or ``None`` to unlink any linked channel.
+        channel_id: :class:`int` | :class:`str` | :data:`None`
+            The ID of the channel to link to the lobby, or :data:`None` to unlink any linked channel.
 
         Returns
         -------
@@ -210,40 +210,40 @@ class LobbyClientMixin:
         ----------
         lobby_id: :class:`int` | :class:`str`
             The ID of the lobby to create a message in.
-        content: :class:`str` | ``None``
+        content: :class:`str` | :data:`None`
             The content of the message.
-        tts: :class:`bool` | ``None``
+        tts: :class:`bool` | :data:`None`
             Whether the message should be sent as text-to-speech.
-        nonce: :class:`int` | :class:`str` | ``None``
+        nonce: :class:`int` | :class:`str` | :data:`None`
             The nonce for the message. Must be a string or integer up to 25 characters in length.
-        embeds: :class:`list`\\[:class:`message_types.EmbedRequest`] | ``None``
+        embeds: :class:`list`\\[:class:`message_types.EmbedRequest`] | :data:`None`
             The embeds to include in the message. Supports up to 10 embeds.
-        allowed_mentions: :class:`message_types.AllowedMentionsRequest` | ``None``
+        allowed_mentions: :class:`message_types.AllowedMentionsRequest` | :data:`None`
             The allowed mentions for the message.
-        message_reference: :class:`message_types.MessageReferenceRequest` | ``None``
+        message_reference: :class:`message_types.MessageReferenceRequest` | :data:`None`
             The message reference for the message.
-        components: :class:`list`\\[:class:`component_types.ComponentRequest`] | ``None``
+        components: :class:`list`\\[:class:`component_types.ComponentRequest`] | :data:`None`
             The components to include in the message.
-        sticker_ids: :class:`list`\\[:class:`int` | :class:`str`] | ``None``
+        sticker_ids: :class:`list`\\[:class:`int` | :class:`str`] | :data:`None`
             The IDs of the stickers to include in the message.
-        flags: :class:`int` | ``None``
+        flags: :class:`int` | :data:`None`
             The message flags for the message.
-        suppress_embeds: :class:`bool` | ``None``
+        suppress_embeds: :class:`bool` | :data:`None`
             Whether to suppress embeds for the message.
-        suppress_notifications: :class:`bool` | ``None``
+        suppress_notifications: :class:`bool` | :data:`None`
             Whether to suppress notifications for the message.
-        voice_message: :class:`bool` | ``None``
+        voice_message: :class:`bool` | :data:`None`
             Whether the message is a voice message.
-        attachments: :class:`list`\\[:class:`message_types.PartialAttachmentRequest`] | ``None``
+        attachments: :class:`list`\\[:class:`message_types.PartialAttachmentRequest`] | :data:`None`
             The attachments to include in the message.
-        poll: :class:`message_types.PollCreateRequest` | ``None``
+        poll: :class:`message_types.PollCreateRequest` | :data:`None`
             The poll data for the message.
-        shared_client_theme: :class:`message_types.SharedClientThemeRequest` | ``None``
+        shared_client_theme: :class:`message_types.SharedClientThemeRequest` | :data:`None`
             The shared client theme data for the message.
-        metadata: :class:`dict`\\[:class:`str`, :class:`object`] | ``None``
+        metadata: :class:`dict`\\[:class:`str`, :class:`object`] | :data:`None`
             The metadata for the message.
             Supports up to 50 keys, with up to 1024 characters per key and value.
-        files: :class:`list`\\[:class:`File`] | ``None``
+        files: :class:`list`\\[:class:`File`] | :data:`None`
             The files to include in the message. Supports up to 10 files.
 
         Returns

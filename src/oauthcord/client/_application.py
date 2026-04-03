@@ -94,7 +94,7 @@ class ApplicationClientMixin:
     ) -> ApplicationRoleConnection:
         """Replace the role connection for the current user and application.
 
-        All parameters are optional. Omitting or setting a parameter to ``None``
+        All parameters are optional. Omitting or setting a parameter to :data:`None`
         will set that field to default.
 
         .. scope:: role_connections.write
