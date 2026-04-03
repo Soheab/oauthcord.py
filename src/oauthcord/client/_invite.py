@@ -10,13 +10,14 @@ if TYPE_CHECKING:
 class InviteClientMixin:
     async def accept_invite(
         self: _AuthorisedSessionProto,
-        invite_code: str,
+        invite: str,
         *,
         session_id: str | None = None,
     ) -> Invite:
         """Accept an invite to a guild.
 
-        The bot must be a member of the guild that the invite originates from.
+        The bot that belongs to the current application must be a member of the guild that
+        the invite originates from.
 
         This cannot be used to accept invites of guilds with the "HUB" feature.
 
@@ -25,8 +26,8 @@ class InviteClientMixin:
 
         Parameters
         ----------
-        invite_code: :class:`str`
-            The invite code of the invite to accept. This is the part after ``discord.gg/`` in the invite URL.
+        invite: :class:`str`
+            The invite code or URL of the invite to accept.
         session_id: :class:`str` | :data:`None`
             The session ID that is accepting the invite. This is only required for guest invites.
 
@@ -35,7 +36,8 @@ class InviteClientMixin:
         :class:`Invite`
              Object representing the accepted invite.
         """
+        code = utils.parse_invite(invite) or invite
         res = await self.client.http.accept_invite(
-            self.token, code=invite_code, session_id=session_id
+            self.token, code=code, session_id=session_id
         )
         return utils._construct_model(Invite, data=res, session=self)

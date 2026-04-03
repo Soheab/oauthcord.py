@@ -1,4 +1,5 @@
 import datetime
+import re
 from typing import TYPE_CHECKING, Any, Literal, Protocol, overload
 
 if TYPE_CHECKING:
@@ -151,3 +152,27 @@ def _serialize_localizations(  # pyright: ignore[reportUnusedFunction]
     data: dict[Locale, str],
 ) -> dict[str, str]:
     return {locale.value: value for locale, value in data.items()}
+
+
+INVITE_RE = re.compile(
+    r"(?:https?://)?discord(?:app)?\.(?:com/invite|gg)/(?P<code>[a-zA-Z0-9]+)/?",
+    re.IGNORECASE,
+)
+
+
+def parse_invite(invite: str) -> str | None:
+    """Parse an invite code or URL and return the invite code.
+
+    Parameters
+    ----------
+    invite: :class:`str`
+        The invite code or URL to parse.
+
+    Returns
+    -------
+    :class:`str` | :data:`None`
+        The invite code extracted from the input, or ``None`` if the
+        input is not a valid invite code or URL.
+    """
+    match = INVITE_RE.fullmatch(invite.strip())
+    return match and match.group("code")
