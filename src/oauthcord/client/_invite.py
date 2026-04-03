@@ -4,10 +4,10 @@ from .. import utils
 from ..models.invite import Invite
 
 if TYPE_CHECKING:
-    from ._base import _AuthorisedSessionProto
+    from ._proto import _AuthorisedSessionProto
 
 
-class InviteClient:
+class InviteClientMixin:
     async def accept_invite(
         self: _AuthorisedSessionProto,
         invite_code: str,

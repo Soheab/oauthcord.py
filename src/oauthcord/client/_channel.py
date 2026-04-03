@@ -10,10 +10,10 @@ from ..models.channel import (
 )
 
 if TYPE_CHECKING:
-    from ._base import _AuthorisedSessionProto
+    from ._proto import _AuthorisedSessionProto
 
 
-class ChannelClient:
+class ChannelClientMixin:
     async def get_dm_channel(
         self: _AuthorisedSessionProto,
         *,

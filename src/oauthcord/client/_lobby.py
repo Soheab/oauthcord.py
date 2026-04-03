@@ -9,10 +9,10 @@ if TYPE_CHECKING:
     from ..internals._types import components as component_types
     from ..internals._types import message as message_types
     from ..models.file import File
-    from ._base import _AuthorisedSessionProto
+    from ._proto import _AuthorisedSessionProto
 
 
-class LobbyClient:
+class LobbyClientMixin:
     async def join_or_create_lobby(
         self: _AuthorisedSessionProto,
         *,

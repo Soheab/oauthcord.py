@@ -4,10 +4,10 @@ from .. import utils
 from ..models.user import CurrentUser, PartialUser
 
 if TYPE_CHECKING:
-    from ._base import _AuthorisedSessionProto
+    from ._proto import _AuthorisedSessionProto
 
 
-class UserClient:
+class UserClientMixin:
     async def get_current_user(
         self: _AuthorisedSessionProto,
     ) -> CurrentUser:

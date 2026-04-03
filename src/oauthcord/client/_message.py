@@ -12,10 +12,10 @@ if TYPE_CHECKING:
         message as message_types,
     )
     from ..models.file import File
-    from ._base import _AuthorisedSessionProto
+    from ._proto import _AuthorisedSessionProto
 
 
-class MessageClient:
+class MessageClientMixin:
     async def get_dm_messages(
         self: _AuthorisedSessionProto,
         *,

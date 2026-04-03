@@ -4,10 +4,10 @@ from .. import utils
 from ..models.connection import Connection
 
 if TYPE_CHECKING:
-    from ._base import _AuthorisedSessionProto
+    from ._proto import _AuthorisedSessionProto
 
 
-class ConnectionClient:
+class ConnectionClientMixin:
     async def get_current_user_connections(
         self: _AuthorisedSessionProto,
     ) -> list[Connection]:

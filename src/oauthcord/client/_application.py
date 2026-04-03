@@ -12,10 +12,10 @@ from ..models.entitlement import Entitlement
 
 if TYPE_CHECKING:
     from ..models.file import File
-    from ._base import _AuthorisedSessionProto
+    from ._proto import _AuthorisedSessionProto
 
 
-class ApplicationClient:
+class ApplicationClientMixin:
     async def create_application_attachment(
         self: _AuthorisedSessionProto,
         *,

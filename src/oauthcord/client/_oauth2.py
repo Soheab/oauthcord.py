@@ -4,10 +4,10 @@ from .. import utils
 from ..models.current_auth import CurrentInformation
 
 if TYPE_CHECKING:
-    from ._base import _AuthorisedSessionProto
+    from ._proto import _AuthorisedSessionProto
 
 
-class Oauth2Client:
+class Oauth2ClientMixin:
     async def get_current_authorization_information(
         self: _AuthorisedSessionProto,
     ) -> CurrentInformation:

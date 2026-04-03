@@ -5,10 +5,10 @@ from ..models.guild import Guild
 from ..models.member import GuildMember
 
 if TYPE_CHECKING:
-    from ._base import _AuthorisedSessionProto
+    from ._proto import _AuthorisedSessionProto
 
 
-class GuildClient:
+class GuildClientMixin:
     async def get_current_user_guilds(
         self: _AuthorisedSessionProto,
     ) -> list[Guild]:

@@ -4,21 +4,21 @@ from typing import Self
 import aiohttp
 
 from .. import utils
+from ..enums import Scope
 from ..internals.http import OAuth2HTTPClient
 from ..models.access_token import AccessTokenResponse
 from ..models.current_auth import CurrentInformation
-from ..models.enums import Scope
-from ._application import ApplicationClient
-from ._channel import ChannelClient
-from ._connection import ConnectionClient
-from ._guild import GuildClient
-from ._invite import InviteClient
-from ._lobby import LobbyClient
-from ._message import MessageClient
-from ._oauth2 import Oauth2Client
-from ._relationship import RelationshipClient
-from ._store import StoreClient
-from ._user import UserClient
+from ._application import ApplicationClientMixin
+from ._channel import ChannelClientMixin
+from ._connection import ConnectionClientMixin
+from ._guild import GuildClientMixin
+from ._invite import InviteClientMixin
+from ._lobby import LobbyClientMixin
+from ._message import MessageClientMixin
+from ._oauth2 import Oauth2ClientMixin
+from ._relationship import RelationshipClientMixin
+from ._store import StoreClientMixin
+from ._user import UserClientMixin
 
 
 class Client:
@@ -157,17 +157,17 @@ class Client:
 
 
 class AuthorisedSession(
-    ApplicationClient,
-    ChannelClient,
-    ConnectionClient,
-    GuildClient,
-    InviteClient,
-    LobbyClient,
-    MessageClient,
-    Oauth2Client,
-    RelationshipClient,
-    StoreClient,
-    UserClient,
+    ApplicationClientMixin,
+    ChannelClientMixin,
+    ConnectionClientMixin,
+    GuildClientMixin,
+    InviteClientMixin,
+    LobbyClientMixin,
+    MessageClientMixin,
+    Oauth2ClientMixin,
+    RelationshipClientMixin,
+    StoreClientMixin,
+    UserClientMixin,
 ):
     """Represents an authorized session with an access token. This is created after exchanging the authorization code,
     and can be used to make authenticated requests to the Discord API.

@@ -17,10 +17,10 @@ from ..models.store import (
 if TYPE_CHECKING:
     from ..internals._types import store as store_types
     from ..models.file import File
-    from ._base import _AuthorisedSessionProto
+    from ._proto import _AuthorisedSessionProto
 
 
-class StoreClient:
+class StoreClientMixin:
     async def get_application_skus(
         self: _AuthorisedSessionProto,
         *,

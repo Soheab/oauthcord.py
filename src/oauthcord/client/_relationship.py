@@ -5,10 +5,10 @@ from ..models.enums import RelationshipType
 from ..models.relationships import GameRelationship, Relationship
 
 if TYPE_CHECKING:
-    from ._base import _AuthorisedSessionProto
+    from ._proto import _AuthorisedSessionProto
 
 
-class RelationshipClient:
+class RelationshipClientMixin:
     async def get_current_user_relationships(
         self: _AuthorisedSessionProto,
     ) -> list[Relationship]:
