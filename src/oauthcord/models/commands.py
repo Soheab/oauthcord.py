@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, override
 
 from ..utils import _serialize_localizations, convert_snowflake
 from ._base import BaseModel, BaseModelWithHTTP
-from .enums import (
+from ..enums import (
     ApplicationCommandHandlerType,
     ApplicationCommandOptionType,
     ApplicationCommandPermissionType,

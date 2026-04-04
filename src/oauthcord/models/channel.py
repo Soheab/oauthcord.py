@@ -5,7 +5,7 @@ from ..utils import convert_snowflake, iso_to_datetime
 from ._base import BaseModel, BaseModelWithHTTP, BaseModelWithSession
 from .asset import Asset
 from .emoji import Emoji
-from .enums import (
+from ..enums import (
     ChannelType,
     ForumLayoutType,
     PermissionOverwriteType,

@@ -4,10 +4,10 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol, overload
 
 if TYPE_CHECKING:
     from .client import AuthorisedSession
-    from .client._base import _AuthorisedSessionProto
+    from .client._proto import _AuthorisedSessionProto
     from .internals.http import OAuth2HTTPClient
     from .models._base import BaseModel, BaseModelWithHTTP, BaseModelWithSession
-    from .models.enums import Locale
+    from .enums import Locale
 
 DISCORD_EPOCH = 1420070400000
 

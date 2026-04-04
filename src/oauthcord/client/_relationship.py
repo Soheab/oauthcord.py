@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from .. import utils
-from ..models.enums import RelationshipType
+from ..enums import RelationshipType
 from ..models.relationships import GameRelationship, Relationship
 
 if TYPE_CHECKING:

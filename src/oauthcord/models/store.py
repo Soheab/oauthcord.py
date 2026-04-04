@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, cast, override
 from ..utils import _serialize_localizations, convert_snowflake, iso_to_datetime
 from ._base import BaseModel, BaseModelWithSession
 from .application import PartialApplication
-from .enums import (
+from ..enums import (
     ContentRatingAgency,
     ESRBContentDescriptor,
     ESRBContentRating,

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from .._base import BaseModel
 from ..emoji import Emoji
-from ..enums import PollLayoutType
+from ...enums import PollLayoutType
 
 if TYPE_CHECKING:
     from ...internals._types.message import (

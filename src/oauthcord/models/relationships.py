@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING, override
 
 from ..utils import convert_snowflake
 from ._base import BaseModelWithSession
-from .enums import RelationshipType
+from ..enums import RelationshipType
 from .user import PartialUser, to_enum
 
 if TYPE_CHECKING:

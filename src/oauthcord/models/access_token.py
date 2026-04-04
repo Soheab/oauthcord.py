@@ -2,7 +2,7 @@ import datetime
 from typing import TYPE_CHECKING, Self, override
 
 from ._base import BaseModelWithHTTP
-from .enums import Scope
+from ..enums import Scope
 
 if TYPE_CHECKING:
     from ..internals._types.token import (

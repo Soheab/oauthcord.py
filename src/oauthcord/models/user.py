@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, override
 from ..utils import convert_snowflake, iso_to_datetime, maybe_available
 from ._base import BaseModel, BaseModelWithHTTP, BaseModelWithSession
 from .asset import Asset
-from .enums import (
+from ..enums import (
     CollectibleNameplatePalette,
     DisplayNameEffect,
     DisplayNameFont,

@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Self
 
 from ...utils import _serialize_localizations
 from .. import commands as command_models
-from ..enums import (
+from ...enums import (
     ApplicationCommandHandlerType,
     ApplicationCommandOptionType,
     ApplicationCommandType,

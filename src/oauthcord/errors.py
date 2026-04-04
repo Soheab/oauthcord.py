@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING, Any
 
-from .models.enums import Scope
+from .enums import Scope
 
 if TYPE_CHECKING:
     from .internals.endpoints.base import Route

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, override
 
 from ..utils import convert_snowflake, iso_to_datetime
 from ._base import *
-from .enums import (
+from ..enums import (
     ActivityLinkType,
     ApplicationSKUDistributor,
     ApplicationType,

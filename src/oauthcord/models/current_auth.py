@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, override
 from ..utils import convert_snowflake
 from ._base import BaseModelWithSession
 from .application import PartialApplication
-from .enums import Scope
+from ..enums import Scope
 from .user import PartialUser
 
 if TYPE_CHECKING:
