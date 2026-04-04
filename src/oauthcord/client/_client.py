@@ -243,7 +243,7 @@ class AuthorisedSession(
         :class:`AccessTokenResponse`
             The new access token response obtained from refreshing.
         """
-        token = await self.token.refresh()
+        token = await self.token.refresh(check_expired=check_expired)
         self.current_authorization_information = (
             await self.get_current_authorization_information()
         )
