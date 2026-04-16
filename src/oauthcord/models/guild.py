@@ -6,8 +6,8 @@ from .asset import Asset
 from .flags import Permissions
 
 if TYPE_CHECKING:
-    from .channel import GuildChannel
     from ..internals._types.guild import CurrentUserGuildResponse as GuildPayload
+    from .channel import GuildChannel
 
 
 __all__ = ("Guild",)
@@ -40,6 +40,6 @@ class Guild(BaseModelWithSession["GuildPayload"]):
         self.features: list[str] = data["features"]
 
     async def channels(self, *, permissions: bool = False) -> list[GuildChannel]:
-        return await self._session.guild_channels(
+        return await self._session.get_guild_channels(
             guild_id=self.id, permissions=permissions
         )

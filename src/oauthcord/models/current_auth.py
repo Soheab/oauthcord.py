@@ -1,10 +1,10 @@
 import datetime
 from typing import TYPE_CHECKING, Any, override
 
+from ..enums import Scope
 from ..utils import convert_snowflake
 from ._base import BaseModelWithSession
 from .application import PartialApplication
-from ..enums import Scope
 from .user import PartialUser
 
 if TYPE_CHECKING:
@@ -102,7 +102,7 @@ class CurrentApplication(
     async def get_partial(
         self,
     ) -> PartialApplication:
-        return await self._session.partial_application(application_id=self.id)
+        return await self._session.get_partial_application(application_id=self.id)
 
 
 class CurrentInformation(

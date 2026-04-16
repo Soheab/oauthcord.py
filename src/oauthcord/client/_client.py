@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import urllib.parse
 from typing import Self
 
@@ -22,60 +24,35 @@ from ._user import UserClientMixin
 
 
 class Client:
-    """Represents an OAuth2 client for Discord. This is the main entry point for using the library.
+    """Discord OAuth2 client.
 
-    Use :meth:`get_authorization_url` to get the URL to redirect users to for authorizing your application, then
-    use :meth:`exchange_token` to exchange the temporary authorization code for an access token, which is used to
-    create an :class:`AuthorisedSession` that can make authenticated requests to the Discord API.
-
-    This class takes the base information needed to perform the OAuth2 flow, and the :class:`AuthorisedSession`
-      class handles the authenticated requests after the token is obtained.
+    This class stores the application credentials required to start the OAuth2
+    authorization flow. Use :meth:`get_authorization_url` to build the user
+    authorization URL, then call :meth:`exchange_token` with the returned code
+    to create an :class:`AuthorisedSession`.
 
     Parameters
     ----------
     client_id: :class:`int` | :class:`str`
-        The client ID of your Discord application.
+        Discord application client ID.
     client_secret: :class:`str`
-        The client secret of your Discord application.
+        Discord application client secret.
     redirect_uri: :class:`str`
-        The redirect URI you set in the Discord Developer Portal for your application. This is where users
-        will be redirected after authorizing your application.
+        Redirect URI configured for the application.
     scopes: :class:`list`[:class:`Scope` | :class:`str`]
-        A list of scopes your application is requesting access to. These determines which endpoints and data your
-        application can access.
-    state: :class:`str` | :class:`None`
-        An optional state parameter to include in the authorization URL. This can be used to maintain state between
-        the authorization request and the callback, and can help prevent CSRF attacks.
-
-        See more in the Discord documentation: https://docs.discord.com/developers/topics/oauth2#state-and-security
+        OAuth2 scopes to request during authorization.
+    state: :class:`str` | :data:`None`
+        Optional state value to include in the authorization URL.
     session: :class:`aiohttp.ClientSession`
-        An optional aiohttp ClientSession to use for making HTTP requests. If not provided, a new session will be
-        created internally.
+        Existing HTTP session to reuse for API requests.
 
     Attributes
     ----------
     http: :class:`OAuth2HTTPClient`
-        The internal HTTP client used for making requests to the Discord API. This is not typically accessed
-        directly by users of the library, but is available for advanced use cases.
-
-        You can use the `data` attribute on all models to get the raw response data from the API too.
-
-    Example
-    -------
-
-    .. code-block:: python
-
-        from oauthcord import Client, Scope
-
-        client = Client(
-            client_id=123456789012345678,
-            client_secret="your_client_secret",
-            redirect_uri="http://localhost:8000/callback",
-            scopes=[Scope.IDENTIFY, Scope.GUILDS],
-        )
-        authorize_url = client.get_authorization_url()
-        print(f"Open this URL to authorize: {authorize_url}")
+        Internal HTTP client used by the library.
     """
+
+    __slots__ = ("_redirect_uri", "_scopes", "_state", "http")
 
     def __init__(
         self,
@@ -109,15 +86,13 @@ class Client:
     def get_authorization_url(
         self,
     ) -> str:
-        """Generates the URL to redirect users to for authorizing your application.
-
-        This URL includes the necessary query parameters based on the client configuration, such as the client ID,
-        redirect URI, requested scopes, and optional state.
+        """Build the Discord OAuth2 authorization URL.
 
         Returns
         -------
         :class:`str`
-            The URL to redirect users to for authorizing your application.
+            Authorization URL containing the configured redirect URI, scopes,
+            and optional state value.
         """
         params = {
             "client_id": str(self.http.client_id),
@@ -136,20 +111,17 @@ class Client:
         self,
         code: str,
     ) -> AuthorisedSession:
-        """Exchanges the temporary authorization code for an access token
-
-        This is typically called in the callback route after the user authorizes your application and is redirected back
-        to your redirect URI with a `code` query parameter.
+        """Exchange an authorization code for an authorised session.
 
         Parameters
         ----------
         code: :class:`str`
-            The authorization code received from Discord after the user authorizes your application.
+            Authorization code returned by Discord.
 
         Returns
         -------
         :class:`AuthorisedSession`
-            An AuthorisedSession instance that can be used to make authenticated requests to the Discord API.
+            Session initialized with the exchanged access token.
         """
         res = await self.http.exchange_token(code, redirect_uri=self._redirect_uri)
         res = utils._construct_model(AccessTokenResponse, data=res, http=self.http)
@@ -169,23 +141,16 @@ class AuthorisedSession(
     StoreClientMixin,
     UserClientMixin,
 ):
-    """Represents an authorized session with an access token. This is created after exchanging the authorization code,
-    and can be used to make authenticated requests to the Discord API.
+    """Authenticated Discord OAuth2 session.
 
-    You may only get this from :meth:`Client.exchange_token`, and it will have the token already set up for making requests.
+    Instances are returned by :meth:`Client.exchange_token`.
 
     Attributes
     ----------
     client: :class:`Client`
-        The parent Client instance that created this session. This can be used to access the base client
-        configuration and HTTP client if needed.
+        Parent OAuth2 client that created the session.
     token: :class:`AccessTokenResponse`
-        The access token response containing the access token and related information. This is used internally for
-        making authenticated requests, and can also be used to refresh or revoke the token if needed.
-    current_authorization_information: :class:`CurrentInformation` | :class:`None`
-        The current authorization information for this session, which includes details about the authorized user and
-        their permissions. This is typically set after the first authenticated request is made, and can be
-        used to check the current scopes and permissions of the token.
+        Current access token data for the session.
     """
 
     def __init__(
@@ -207,9 +172,13 @@ class AuthorisedSession(
 
     @property
     def current_authorization_information(self) -> CurrentInformation | None:
-        """:class:`CurrentInformation` | :class:`None`: The current authorization information for this session,
-        which includes details about the authorized user and their permissions. This is typically set after
-        the first authenticated request is made, and can be used to check the current scopes and permissions of the token.
+        """Current authorization information for the session.
+
+        Returns
+        -------
+        :class:`CurrentInformation` | :data:`None`
+            Cached authorization information for the current token, if it has
+            been loaded.
         """
         return self._current_authorization_information
 
@@ -227,21 +196,17 @@ class AuthorisedSession(
         *,
         check_expired: bool = False,
     ) -> AccessTokenResponse:
-        """Refreshes the access token using the refresh token.
-
-        The current token information will be updated with the new token data after refreshing.
+        """Refresh the current access token.
 
         Parameters
         ----------
         check_expired: :class:`bool`
-            If set to True, the token will only be refreshed if it is expired. If False
-            (the default), the token will be refreshed regardless of its expiration status.
-
+            Whether to refresh only when the token is expired.
 
         Returns
         -------
         :class:`AccessTokenResponse`
-            The new access token response obtained from refreshing.
+            Updated token data after the refresh request completes.
         """
         token = await self.token.refresh(check_expired=check_expired)
         self.current_authorization_information = (
@@ -252,13 +217,11 @@ class AuthorisedSession(
     async def revoke(
         self,
     ) -> None:
-        """Revokes the current access token, invalidating it for future use.
+        """Revoke the current access token.
 
-        .. warning::
-            This revokes any active tokens associated with the current application.
-
-            After revoking, the current token information will be cleared, and the session will no longer be able to make
-            authenticated requests until a new token is obtained through the OAuth2 flow again.
+        Revoking clears cached authorization information for this session. Any
+        application tokens invalidated by Discord must be re-authorized through
+        the OAuth2 flow before the session can be used again.
         """
         await self.token.revoke()
         self._current_authorization_information = None

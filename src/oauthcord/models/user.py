@@ -1,9 +1,6 @@
 import datetime
 from typing import TYPE_CHECKING, Any, override
 
-from ..utils import convert_snowflake, iso_to_datetime, maybe_available
-from ._base import BaseModel, BaseModelWithHTTP, BaseModelWithSession
-from .asset import Asset
 from ..enums import (
     CollectibleNameplatePalette,
     DisplayNameEffect,
@@ -12,10 +9,12 @@ from ..enums import (
     PremiumType,
     to_enum,
 )
+from ..utils import convert_snowflake, iso_to_datetime, maybe_available
+from ._base import BaseModel, BaseModelWithHTTP, BaseModelWithSession
+from .asset import Asset
 from .flags import UserFlags
 
 if TYPE_CHECKING:
-    from .channel import DMChannel
     from ..internals._types.user import (
         AvatarDecorationDataResponse,
         CollectablesResponse,
@@ -33,6 +32,7 @@ if TYPE_CHECKING:
     from ..internals._types.user import (
         _CollectibleResponse as BaseCollectibleResponse,
     )
+    from .channel import DMChannel
 
 
 __all__ = (
@@ -163,7 +163,7 @@ class PartialUser[D = PartialUserResponse](BaseModelWithSession[D]):
 
     async def dm_channel(self) -> DMChannel:
         """Get a DM channel with this user."""
-        return await self._session.dm_channel(user_id=self.id)
+        return await self._session.get_dm_channel(user_id=self.id)
 
 
 class GuildMemberWithUser[D = GuildMemberWithUserResponse](PartialUser[D]):

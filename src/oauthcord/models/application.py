@@ -1,8 +1,6 @@
 import datetime
 from typing import TYPE_CHECKING, override
 
-from ..utils import convert_snowflake, iso_to_datetime
-from ._base import *
 from ..enums import (
     ActivityLinkType,
     ApplicationSKUDistributor,
@@ -15,11 +13,11 @@ from ..enums import (
     IntegrationInstallType,
     to_enum,
 )
+from ..utils import convert_snowflake, iso_to_datetime
+from ._base import *
 from .user import PartialUser
 
 if TYPE_CHECKING:
-    from .attachment import Attachment
-    from .file import File
     from ..internals._types.application import (
         ActivityLinkResponse,
         ApplicationExecutableResponse,
@@ -34,6 +32,8 @@ if TYPE_CHECKING:
         PartialApplicationIdentityResponse,
         PartialApplicationResponse,
     )
+    from .attachment import Attachment
+    from .file import File
 
 
 __all__ = (
@@ -709,7 +709,7 @@ class PartialApplication(BaseModelWithSession["PartialApplicationResponse"]):
         for raw_key, raw_value in data.get("integration_types_config", {}).items():
             try:
                 key = to_enum(IntegrationInstallType, int(raw_key))
-            except TypeError, ValueError:
+            except (TypeError, ValueError):
                 continue
 
             if raw_value is None:
@@ -750,9 +750,7 @@ class PartialApplication(BaseModelWithSession["PartialApplicationResponse"]):
     async def get_user_role_connection(
         self,
     ) -> ApplicationRoleConnection:
-        return await self._session.user_application_role_connection(
-            application_id=self.id
-        )
+        return await self._session.get_user_application_role_connection()
 
     async def edit_user_role_connection(
         self,
@@ -762,7 +760,6 @@ class PartialApplication(BaseModelWithSession["PartialApplicationResponse"]):
         metadata: dict[str, str] | None = None,
     ) -> ApplicationRoleConnection:
         return await self._session.edit_user_application_role_connection(
-            application_id=self.id,
             platform_name=platform_name,
             platform_username=platform_username,
             metadata=metadata,
@@ -777,7 +774,6 @@ class PartialApplication(BaseModelWithSession["PartialApplicationResponse"]):
         custom_id: str | None = None,
     ) -> ActivityLink:
         return await self._session.create_application_quick_link(
-            application_id=self.id,
             description=description,
             image=image,
             title=title,

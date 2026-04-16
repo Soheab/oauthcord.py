@@ -34,7 +34,7 @@ DISCORD_OAUTH_STATE = None
 app = web.Application()
 routes = web.RouteTableDef()
 
-scopes = [Scope.IDENTIFY, Scope.GUILDS]
+scopes: list[Scope | str] = [Scope.IDENTIFY, Scope.GUILDS]
 client = Client(
     client_id=DISCORD_CLIENT_ID,
     client_secret=DISCORD_CLIENT_SECRET,
@@ -57,12 +57,12 @@ async def callback(request: web.Request):
     session = await client.exchange_token(code)
 
     # Fetch the current user and the user's guild list with that token.
-    me = await session.current_user()
-    guilds = await session.guilds()
+    me = await session.get_current_user()
+    guilds = await session.get_current_user_guilds()
 
     # Return one JSON payload so the OAuth result is easy to inspect.
-    data = me.data
-    data["guilds"] = [guild.data for guild in guilds]  # type: ignore
+    data = dict(me.data)
+    data["guilds"] = [guild.data for guild in guilds]
 
     return json_response(data=data)
 

@@ -2,13 +2,11 @@ import asyncio
 import json
 import logging
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
 import aiohttp
 
 from ..errors import HTTPException, create_http_exception
-from ..models.access_token import AccessTokenResponse
-from ..models.enums import Scope
 from ..utils import NotSet
 from ._ratelimiter import HTTPRateLimiterMixin
 from .endpoints.application import ApplicationHTTPClientMixin
@@ -156,9 +154,7 @@ def get_message_create_payload(
     if metadata is not None:
         data["metadata"] = metadata
 
-    for k, v in extras.items():
-        if v:
-            data[k] = v
+    data.update({k: v for k, v in extras.items() if v})  # pyright: ignore[reportCallIssue, reportArgumentType]
 
     return get_multipart_payload(files=files, data=data)  # pyright: ignore[reportArgumentType]
 
@@ -179,11 +175,23 @@ class OAuth2HTTPClient(
     TokenHTTPClientMixin,
     UserHTTPClientMixin,
 ):
-    API_BASE = "https://discord.com/api/v10"
-    BASE_URL = "https://discord.com/oauth2/authorize"
+    API_BASE: ClassVar[str] = "https://discord.com/api/v10"
+    BASE_URL: ClassVar[str] = "https://discord.com/oauth2/authorize"
+    CDN_URL: ClassVar[str] = "https://cdn.discordapp.com"
 
-    RETRYABLE_SERVER_STATUSES = frozenset({500, 502, 503, 504, 521, 522, 523, 524})
-    CONNECTION_RESET_ERRNOS = frozenset({54, 10054})
+    RETRYABLE_SERVER_STATUSES: ClassVar[frozenset[int]] = frozenset(
+        {
+            500,
+            502,
+            503,
+            504,
+            521,
+            522,
+            523,
+            524,
+        }
+    )
+    CONNECTION_RESET_ERRNOS: ClassVar[frozenset[int]] = frozenset({54, 10054})
 
     __get_client: Callable[[], Client]
     __slots__ = (
@@ -224,8 +232,6 @@ class OAuth2HTTPClient(
 
         self._init_ratelimiter()
 
-        self.token: AccessTokenResponse | None = None
-
     async def close(self) -> None:
         if self.__session and not self.__session.closed:
             await self.__session.close()
@@ -265,6 +271,7 @@ class OAuth2HTTPClient(
         self,
         url: str,
     ) -> bytes:
+        url = url if url.startswith("https") else f"{self.CDN_URL}/{url.lstrip('/')}"
         session = await self.__get_session()
         route = Route("GET", url)
         async with session.get(url) as response:

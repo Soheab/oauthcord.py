@@ -14,7 +14,10 @@ from ..errors import RateLimited
 if TYPE_CHECKING:
     from .endpoints.base import Route
 
+from .endpoints.base import Route
+
 _log = logging.getLogger("http")
+_RATELIMIT_ROUTE = Route("GET", "/")
 
 
 class Ratelimit:
@@ -112,7 +115,9 @@ class Ratelimit:
             and self.reset_after > self._max_ratelimit_timeout
         )
         exception = (
-            RateLimited({}, self.reset_after, is_global=False) if error else None
+            RateLimited(_RATELIMIT_ROUTE, {}, self.reset_after, is_global=False)
+            if error
+            else None
         )
 
         async with self._lock:
@@ -144,7 +149,12 @@ class Ratelimit:
                     current_reset_after,
                     self._max_ratelimit_timeout,
                 )
-                raise RateLimited({}, current_reset_after, is_global=False)
+                raise RateLimited(
+                    _RATELIMIT_ROUTE,
+                    {},
+                    current_reset_after,
+                    is_global=False,
+                )
 
         while self.remaining <= 0:
             if self.expires is None:
@@ -198,7 +208,12 @@ class Ratelimit:
                 asyncio.create_task(self._refresh())  # noqa: RUF006
             elif self._pending:
                 exception = (
-                    RateLimited({}, self.reset_after, is_global=False)
+                    RateLimited(
+                        _RATELIMIT_ROUTE,
+                        {},
+                        self.reset_after,
+                        is_global=False,
+                    )
                     if self._max_ratelimit_timeout
                     and self.reset_after > self._max_ratelimit_timeout
                     else None

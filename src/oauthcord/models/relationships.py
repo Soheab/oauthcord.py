@@ -1,8 +1,8 @@
 from typing import TYPE_CHECKING, override
 
+from ..enums import RelationshipType
 from ..utils import convert_snowflake
 from ._base import BaseModelWithSession
-from ..enums import RelationshipType
 from .user import PartialUser, to_enum
 
 if TYPE_CHECKING:

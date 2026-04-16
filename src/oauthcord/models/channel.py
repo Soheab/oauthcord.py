@@ -1,10 +1,8 @@
+from __future__ import annotations
+
 import datetime
 from typing import TYPE_CHECKING, Any, override
 
-from ..utils import convert_snowflake, iso_to_datetime
-from ._base import BaseModel, BaseModelWithHTTP, BaseModelWithSession
-from .asset import Asset
-from .emoji import Emoji
 from ..enums import (
     ChannelType,
     ForumLayoutType,
@@ -14,6 +12,10 @@ from ..enums import (
     VideoQualityMode,
     to_enum,
 )
+from ..utils import convert_snowflake, iso_to_datetime
+from ._base import BaseModel, BaseModelWithSession
+from .asset import Asset
+from .emoji import Emoji
 from .flags import ChannelFlags, Permissions, RecipientFlags
 from .member import GuildMember, ThreadMember
 from .user import PartialUser
@@ -25,6 +27,7 @@ if TYPE_CHECKING:
         ChannelNickResponse,
         DefaultReactionResponse,
         DMChannelResponse,
+        EphemeralDMChannelResponse,
         FollowedChannelResponse,
         ForumTagResponse,
         GetChannelLinkedAccountsResponse,
@@ -528,7 +531,7 @@ class DMChannel(PrivateChannel["DMChannelResponse"]):
 
     async def get_call_eligibility(self) -> CallEligibility:
         """Get the call eligibility for this DM channel."""
-        return await self._session.call_eligibility(channel_id=self.id)
+        return await self._session.get_call_eligibility(channel_id=self.id)
 
 
 class GroupDMChannel(PrivateChannel["GroupDMChannelResponse"]):
@@ -589,14 +592,14 @@ class GroupDMChannel(PrivateChannel["GroupDMChannelResponse"]):
 
     async def get_linked_accounts(
         self, *, user_ids: list[int | str]
-    ) -> ChannelLinkedAccounts:
+    ) -> dict[int, list[LinkedAccount]]:
         """Get the linked accounts for this group DM channel."""
-        return await self._session.channel_linked_accounts(
+        return await self._session.get_channel_linked_accounts(
             channel_id=self.id, user_ids=user_ids
         )
 
 
-class EphemeralDMChannel(PrivateChannel["EphemeralDMChannelResponse"]):
+class EphemeralDMChannel(PrivateChannel[EphemeralDMChannelResponse]):
     """Represents Discord API data for `EphemeralDMChannel`."""
 
 

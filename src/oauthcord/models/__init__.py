@@ -1,4 +1,5 @@
 # fmt: off
+from ..enums import *
 from ..errors import *
 from .access_token import *
 from .application import *
@@ -13,7 +14,6 @@ from .current_auth import *
 from .embeds import *
 from .emoji import *
 from .entitlement import *
-from ..enums import *
 from .file import *
 from .flags import *
 from .guild import *

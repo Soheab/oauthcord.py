@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import datetime
 from typing import TYPE_CHECKING, Self, override
 
-from ._base import BaseModelWithHTTP
 from ..enums import Scope
+from ._base import BaseModelWithHTTP
 
 if TYPE_CHECKING:
     from ..internals._types.token import (

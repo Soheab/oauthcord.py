@@ -1,8 +1,8 @@
+from __future__ import annotations
+
 from collections.abc import Sequence
 from typing import TYPE_CHECKING, override
 
-from ..utils import _serialize_localizations, convert_snowflake
-from ._base import BaseModel, BaseModelWithHTTP
 from ..enums import (
     ApplicationCommandHandlerType,
     ApplicationCommandOptionType,
@@ -14,6 +14,8 @@ from ..enums import (
     Locale,
     to_enum,
 )
+from ..utils import _serialize_localizations, convert_snowflake
+from ._base import BaseModel, BaseModelWithHTTP
 from .flags import Permissions
 
 if TYPE_CHECKING:

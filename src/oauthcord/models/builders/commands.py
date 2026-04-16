@@ -1,9 +1,9 @@
+from __future__ import annotations
+
 from enum import Enum
 from reprlib import recursive_repr
 from typing import TYPE_CHECKING, Self
 
-from ...utils import _serialize_localizations
-from .. import commands as command_models
 from ...enums import (
     ApplicationCommandHandlerType,
     ApplicationCommandOptionType,
@@ -14,10 +14,12 @@ from ...enums import (
     Locale,
     to_enum,
 )
+from ...utils import _serialize_localizations
+from .. import commands as command_models
 from ..flags import Permissions
 
 if TYPE_CHECKING:
-    from ..internals._types import commands as command_types
+    from ...internals._types import commands as command_types
 
 
 __all__ = (

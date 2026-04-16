@@ -1,8 +1,6 @@
 import datetime
 from typing import TYPE_CHECKING, override
 
-from ..utils import convert_snowflake, iso_to_datetime
-from ._base import BaseModel, BaseModelWithSession
 from ..enums import (
     EntitlementFulfillmentStatus,
     EntitlementSourceType,
@@ -10,6 +8,8 @@ from ..enums import (
     GiftStyle,
     to_enum,
 )
+from ..utils import convert_snowflake, iso_to_datetime
+from ._base import BaseModel, BaseModelWithSession
 from .user import PartialUser
 
 if TYPE_CHECKING:

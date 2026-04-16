@@ -66,7 +66,7 @@ class PartialMessage(BaseModelWithSession["PartialMessagePayload"]):
 
         channel_data = data.get("channel")
         self.channel: BaseChannel | PartialChannel | None = (
-            _from_data(self._http, channel_data) if channel_data else None
+            _from_data(self._session, channel_data) if channel_data else None
         )
         self.recipient_id: int | None = convert_snowflake(
             data, "recipient_id", always_available=False
@@ -151,5 +151,5 @@ class Message(BaseModelWithSession["MessagePayload"]):
 
         thread_data = data.get("thread")
         self.thread: BaseChannel | PartialChannel | None = (
-            _from_data(self._http, thread_data) if thread_data else None
+            _from_data(self._session, thread_data) if thread_data else None
         )

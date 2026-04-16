@@ -31,7 +31,7 @@ DISCORD_CLIENT_SECRET = ""
 DISCORD_REDIRECT_URI = ""
 DISCORD_OAUTH_STATE = None
 
-scopes = [Scope.IDENTIFY, Scope.GUILDS]
+scopes: list[Scope | str] = [Scope.IDENTIFY, Scope.GUILDS]
 client = Client(
     client_id=DISCORD_CLIENT_ID,
     client_secret=DISCORD_CLIENT_SECRET,
@@ -55,8 +55,8 @@ async def callback(code: str) -> Response[dict[str, Any]]:
 
     # Fetch the current user and the user's guild list with that token.
     # don't need to pass the token here, it's stored after get_token() is called.
-    me = await session.current_user()
-    guilds = await session.guilds()
+    me = await session.get_current_user()
+    guilds = await session.get_current_user_guilds()
 
     # Return one JSON payload so the OAuth result is easy to inspect.
     data = dict(me.data)

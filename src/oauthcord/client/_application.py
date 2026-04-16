@@ -78,7 +78,13 @@ class ApplicationClientMixin:
         :class:`ApplicationRoleConnection`
             Object representing the user's role connection for the application.
         """
-        application_id = self.current_authorization_information.application.id
+        current_auth = self.current_authorization_information
+        if current_auth is None:
+            raise ValueError(
+                "current_authorization_information is not available for this session"
+            )
+
+        application_id = current_auth.application.id
         res = await self.client.http.get_user_application_role_connection(
             self.token,
             application_id=application_id,
@@ -115,7 +121,13 @@ class ApplicationClientMixin:
         :class:`ApplicationRoleConnection`
             Object representing the user's updated role connection for the application.
         """
-        application_id = self.current_authorization_information.application.id
+        current_auth = self.current_authorization_information
+        if current_auth is None:
+            raise ValueError(
+                "current_authorization_information is not available for this session"
+            )
+
+        application_id = current_auth.application.id
         res = await self.client.http.edit_user_application_role_connection(
             self.token,
             application_id=application_id,
@@ -154,9 +166,15 @@ class ApplicationClientMixin:
         :class:`ActivityLink`
             Object representing the created quick link.
         """
+        current_auth = self.current_authorization_information
+        if current_auth is None:
+            raise ValueError(
+                "current_authorization_information is not available for this session"
+            )
+
         res = await self.client.http.create_application_quick_link(
             self.token,
-            application_id=self.current_authorization_information.application.id,
+            application_id=current_auth.application.id,
             title=title,
             description=description,
             image=image,

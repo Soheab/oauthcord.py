@@ -22,7 +22,7 @@ This is not a gateway or bot framework. If you need bot events, shards, or gatew
 
 ### Requirements
 
-- Python `3.14+`
+- Python `3.13+`
 
 
 Install directly from GitHub:

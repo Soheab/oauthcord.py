@@ -5,9 +5,17 @@ from typing import TYPE_CHECKING, Any, Literal, Protocol, overload
 if TYPE_CHECKING:
     from .client import AuthorisedSession
     from .client._proto import _AuthorisedSessionProto
+    from .enums import Locale
     from .internals.http import OAuth2HTTPClient
     from .models._base import BaseModel, BaseModelWithHTTP, BaseModelWithSession
-    from .enums import Locale
+
+__all__ = (
+    "NotSet",
+    "convert_snowflake",
+    "id_to_datetime",
+    "iso_to_datetime",
+    "parse_invite",
+)
 
 DISCORD_EPOCH = 1420070400000
 
@@ -93,7 +101,7 @@ def maybe_available[T: Any, D: Any = None](
 ) -> T | D:
     try:
         return obj(data[key])
-    except KeyError, TypeError:
+    except (KeyError, TypeError):
         return default
 
 
@@ -117,7 +125,7 @@ def convert_snowflake(
 def convert_snowflake(data: Any, key: str, always_available: bool = True) -> int | None:
     try:
         return int(data[key])
-    except KeyError, TypeError, ValueError:
+    except (KeyError, TypeError, ValueError):
         if always_available:
             raise TypeError(f"Missing or invalid snowflake for key: {key}")
         return None

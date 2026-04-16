@@ -1,9 +1,9 @@
 from typing import TYPE_CHECKING, override
 
+from ..enums import IntegrationType, Service, Visibility
 from ..utils import convert_snowflake
 from ._base import BaseModel, BaseModelWithHTTP
 from .asset import Asset
-from ..enums import IntegrationType, Service, Visibility
 from .user import to_enum
 
 if TYPE_CHECKING:

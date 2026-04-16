@@ -136,7 +136,6 @@ class LobbyHTTPClientMixin(BaseHTTPClient):
             flags=flags,
             metadata=metadata,
             files=files,
-            activity=activity,
             poll=poll,
             shared_client_theme=shared_client_theme,
         )

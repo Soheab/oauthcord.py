@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from .base import BaseHTTPClient, Route
 
 if TYPE_CHECKING:
-    from ...file import File
+    from ...models.file import File
     from .._types import components as component_types
     from .._types import message as message_types
     from .base import ValidToken

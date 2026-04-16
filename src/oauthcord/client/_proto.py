@@ -6,7 +6,7 @@ if TYPE_CHECKING:
     from . import Client
 
 
-class _AuthorisedSessionProto(Protocol):
+class _AuthorisedSessionProto(Protocol):  # pyright: ignore[reportUnusedClass]
     client: Client
     token: AccessTokenResponse
 

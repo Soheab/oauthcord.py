@@ -1,7 +1,5 @@
 from typing import TYPE_CHECKING, Any
 
-from .enums import Scope
-
 if TYPE_CHECKING:
     from .internals.endpoints.base import Route
 
