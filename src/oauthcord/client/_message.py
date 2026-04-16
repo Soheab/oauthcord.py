@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""Message-related client mixins for authenticated sessions."""
+
 from typing import TYPE_CHECKING
 
 from .. import utils
@@ -16,6 +20,8 @@ if TYPE_CHECKING:
 
 
 class MessageClientMixin:
+    """Methods for reading, sending, editing, and deleting DM messages."""
+
     async def get_dm_messages(
         self: _AuthorisedSessionProto,
         *,

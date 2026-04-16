@@ -1,3 +1,5 @@
+"""Models for Discord application command payloads and permissions."""
+
 from __future__ import annotations
 
 from collections.abc import Sequence
@@ -39,6 +41,8 @@ class OptionChoice(
         "commands._StringApplicationCommandOptionChoiceResponse | commands.ApplicationCommandOptionChoiceRequest",
     ]
 ):
+    """One selectable choice for a command option."""
+
     __slots__ = ("name", "name_localizations", "value")
 
     @override
@@ -73,6 +77,8 @@ class Option(
         "commands.ApplicationCommandOptionResponse | commands.ApplicationCommandOptionRequest",
     ]
 ):
+    """One option definition attached to an application command."""
+
     __slots__ = (
         "autocomplete",
         "channel_types",
@@ -185,6 +191,8 @@ class Option(
 
 
 class RequestCommand(BaseModel["commands.ApplicationCommandRequest"]):
+    """Serializable application command payload used for create and edit requests."""
+
     __slots__ = (
         "contexts",
         "default_member_permissions",
@@ -285,6 +293,8 @@ class RequestCommand(BaseModel["commands.ApplicationCommandRequest"]):
 class Command[
     D = commands.ApplicationCommandResponse | commands.GuildApplicationCommandResponse
 ](BaseModelWithHTTP[D]):
+    """Application command payload returned by Discord."""
+
     __slots__ = (
         "application_id",
         "contexts",
@@ -351,6 +361,8 @@ class Command[
 
 
 class Subcommand[D = commands._SubCommandCommandOptionResponse](BaseModelWithHTTP[D]):
+    """Subcommand entry nested under a command group."""
+
     __slots__ = (
         "description",
         "description_localizations",
@@ -401,6 +413,8 @@ class Group(
         "commands.ApplicationCommandResponse | commands.GuildApplicationCommandResponse"
     ],
 ):
+    """Command model that exposes nested subcommands as a group."""
+
     __slots__ = ("commands",)
 
     def __init__(
@@ -421,6 +435,8 @@ class Group(
 class ApplicationCommandPermission(
     BaseModelWithHTTP["commands.ApplicationCommandPermissionsResponse"]
 ):
+    """Permission override entry for one command target."""
+
     __slots__ = ("id", "permission", "type")
 
     @override
@@ -435,6 +451,8 @@ class ApplicationCommandPermission(
 class GuildApplicationCommandPermissions(
     BaseModelWithHTTP["commands.GuildApplicationCommandPermissionsResponse"]
 ):
+    """Guild-scoped permission set for an application command."""
+
     __slots__ = ("application_id", "guild_id", "id", "permissions")
 
     @override

@@ -1,0 +1,45 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link
+  href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap"
+  rel="stylesheet"
+>
+<style>
+@font-face {
+  font-family: "gg sans";
+  src: url("{{ pathto('_static/fonts/gg-sans/gg%20sans%20Regular.ttf', 1) }}") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "gg sans";
+  src: url("{{ pathto('_static/fonts/gg-sans/gg%20sans%20Medium.ttf', 1) }}") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "gg sans";
+  src: url("{{ pathto('_static/fonts/gg-sans/gg%20sans%20Semibold.ttf', 1) }}") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "gg sans";
+  src: url("{{ pathto('_static/fonts/gg-sans/gg%20sans%20Bold.ttf', 1) }}") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --sy-f-text: "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+</style>

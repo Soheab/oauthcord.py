@@ -1,3 +1,5 @@
+"""Builder classes for Discord poll creation payloads."""
+
 from __future__ import annotations
 
 import datetime
@@ -20,6 +22,8 @@ __all__ = (
 
 
 class PollBuilder(BaseModel[None, "PollCreateRequest"]):
+    """Builder for a Discord poll payload."""
+
     def __init__(
         self,
         *,
@@ -75,6 +79,8 @@ class PollBuilder(BaseModel[None, "PollCreateRequest"]):
 
 
 class PollAnswerBuilder(BaseModel[None, "PollAnswerRequest"]):
+    """Builder for one answer entry within a Discord poll."""
+
     def __init__(
         self,
         *,

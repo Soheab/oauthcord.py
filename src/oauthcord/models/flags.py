@@ -1,3 +1,5 @@
+"""Bitflag helpers and concrete Discord flag containers."""
+
 from __future__ import annotations
 
 from collections.abc import Iterator
@@ -213,6 +215,8 @@ __all__ = (
 
 
 class Flag:
+    """Descriptor representing one named bit within a flag container."""
+
     __slots__ = ("name", "value")
 
     def __init__(self, value: int) -> None:
@@ -241,6 +245,8 @@ class Flag:
 
 
 class FlagsMeta(type):
+    """Metaclass that collects :class:`Flag` descriptors from subclasses."""
+
     _flags: dict[str, Flag]
 
     def __new__(
@@ -269,6 +275,8 @@ class FlagsMeta(type):
 
 
 class BaseFlags(metaclass=FlagsMeta):
+    """Base class for working with Discord integer-backed flag sets."""
+
     def __init__(self, value: int | None = None, /, **flags: bool) -> None:
         self.value: int = value if value is not None else 0
         for flag_name, flag_value in flags.items():
@@ -318,6 +326,8 @@ class BaseFlags(metaclass=FlagsMeta):
 
 
 class UserFlags(BaseFlags):
+    """Flags describing Discord user account badges and capabilities."""
+
     if TYPE_CHECKING:
 
         def __init__(
@@ -342,6 +352,8 @@ class UserFlags(BaseFlags):
 
 
 class Permissions(BaseFlags):
+    """Guild and channel permission bits represented as a flag container."""
+
     if TYPE_CHECKING:
 
         def __init__(
@@ -402,6 +414,8 @@ class Permissions(BaseFlags):
 
 
 class MemberFlags(BaseFlags):
+    """Flags describing guild member state tracked by Discord."""
+
     if TYPE_CHECKING:
 
         def __init__(
@@ -421,6 +435,8 @@ class MemberFlags(BaseFlags):
 
 
 class ChannelFlags(BaseFlags):
+    """Flags describing channel-level Discord state."""
+
     if TYPE_CHECKING:
 
         def __init__(
@@ -447,6 +463,8 @@ class ChannelFlags(BaseFlags):
 
 
 class RecipientFlags(BaseFlags):
+    """Flags attached to DM recipients."""
+
     if TYPE_CHECKING:
 
         def __init__(
@@ -457,6 +475,8 @@ class RecipientFlags(BaseFlags):
 
 
 class MessageFlags(BaseFlags):
+    """Flags describing message state and delivery behavior."""
+
     if TYPE_CHECKING:
 
         def __init__(
@@ -482,6 +502,8 @@ class MessageFlags(BaseFlags):
 
 
 class EmbedFlags(BaseFlags):
+    """Flags describing embed content warnings and metadata."""
+
     if TYPE_CHECKING:
 
         def __init__(
@@ -495,6 +517,8 @@ class EmbedFlags(BaseFlags):
 
 
 class AttachmentFlags(BaseFlags):
+    """Flags describing attachment presentation and safety metadata."""
+
     if TYPE_CHECKING:
 
         def __init__(
@@ -512,6 +536,8 @@ class AttachmentFlags(BaseFlags):
 
 
 class ApplicationFlags(BaseFlags):
+    """Flags describing Discord application capabilities and rollout state."""
+
     if TYPE_CHECKING:
 
         def __init__(
@@ -543,6 +569,8 @@ class ApplicationFlags(BaseFlags):
 
 
 class SKUFlags(BaseFlags):
+    """Flags describing Discord store SKU behavior and availability."""
+
     if TYPE_CHECKING:
 
         def __init__(
@@ -564,6 +592,8 @@ class SKUFlags(BaseFlags):
 
 
 class LobbyFlags(BaseFlags):
+    """Flags describing Discord lobby behavior."""
+
     if TYPE_CHECKING:
 
         def __init__(
@@ -574,6 +604,8 @@ class LobbyFlags(BaseFlags):
 
 
 class LobbyMemberFlags(BaseFlags):
+    """Flags describing Discord lobby member capabilities."""
+
     if TYPE_CHECKING:
 
         def __init__(

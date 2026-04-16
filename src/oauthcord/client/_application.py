@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""Application-related client mixins for authenticated sessions."""
+
 from typing import TYPE_CHECKING
 
 from .. import utils
@@ -16,6 +20,8 @@ if TYPE_CHECKING:
 
 
 class ApplicationClientMixin:
+    """Methods for application resources available on an authorised session."""
+
     async def create_application_attachment(
         self: _AuthorisedSessionProto,
         *,

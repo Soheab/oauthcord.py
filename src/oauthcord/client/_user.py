@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""User-related client mixins for authenticated sessions."""
+
 from typing import TYPE_CHECKING
 
 from .. import utils
@@ -8,6 +12,8 @@ if TYPE_CHECKING:
 
 
 class UserClientMixin:
+    """Methods for the currently authorised Discord user."""
+
     async def get_current_user(
         self: _AuthorisedSessionProto,
     ) -> CurrentUser:

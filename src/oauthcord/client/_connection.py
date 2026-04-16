@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""Connection-related client mixins for authenticated sessions."""
+
 from typing import TYPE_CHECKING
 
 from .. import utils
@@ -8,6 +12,8 @@ if TYPE_CHECKING:
 
 
 class ConnectionClientMixin:
+    """Methods for Discord user connection and integration resources."""
+
     async def get_current_user_connections(
         self: _AuthorisedSessionProto,
     ) -> list[Connection]:

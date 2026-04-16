@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""Invite-related client mixins for authenticated sessions."""
+
 from typing import TYPE_CHECKING
 
 from .. import utils
@@ -8,6 +12,8 @@ if TYPE_CHECKING:
 
 
 class InviteClientMixin:
+    """Methods for accepting and resolving Discord invites."""
+
     async def accept_invite(
         self: _AuthorisedSessionProto,
         invite: str,

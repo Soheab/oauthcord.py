@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""Lobby-related client mixins for authenticated sessions."""
+
 from typing import TYPE_CHECKING
 
 from .. import utils
@@ -13,6 +17,8 @@ if TYPE_CHECKING:
 
 
 class LobbyClientMixin:
+    """Methods for joining, editing, and messaging Discord lobbies."""
+
     async def join_or_create_lobby(
         self: _AuthorisedSessionProto,
         *,

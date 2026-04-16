@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""Relationship-related client mixins for authenticated sessions."""
+
 from typing import TYPE_CHECKING
 
 from .. import utils
@@ -9,6 +13,8 @@ if TYPE_CHECKING:
 
 
 class RelationshipClientMixin:
+    """Methods for managing user and game relationship resources."""
+
     async def get_current_user_relationships(
         self: _AuthorisedSessionProto,
     ) -> list[Relationship]:

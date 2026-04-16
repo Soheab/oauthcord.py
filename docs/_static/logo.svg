@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" fill="none">
+  <defs>
+    <linearGradient id="oauthcord-gradient" x1="12" y1="10" x2="82" y2="86" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2563EB" />
+      <stop offset="1" stop-color="#14B8A6" />
+    </linearGradient>
+  </defs>
+  <rect x="8" y="8" width="80" height="80" rx="24" fill="url(#oauthcord-gradient)" />
+  <circle cx="46" cy="50" r="18" stroke="#F8FBFF" stroke-width="10" />
+  <path d="M61.5 34.5L67.5 40.5L40.5 67.5H34.5V61.5L61.5 34.5Z" fill="#F8FBFF" />
+  <circle cx="69" cy="27" r="7" fill="#BFF4FF" />
+</svg>

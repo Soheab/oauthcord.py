@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""Guild-related client mixins for authenticated sessions."""
+
 from typing import TYPE_CHECKING
 
 from .. import utils
@@ -9,6 +13,8 @@ if TYPE_CHECKING:
 
 
 class GuildClientMixin:
+    """Methods for guild membership resources available to the current user."""
+
     async def get_current_user_guilds(
         self: _AuthorisedSessionProto,
     ) -> list[Guild]:

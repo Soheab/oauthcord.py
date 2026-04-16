@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""Exception types raised by oauthcord.py HTTP and model operations."""
+
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -19,10 +23,14 @@ __all__ = (
 
 
 class OauthCordException(Exception):
+    """Base exception for all library-specific errors."""
+
     pass
 
 
 class HTTPException(OauthCordException):
+    """Base exception for Discord HTTP responses that indicate failure."""
+
     def __init__(
         self, route: Route, response: str | dict[str, Any] | list[Any], status: int
     ) -> None:
@@ -56,6 +64,8 @@ class HTTPException(OauthCordException):
 
 
 class RateLimited(HTTPException):
+    """Exception raised when Discord rate limits the current request."""
+
     def __init__(
         self,
         route: Route,
@@ -73,30 +83,44 @@ class RateLimited(HTTPException):
 
 
 class BadRequest(HTTPException):
+    """Exception raised for HTTP 400 responses."""
+
     pass
 
 
 class Unauthorized(HTTPException):
+    """Exception raised for HTTP 401 responses."""
+
     pass
 
 
 class Forbidden(HTTPException):
+    """Exception raised for HTTP 403 responses."""
+
     pass
 
 
 class NotFound(HTTPException):
+    """Exception raised for HTTP 404 responses."""
+
     pass
 
 
 class Conflict(HTTPException):
+    """Exception raised for HTTP 409 responses."""
+
     pass
 
 
 class UnprocessableEntity(HTTPException):
+    """Exception raised for HTTP 422 responses."""
+
     pass
 
 
 class DiscordServerError(HTTPException):
+    """Exception raised for HTTP 5xx responses from Discord."""
+
     pass
 
 

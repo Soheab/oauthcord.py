@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""Channel-related client mixins for authenticated sessions."""
+
 from typing import TYPE_CHECKING
 
 from .. import utils
@@ -14,6 +18,8 @@ if TYPE_CHECKING:
 
 
 class ChannelClientMixin:
+    """Methods for private channels, guild channels, and call helpers."""
+
     async def get_dm_channel(
         self: _AuthorisedSessionProto,
         *,

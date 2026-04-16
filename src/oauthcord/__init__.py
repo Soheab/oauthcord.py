@@ -1,3 +1,5 @@
+"""Public exports for the oauthcord.py package."""
+
 from .client import AuthorisedSession, Client
 from .errors import *
 from .models import *

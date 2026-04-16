@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""Store-related client mixins for authenticated sessions."""
+
 import datetime
 from typing import TYPE_CHECKING
 
@@ -21,6 +25,8 @@ if TYPE_CHECKING:
 
 
 class StoreClientMixin:
+    """Methods for Discord store, SKU, listing, and asset resources."""
+
     async def get_application_skus(
         self: _AuthorisedSessionProto,
         *,

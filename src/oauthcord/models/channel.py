@@ -238,7 +238,7 @@ class BaseChannel[D: Any = "_BaseChannelResponse"](BaseModelWithSession[D]):
         )
 
 
-class GuildChannel[D: Any = _GuildChannelResponse](BaseChannel[D]):
+class GuildChannel[D: Any = "_GuildChannelResponse"](BaseChannel[D]):
     """Represents Discord API data for `GuildChannel`."""
 
     __slots__ = (
@@ -477,7 +477,7 @@ class ThreadChannel(BaseChannel["_ThreadChannelResponse"]):
         ]
 
 
-class PrivateChannel[D = PrivateChannelResponse](BaseChannel[D]):
+class PrivateChannel[D = "PrivateChannelResponse"](BaseChannel[D]):
     __slots__ = ("recipients",)
 
     @override
@@ -599,7 +599,7 @@ class GroupDMChannel(PrivateChannel["GroupDMChannelResponse"]):
         )
 
 
-class EphemeralDMChannel(PrivateChannel[EphemeralDMChannelResponse]):
+class EphemeralDMChannel(PrivateChannel["EphemeralDMChannelResponse"]):
     """Represents Discord API data for `EphemeralDMChannel`."""
 
 

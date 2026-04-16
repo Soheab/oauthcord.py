@@ -1,3 +1,7 @@
+from __future__ import annotations
+
+"""OAuth2 authorization helpers for authenticated sessions."""
+
 from typing import TYPE_CHECKING
 
 from .. import utils
@@ -8,6 +12,8 @@ if TYPE_CHECKING:
 
 
 class Oauth2ClientMixin:
+    """Methods for inspecting the current OAuth2 authorization context."""
+
     async def get_current_authorization_information(
         self: _AuthorisedSessionProto,
     ) -> CurrentInformation:

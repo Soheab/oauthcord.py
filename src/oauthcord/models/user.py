@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 from typing import TYPE_CHECKING, Any, override
 
@@ -50,7 +52,7 @@ __all__ = (
 )
 
 
-class BaseCollectable[D: Any = BaseCollectibleResponse](BaseModelWithHTTP[D]):
+class BaseCollectable[D: Any = "BaseCollectibleResponse"](BaseModelWithHTTP[D]):
     __slots__ = ("asset", "label", "sku_id")
 
     @override
@@ -131,7 +133,7 @@ class DisplayNameStyle(BaseModel["DisplayNameStyleResponse"]):
         self.colors: list[int] = data["colors"]
 
 
-class PartialUser[D = PartialUserResponse](BaseModelWithSession[D]):
+class PartialUser[D = "PartialUserResponse"](BaseModelWithSession[D]):
     """Represents a partial Discord user payload."""
 
     __slots__ = (
@@ -166,7 +168,7 @@ class PartialUser[D = PartialUserResponse](BaseModelWithSession[D]):
         return await self._session.get_dm_channel(user_id=self.id)
 
 
-class GuildMemberWithUser[D = GuildMemberWithUserResponse](PartialUser[D]):
+class GuildMemberWithUser[D = "GuildMemberWithUserResponse"](PartialUser[D]):
     __slots__ = (
         "accent_color",
         "avatar_decoration_data",

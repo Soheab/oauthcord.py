@@ -1,3 +1,5 @@
+"""Builder classes for Discord application command payloads."""
+
 from __future__ import annotations
 
 from enum import Enum
@@ -193,6 +195,8 @@ class WithDescriptionLocalizationsMixin:
 
 
 class OptionChoiceBuilder(WithNameLocalizationsMixin):
+    """Builder for a single option choice value."""
+
     def __init__(
         self,
         *,
@@ -483,6 +487,8 @@ class _BaseChatInputCommandBuilder(
 
 
 class ChatInputCommandBuilder(_BaseChatInputCommandBuilder, WithContextsMixin):
+    """Builder for a top-level slash command."""
+
     def __init__(
         self,
         *,
@@ -548,6 +554,8 @@ class ChatInputCommandBuilder(_BaseChatInputCommandBuilder, WithContextsMixin):
 
 
 class ChatInputSubCommandBuilder(_BaseChatInputCommandBuilder):
+    """Builder for a slash-command subcommand within a group."""
+
     def __init__(
         self,
         *,
@@ -602,6 +610,8 @@ class ChatInputSubCommandBuilder(_BaseChatInputCommandBuilder):
 
 
 class ChatInputGroupCommandBuilder(_BaseApplicationCommandBuilder):
+    """Builder for a slash-command tree containing groups and subcommands."""
+
     def __init__(
         self,
         *,
@@ -779,6 +789,8 @@ class PrimaryEntryPointCommandBuilder(
     WithDescriptionLocalizationsMixin,
     WithContextsMixin,
 ):
+    """Builder for a primary entry point application command."""
+
     def __init__(
         self,
         *,
@@ -860,6 +872,8 @@ class _BaseContextMenuCommandBuilder(_BaseApplicationCommandBuilder, WithContext
 
 
 class MessageCommandBuilder(_BaseContextMenuCommandBuilder):
+    """Builder for a message context menu command."""
+
     def __init__(
         self,
         *,
@@ -895,6 +909,8 @@ class MessageCommandBuilder(_BaseContextMenuCommandBuilder):
 
 
 class UserCommandBuilder(_BaseContextMenuCommandBuilder):
+    """Builder for a user context menu command."""
+
     def __init__(
         self,
         *,
