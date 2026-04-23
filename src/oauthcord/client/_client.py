@@ -83,6 +83,10 @@ class Client:
         self._redirect_uri: str = redirect_uri
         self._state: str | None = state
 
+    async def close(self) -> None:
+        """Close the client's internal HTTP session."""
+        await self.http.close()
+
     def get_authorization_url(
         self,
     ) -> str:
@@ -169,6 +173,13 @@ class AuthorisedSession(
 
     def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None:
         pass
+
+    async def close(self) -> None:
+        """Close the session's internal HTTP client.
+
+        This is a shortcut to `.client.close()`.
+        """
+        await self.client.close()
 
     @property
     def current_authorization_information(self) -> CurrentInformation | None:

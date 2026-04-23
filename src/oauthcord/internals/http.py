@@ -181,18 +181,16 @@ class OAuth2HTTPClient(
     BASE_URL: ClassVar[str] = "https://discord.com/oauth2/authorize"
     CDN_URL: ClassVar[str] = "https://cdn.discordapp.com"
 
-    RETRYABLE_SERVER_STATUSES: ClassVar[frozenset[int]] = frozenset(
-        {
-            500,
-            502,
-            503,
-            504,
-            521,
-            522,
-            523,
-            524,
-        }
-    )
+    RETRYABLE_SERVER_STATUSES: ClassVar[frozenset[int]] = frozenset({
+        500,
+        502,
+        503,
+        504,
+        521,
+        522,
+        523,
+        524,
+    })
     CONNECTION_RESET_ERRNOS: ClassVar[frozenset[int]] = frozenset({54, 10054})
 
     __get_client: Callable[[], Client]
@@ -231,12 +229,17 @@ class OAuth2HTTPClient(
 
         self._auth = aiohttp.BasicAuth(str(client_id), client_secret)
         self.__session: aiohttp.ClientSession | None = session or None
+        self._session_provided = session is not NotSet
 
         self._init_ratelimiter()
 
     async def close(self) -> None:
+        if self._session_provided:
+            return
+
         if self.__session and not self.__session.closed:
             await self.__session.close()
+            self.__session = None
 
     @staticmethod
     def _get_retry_delay(attempt: int) -> int:
