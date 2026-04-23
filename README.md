@@ -94,6 +94,25 @@ asyncio.run(main())
 
 Minimal end-to-end callback examples are included in [`examples/app_aiohttp.py`](./examples/app_aiohttp.py) and [`examples/app_litestar.py`](./examples/app_litestar.py).
 
+## Model data access
+
+All returned models expose a `.data` attribute containing the raw payload from Discord.
+Use this when you want the original API data directly instead of typed attributes.
+
+```python
+me = await session.current_user()
+
+# typed model attribute 
+username = me.username
+print("Username", username)
+
+# raw Discord payload
+raw = me.data
+print(raw)
+username = raw["username"]
+print("Username:", username)
+```
+
 
 ## API coverage
 
