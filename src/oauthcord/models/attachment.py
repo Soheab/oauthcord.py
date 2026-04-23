@@ -55,23 +55,24 @@ class Attachment(BaseModel["AttachmentPayload", "PartialAttachmentRequest"]):
     """
 
     __slots__ = (
-        "content_scan_version",
-        "content_type",
-        "description",
-        "duration_secs",
-        "ephemeral",
-        "filename",
-        "flags",
-        "height",
+        *BaseModel.__slots__,
         "id",
-        "placeholder",
-        "placeholder_version",
-        "proxy_url",
+        "filename",
         "size",
-        "title",
         "url",
-        "waveform",
+        "proxy_url",
+        "title",
+        "description",
+        "content_type",
+        "height",
         "width",
+        "content_scan_version",
+        "placeholder_version",
+        "placeholder",
+        "ephemeral",
+        "duration_secs",
+        "waveform",
+        "flags",
     )
 
     @override

@@ -242,7 +242,10 @@ class BaseModelWithHTTP[D: Any, R: Any = None](BaseModel[D, R]):
 
 
 class BaseModelWithSession[D: Any, R: Any = None](BaseModel[D, R]):
-    __slots__ = (*BaseModel.__slots__, "_session")
+    __slots__ = (
+        *BaseModel.__slots__,
+        "_session",
+    )
 
     def __init__(self, *, data: D, session: AuthorisedSession) -> None:
         self._session = session

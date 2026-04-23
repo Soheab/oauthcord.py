@@ -30,6 +30,7 @@ class CurrentApplication(
     """Represents Discord API data for `CurrentApplication`."""
 
     __slots__ = (
+        *BaseModelWithSession.__slots__,
         "bot_public",
         "bot_require_code_grant",
         "description",
@@ -112,7 +113,13 @@ class CurrentInformation(
 ):
     """Represents Discord API data for `CurrentInformation`."""
 
-    __slots__ = ("_expires", "application", "scopes", "user")
+    __slots__ = (
+        *BaseModelWithSession.__slots__,
+        "_expires",
+        "scopes",
+        "application",
+        "user",
+    )
 
     def _initialize(self, data: CurrentAuthorizationInformationResponsePayload) -> None:
         self._expires: datetime.datetime = datetime.datetime.fromisoformat(

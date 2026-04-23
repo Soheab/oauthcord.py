@@ -18,7 +18,16 @@ __all__ = ("Guild",)
 class Guild(BaseModelWithSession["GuildPayload"]):
     """Represents a Discord guild available to the authorized user."""
 
-    __slots__ = ("banner", "features", "icon", "id", "name", "owner", "permissions")
+    __slots__ = (
+        *BaseModelWithSession.__slots__,
+        "id",
+        "name",
+        "icon",
+        "banner",
+        "owner",
+        "permissions",
+        "features",
+    )
 
     @override
     def _initialize(self, data: GuildPayload) -> None:

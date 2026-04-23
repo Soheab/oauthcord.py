@@ -28,6 +28,7 @@ class InviteGuild(BaseModelWithSession["InviteGuildResponse"]):
     """Represents Discord API data for `InviteGuild`."""
 
     __slots__ = (
+        *BaseModelWithSession.__slots__,
         "banner",
         "description",
         "features",
@@ -70,26 +71,27 @@ class Invite(BaseModelWithSession["InviteResponse"]):
     """Represents a Discord invite."""
 
     __slots__ = (
-        "approximate_member_count",
-        "approximate_presence_count",
-        "channel",
+        *BaseModelWithSession.__slots__,
         "code",
-        "expires_at",
-        "flags",
-        "guild",
+        "type",
         "guild_id",
-        "guild_join_request",
-        "guild_scheduled_event",
-        "inviter",
-        "new_member",
+        "guild",
+        "channel",
         "profile",
-        "roles",
-        "show_verification_form",
-        "stage_instance",
-        "target_application",
+        "inviter",
         "target_type",
         "target_user",
-        "type",
+        "target_application",
+        "roles",
+        "approximate_presence_count",
+        "approximate_member_count",
+        "expires_at",
+        "flags",
+        "new_member",
+        "show_verification_form",
+        "stage_instance",
+        "guild_scheduled_event",
+        "guild_join_request",
     )
 
     @override

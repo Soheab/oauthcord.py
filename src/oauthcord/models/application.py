@@ -70,7 +70,7 @@ class ApplicationExecutable(BaseModel["ApplicationExecutableResponse"]):
         Whether this executable is the primary launcher.
     """
 
-    __slots__ = ("is_launcher", "name", "os")
+    __slots__ = (*BaseModel.__slots__, "is_launcher", "name", "os")
 
     @override
     def _initialize(self, data: ApplicationExecutableResponse) -> None:
@@ -95,7 +95,7 @@ class ApplicationSKU(BaseModel["ApplicationSKUResponse"]):
         The distributor platform for the SKU.
     """
 
-    __slots__ = ("distributor", "id", "sku")
+    __slots__ = (*BaseModel.__slots__, "distributor", "id", "sku")
 
     @override
     def _initialize(self, data: ApplicationSKUResponse) -> None:
@@ -121,7 +121,7 @@ class Company(BaseModel["CompanyResponse"]):
         The company display name.
     """
 
-    __slots__ = ("id", "name")
+    __slots__ = (*BaseModel.__slots__, "id", "name")
 
     @override
     def _initialize(self, data: CompanyResponse) -> None:
@@ -143,7 +143,7 @@ class ApplicationInstallParams(BaseModel["ApplicationInstallParamsResponse"]):
         The permissions bitset represented as a string.
     """
 
-    __slots__ = ("permissions", "scopes")
+    __slots__ = (*BaseModel.__slots__, "permissions", "scopes")
 
     @override
     def _initialize(self, data: ApplicationInstallParamsResponse) -> None:
@@ -166,7 +166,7 @@ class ApplicationIntegrationTypeConfiguration(
         The OAuth2 install parameters for this integration type, if present.
     """
 
-    __slots__ = ("oauth2_install_params",)
+    __slots__ = (*BaseModel.__slots__, "oauth2_install_params")
 
     @override
     def _initialize(
@@ -181,6 +181,7 @@ class EmbeddedActivityPlatformConfig(
     BaseModel["EmbeddedActivityPlatformConfigResponse"]
 ):
     __slots__ = (
+        *BaseModel.__slots__,
         "label_type",
         "label_until",
         "omit_badge_from_surfaces",
@@ -263,6 +264,7 @@ class EmbeddedActivityConfig(BaseModel["EmbeddedActivityConfigResponse"]):
     """
 
     __slots__ = (
+        *BaseModel.__slots__,
         "activity_preview_video_asset_id",
         "application_id",
         "blocked_locales",
@@ -331,6 +333,7 @@ class ApplicationRoleConnectionMetadata(
     BaseModel["ApplicationRoleConnectionMetadataResponse"]
 ):
     __slots__ = (
+        *BaseModel.__slots__,
         "description",
         "description_localizations",
         "key",
@@ -394,6 +397,7 @@ class ApplicationRoleConnection(
     """
 
     __slots__ = (
+        *BaseModelWithSession.__slots__,
         "application",
         "application_metadata",
         "metadata",
@@ -447,6 +451,7 @@ class ActivityLink(BaseModel["ActivityLinkResponse"]):
     """
 
     __slots__ = (
+        *BaseModel.__slots__,
         "application_id",
         "asset_id",
         "asset_path",
@@ -489,7 +494,7 @@ class PartialApplicationIdentity(BaseModel["PartialApplicationIdentityResponse"]
         The external user identifier.
     """
 
-    __slots__ = ("external_user_id", "user_id")
+    __slots__ = (*BaseModel.__slots__, "external_user_id", "user_id")
 
     @override
     def _initialize(self, data: PartialApplicationIdentityResponse) -> None:
@@ -596,50 +601,51 @@ class PartialApplication(BaseModelWithSession["PartialApplicationResponse"]):
     """
 
     __slots__ = (
-        "aliases",
-        "bot",
-        "bot_public",
-        "bot_require_code_grant",
-        "connection_entrypoint_url",
-        "cover_image",
-        "custom_install_url",
-        "deeplink_uri",
-        "description",
-        "developers",
-        "embedded_activity_config",
-        "eula_id",
-        "executables",
-        "flags",
-        "hook",
-        "icon",
+        *BaseModelWithSession.__slots__,
         "id",
-        "install_params",
-        "integration_public",
-        "integration_require_code_grant",
-        "integration_types_config",
-        "is_discoverable",
-        "is_monetized",
-        "is_verified",
-        "max_participants",
         "name",
+        "description",
+        "icon",
+        "cover_image",
+        "splash",
+        "type",
+        "flags",
+        "primary_sku_id",
+        "verify_key",
+        "eula_id",
+        "slug",
+        "aliases",
+        "executables",
+        "third_party_skus",
+        "hook",
         "overlay",
-        "overlay_compatibility_hook",
         "overlay_methods",
         "overlay_warn",
-        "parent_id",
-        "primary_sku_id",
-        "privacy_policy_url",
+        "overlay_compatibility_hook",
+        "bot",
+        "developers",
         "publishers",
         "rpc_origins",
-        "slug",
-        "splash",
-        "storefront_available",
-        "summary",
-        "tags",
+        "deeplink_uri",
+        "integration_public",
+        "integration_require_code_grant",
+        "bot_public",
+        "bot_require_code_grant",
         "terms_of_service_url",
-        "third_party_skus",
-        "type",
-        "verify_key",
+        "privacy_policy_url",
+        "tags",
+        "install_params",
+        "custom_install_url",
+        "integration_types_config",
+        "connection_entrypoint_url",
+        "is_verified",
+        "is_discoverable",
+        "is_monetized",
+        "storefront_available",
+        "max_participants",
+        "embedded_activity_config",
+        "parent_id",
+        "summary",
     )
 
     @override

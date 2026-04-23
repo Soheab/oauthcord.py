@@ -25,6 +25,7 @@ class GuildMember(BaseModelWithSession["GuildMemberResponse"]):
     """Represents a guild member payload for the authorized user."""
 
     __slots__ = (
+        *BaseModelWithSession.__slots__,
         "avatar",
         "banner",
         "bio",
@@ -109,14 +110,15 @@ class ThreadMember(BaseModelWithSession["ThreadMemberResponse"]):
     """Represents a thread member payload."""
 
     __slots__ = (
-        "flags",
+        *BaseModelWithSession.__slots__,
         "guild_id",
         "id",
-        "join_timestamp",
-        "member",
-        "mute_config",
-        "muted",
         "user_id",
+        "join_timestamp",
+        "flags",
+        "muted",
+        "mute_config",
+        "member",
     )
 
     @override

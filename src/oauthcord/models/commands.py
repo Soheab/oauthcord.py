@@ -39,7 +39,7 @@ class OptionChoice(
         "commands._StringApplicationCommandOptionChoiceResponse | commands.ApplicationCommandOptionChoiceRequest",
     ]
 ):
-    __slots__ = ("name", "name_localizations", "value")
+    __slots__ = (*BaseModel.__slots__, "name", "name_localizations", "value")
 
     @override
     def _initialize(
@@ -74,6 +74,7 @@ class Option(
     ]
 ):
     __slots__ = (
+        *BaseModel.__slots__,
         "autocomplete",
         "channel_types",
         "choices",
@@ -186,6 +187,7 @@ class Option(
 
 class RequestCommand(BaseModel["commands.ApplicationCommandRequest"]):
     __slots__ = (
+        *BaseModel.__slots__,
         "contexts",
         "default_member_permissions",
         "description",
@@ -286,6 +288,7 @@ class Command[
     D = commands.ApplicationCommandResponse | commands.GuildApplicationCommandResponse
 ](BaseModelWithHTTP[D]):
     __slots__ = (
+        *BaseModelWithHTTP.__slots__,
         "application_id",
         "contexts",
         "default_member_permissions",
@@ -352,6 +355,7 @@ class Command[
 
 class Subcommand[D = commands._SubCommandCommandOptionResponse](BaseModelWithHTTP[D]):
     __slots__ = (
+        *BaseModelWithHTTP.__slots__,
         "description",
         "description_localizations",
         "name",
@@ -401,7 +405,7 @@ class Group(
         "commands.ApplicationCommandResponse | commands.GuildApplicationCommandResponse"
     ],
 ):
-    __slots__ = ("commands",)
+    __slots__ = (*Command.__slots__, "commands")
 
     def __init__(
         self,
@@ -421,7 +425,7 @@ class Group(
 class ApplicationCommandPermission(
     BaseModelWithHTTP["commands.ApplicationCommandPermissionsResponse"]
 ):
-    __slots__ = ("id", "permission", "type")
+    __slots__ = (*BaseModelWithHTTP.__slots__, "id", "permission", "type")
 
     @override
     def _initialize(self, data: commands.ApplicationCommandPermissionsResponse) -> None:
@@ -435,7 +439,13 @@ class ApplicationCommandPermission(
 class GuildApplicationCommandPermissions(
     BaseModelWithHTTP["commands.GuildApplicationCommandPermissionsResponse"]
 ):
-    __slots__ = ("application_id", "guild_id", "id", "permissions")
+    __slots__ = (
+        *BaseModelWithHTTP.__slots__,
+        "id",
+        "application_id",
+        "guild_id",
+        "permissions",
+    )
 
     @override
     def _initialize(

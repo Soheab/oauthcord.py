@@ -32,7 +32,7 @@ __all__ = (
 class QuestRewardsMetadata(BaseModel["QuestRewardsMetadataResponse"]):
     """Represents Discord API data for `QuestRewardsMetadata`."""
 
-    __slots__ = ("reward_code", "tag")
+    __slots__ = (*BaseModel.__slots__, "reward_code", "tag")
 
     @override
     def _initialize(self, data: QuestRewardsMetadataResponse) -> None:
@@ -43,7 +43,7 @@ class QuestRewardsMetadata(BaseModel["QuestRewardsMetadataResponse"]):
 class TenantMetadata(BaseModel["TenantMetadataResponse"]):
     """Represents Discord API data for `TenantMetadata`."""
 
-    __slots__ = ("quest_rewards",)
+    __slots__ = (*BaseModel.__slots__, "quest_rewards")
 
     @override
     def _initialize(self, data: TenantMetadataResponse) -> None:
@@ -56,31 +56,32 @@ class Entitlement(BaseModelWithSession["EntitlementResponse"]):
     """Represents a Discord application entitlement."""
 
     __slots__ = (
-        "application_id",
-        "branches",
-        "consumed",
-        "deleted",
-        "ends_at",
-        "fulfilled_at",
-        "fulfillment_status",
-        "gift_code_batch_id",
-        "gift_code_flags",
-        "gift_style",
-        "gifter_user_id",
-        "guild_id",
+        *BaseModelWithSession.__slots__,
         "id",
-        "parent_id",
-        "promotion_id",
-        "sku",
-        "sku_id",
-        "source_type",
-        "starts_at",
-        "subscription_id",
-        "subscription_plan",
-        "tenant_metadata",
         "type",
-        "user",
+        "sku_id",
+        "application_id",
         "user_id",
+        "user",
+        "guild_id",
+        "parent_id",
+        "deleted",
+        "consumed",
+        "branches",
+        "starts_at",
+        "ends_at",
+        "promotion_id",
+        "subscription_id",
+        "gift_code_flags",
+        "gift_code_batch_id",
+        "gifter_user_id",
+        "gift_style",
+        "fulfillment_status",
+        "fulfilled_at",
+        "source_type",
+        "tenant_metadata",
+        "sku",
+        "subscription_plan",
     )
 
     @override

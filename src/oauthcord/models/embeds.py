@@ -19,7 +19,7 @@ __all__ = (
 class EmbedFooter(
     BaseModel["message_types.EmbedFooterResponse", "message_types.EmbedFooterRequest"]
 ):
-    __slots__ = ("icon_url", "proxy_icon_url", "text")
+    __slots__ = (*BaseModel.__slots__, "icon_url", "proxy_icon_url", "text")
 
     def __init__(
         self,
@@ -61,6 +61,7 @@ class EmbedMedia(
     """Builder and serializer for Discord embed payload data."""
 
     __slots__ = (
+        *BaseModel.__slots__,
         "content_scan_metadata",
         "content_type",
         "description",
@@ -127,7 +128,7 @@ class EmbedMedia(
 class EmbedAuthor(
     BaseModel["message_types.EmbedAuthorResponse", "message_types.EmbedAuthorRequest"]
 ):
-    __slots__ = ("icon_url", "name", "proxy_icon_url", "url")
+    __slots__ = (*BaseModel.__slots__, "icon_url", "name", "proxy_icon_url", "url")
 
     def __init__(
         self,
@@ -170,7 +171,7 @@ class EmbedField(
 ):
     """Builder and serializer for Discord embed payload data."""
 
-    __slots__ = ("inline", "name", "value")
+    __slots__ = (*BaseModel.__slots__, "inline", "name", "value")
 
     def __init__(self, name: str, value: str, *, inline: bool | None = None) -> None:
         super().__init__(data={"name": name, "value": value})
@@ -198,22 +199,23 @@ class EmbedField(
 
 class Embed(BaseModel["message_types.EmbedResponse", "message_types.EmbedRequest"]):
     __slots__ = (
-        "author",
-        "color",
-        "content_scan_version",
-        "description",
-        "fields",
-        "flags",
-        "footer",
-        "image",
-        "provider",
-        "reference_id",
-        "thumbnail",
-        "timestamp",
+        *BaseModel.__slots__,
         "title",
         "type",
+        "description",
         "url",
+        "timestamp",
+        "color",
+        "footer",
+        "image",
+        "thumbnail",
         "video",
+        "provider",
+        "author",
+        "fields",
+        "reference_id",
+        "content_scan_version",
+        "flags",
     )
 
     def __init__(

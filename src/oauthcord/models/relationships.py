@@ -26,7 +26,7 @@ __all__ = (
 
 
 class _RelationshipBase[D: _RelationshipBasePayload](BaseModelWithSession[D]):
-    __slots__ = ("id", "since", "type", "user")
+    __slots__ = (*BaseModelWithSession.__slots__, "id", "since", "type", "user")
 
     @override
     def _initialize(self, data: D) -> None:
@@ -42,6 +42,7 @@ class Relationship(_RelationshipBase["RelationshipPayload"]):
     """Represents Discord API data for `Relationship`."""
 
     __slots__ = (
+        *_RelationshipBase.__slots__,
         "has_played_game",
         "is_spam_request",
         "nickname",
@@ -66,7 +67,12 @@ class Relationship(_RelationshipBase["RelationshipPayload"]):
 class GameRelationship(_RelationshipBase["GameRelationshipPayload"]):
     """Represents Discord API data for `GameRelationship`."""
 
-    __slots__ = ("application_id", "dm_access_type", "user_id")
+    __slots__ = (
+        *_RelationshipBase.__slots__,
+        "application_id",
+        "dm_access_type",
+        "user_id",
+    )
 
     @override
     def _initialize(self, data: GameRelationshipPayload) -> None:

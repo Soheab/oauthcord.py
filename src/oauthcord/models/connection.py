@@ -35,6 +35,7 @@ class Connection(BaseModelWithHTTP["ConnectionPayload"]):
     """Represents a Discord user connection."""
 
     __slots__ = (
+        *BaseModelWithHTTP.__slots__,
         "friend_sync",
         "id",
         "integrations",
@@ -68,7 +69,7 @@ class Connection(BaseModelWithHTTP["ConnectionPayload"]):
 
 
 class Integration(BaseModelWithHTTP["IntegrationResponsePayload"]):
-    __slots__ = ("account", "guild", "id", "type")
+    __slots__ = (*BaseModelWithHTTP.__slots__, "account", "guild", "id", "type")
 
     @override
     def _initialize(self, data: IntegrationResponsePayload) -> None:
@@ -83,7 +84,7 @@ class Integration(BaseModelWithHTTP["IntegrationResponsePayload"]):
 
 
 class IntegrationAccount(BaseModel["IntegrationAccountResponsePayload"]):
-    __slots__ = ("id", "name")
+    __slots__ = (*BaseModel.__slots__, "id", "name")
 
     @override
     def _initialize(self, data: IntegrationAccountResponsePayload) -> None:
@@ -92,7 +93,12 @@ class IntegrationAccount(BaseModel["IntegrationAccountResponsePayload"]):
 
 
 class IntegrationGuild(BaseModelWithHTTP["IntegrationGuildResponsePayload"]):
-    __slots__ = ("icon", "id", "name")
+    __slots__ = (
+        *BaseModelWithHTTP.__slots__,
+        "id",
+        "name",
+        "icon",
+    )
 
     @override
     def _initialize(self, data: IntegrationGuildResponsePayload) -> None:

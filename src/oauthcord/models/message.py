@@ -33,6 +33,7 @@ class PartialMessage(BaseModelWithSession["PartialMessagePayload"]):
     """Represents a partial Discord message payload."""
 
     __slots__ = (
+        *BaseModelWithSession.__slots__,
         "application_id",
         "author",
         "channel",
@@ -79,28 +80,29 @@ class Message(BaseModelWithSession["MessagePayload"]):
     """Represents a full Discord message."""
 
     __slots__ = (
-        "attachments",
-        "author",
-        "channel_id",
-        "components",
-        "content",
-        "edited_timestamp",
-        "embeds",
-        "flags",
+        *BaseModelWithSession.__slots__,
         "id",
+        "channel_id",
         "lobby_id",
-        "mention_channels",
+        "author",
+        "content",
+        "timestamp",
+        "edited_timestamp",
+        "tts",
         "mention_everyone",
-        "mention_roles",
         "mentions",
+        "mention_roles",
+        "mention_channels",
+        "attachments",
+        "embeds",
+        "reactions",
         "nonce",
         "pinned",
-        "reactions",
-        "thread",
-        "timestamp",
-        "tts",
-        "type",
         "webhook_id",
+        "type",
+        "flags",
+        "components",
+        "thread",
     )
 
     @override

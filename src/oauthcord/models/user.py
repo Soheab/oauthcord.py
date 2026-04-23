@@ -53,7 +53,7 @@ __all__ = (
 
 
 class BaseCollectable[D: Any = BaseCollectibleResponse](BaseModelWithHTTP[D]):
-    __slots__ = ("asset", "label", "sku_id")
+    __slots__ = (*BaseModelWithHTTP.__slots__, "asset", "label", "sku_id")
 
     @override
     def _initialize(self, data: D) -> None:
@@ -63,7 +63,7 @@ class BaseCollectable[D: Any = BaseCollectibleResponse](BaseModelWithHTTP[D]):
 
 
 class CollectibleNameplate(BaseCollectable["CollectibleNameplateResponse"]):
-    __slots__ = ("palette",)
+    __slots__ = (*BaseCollectable.__slots__, "palette")
 
     @override
     def _initialize(self, data: CollectibleNameplateResponse) -> None:
@@ -76,7 +76,7 @@ class CollectibleNameplate(BaseCollectable["CollectibleNameplateResponse"]):
 class Collectible(BaseModelWithHTTP["CollectablesResponse"]):
     """Represents Discord API data for `Collectible`."""
 
-    __slots__ = ("nameplate",)
+    __slots__ = (*BaseModelWithHTTP.__slots__, "nameplate")
 
     @override
     def _initialize(self, data: CollectablesResponse) -> None:
@@ -90,7 +90,13 @@ class Collectible(BaseModelWithHTTP["CollectablesResponse"]):
 class PrimaryGuild(BaseModelWithHTTP["PrimaryGuildResponse"]):
     """Represents Discord API data for `PrimaryGuild`."""
 
-    __slots__ = ("badge", "identity_enabled", "identity_guild_id", "tag")
+    __slots__ = (
+        *BaseModelWithHTTP.__slots__,
+        "badge",
+        "identity_enabled",
+        "identity_guild_id",
+        "tag",
+    )
 
     @override
     def _initialize(self, data: PrimaryGuildResponse) -> None:
@@ -113,7 +119,7 @@ class PrimaryGuild(BaseModelWithHTTP["PrimaryGuildResponse"]):
 class AvatarDecorationData(BaseModelWithHTTP["AvatarDecorationDataResponse"]):
     """Represents Discord API data for `AvatarDecorationData`."""
 
-    __slots__ = ("asset", "sku_id")
+    __slots__ = (*BaseModelWithHTTP.__slots__, "asset", "sku_id")
 
     @override
     def _initialize(self, data: AvatarDecorationDataResponse) -> None:
@@ -124,7 +130,7 @@ class AvatarDecorationData(BaseModelWithHTTP["AvatarDecorationDataResponse"]):
 class DisplayNameStyle(BaseModel["DisplayNameStyleResponse"]):
     """Represents Discord API data for `DisplayNameStyle`."""
 
-    __slots__ = ("colors", "effect", "font")
+    __slots__ = (*BaseModel.__slots__, "colors", "effect", "font")
 
     @override
     def _initialize(self, data: DisplayNameStyleResponse) -> None:
@@ -137,6 +143,7 @@ class PartialUser[D = PartialUserResponse](BaseModelWithSession[D]):
     """Represents a partial Discord user payload."""
 
     __slots__ = (
+        *BaseModelWithSession.__slots__,
         "avatar",
         "discriminator",
         "global_name",
@@ -170,6 +177,7 @@ class PartialUser[D = PartialUserResponse](BaseModelWithSession[D]):
 
 class GuildMemberWithUser[D = GuildMemberWithUserResponse](PartialUser[D]):
     __slots__ = (
+        *PartialUser.__slots__,
         "accent_color",
         "avatar_decoration_data",
         "banner",
@@ -218,7 +226,13 @@ class GuildMemberWithUser[D = GuildMemberWithUserResponse](PartialUser[D]):
 class CurrentUser(GuildMemberWithUser["CurrentUserResponse"]):
     """Represents the currently authorized Discord user."""
 
-    __slots__ = ("_email", "locale", "mfa_enabled", "premium_type")
+    __slots__ = (
+        *GuildMemberWithUser.__slots__,
+        "_email",
+        "locale",
+        "mfa_enabled",
+        "premium_type",
+    )
 
     @override
     def _initialize(self, data: CurrentUserResponse) -> None:
@@ -241,6 +255,7 @@ class HarvestMetadata(BaseModel["HarvestMetadataResponse"]):
     """Represents Discord API data for `HarvestMetadata`."""
 
     __slots__ = (
+        *BaseModel.__slots__,
         "backend_attempts",
         "bypass_cooldown",
         "is_provisional",
@@ -261,18 +276,19 @@ class Harvest(BaseModel["HarvestResponse"]):
     """Represents Discord API data for `Harvest`."""
 
     __slots__ = (
-        "backends",
-        "completed_at",
-        "created_at",
-        "email",
+        *BaseModel.__slots__,
         "harvest_id",
-        "harvest_metadata",
-        "polled_at",
-        "shadow_run",
+        "user_id",
+        "email",
         "state",
         "status",
+        "created_at",
+        "completed_at",
+        "polled_at",
+        "backends",
         "updated_at",
-        "user_id",
+        "shadow_run",
+        "harvest_metadata",
     )
 
     @override

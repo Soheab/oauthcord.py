@@ -136,7 +136,7 @@ class LocalizedString(
         Localized string overrides keyed by locale code.
     """
 
-    __slots__ = ("default", "localizations")
+    __slots__ = (*BaseModel.__slots__, "default", "localizations")
 
     @override
     def _initialize(self, data: store_types.LocalizedString) -> None:
@@ -174,7 +174,15 @@ class StoreAsset(BaseModel["store_types.StoreAssetResponse"]):
         The asset height in pixels.
     """
 
-    __slots__ = ("filename", "height", "id", "mime_type", "size", "width")
+    __slots__ = (
+        *BaseModel.__slots__,
+        "filename",
+        "height",
+        "id",
+        "mime_type",
+        "size",
+        "width",
+    )
 
     @override
     def _initialize(self, data: store_types.StoreAssetResponse) -> None:
@@ -199,7 +207,7 @@ class StoreListingIcon(BaseModel["store_types.StoreListingIconResponse"]):
         The unicode emoji for the icon, if the icon uses emoji.
     """
 
-    __slots__ = ("emoji", "store_asset_id", "type")
+    __slots__ = (*BaseModel.__slots__, "emoji", "store_asset_id", "type")
 
     @override
     def _initialize(self, data: store_types.StoreListingIconResponse) -> None:
@@ -225,7 +233,7 @@ class StoreListingBenefit(BaseModel["store_types.StoreListingBenefitResponse"]):
         The icon associated with the benefit.
     """
 
-    __slots__ = ("description", "icon", "id", "name")
+    __slots__ = (*BaseModel.__slots__, "description", "icon", "id", "name")
 
     @override
     def _initialize(self, data: store_types.StoreListingBenefitResponse) -> None:
@@ -261,6 +269,7 @@ class StoreCarouselItem(
     """
 
     __slots__ = (
+        *BaseModel.__slots__,
         "asset_id",
         "background_asset_id",
         "label",
@@ -315,7 +324,7 @@ class StoreNote(BaseModelWithSession["store_types.StoreNoteResponse"]):
         The note content.
     """
 
-    __slots__ = ("content", "user")
+    __slots__ = (*BaseModelWithSession.__slots__, "content", "user")
 
     @override
     def _initialize(self, data: store_types.StoreNoteResponse) -> None:
@@ -341,6 +350,7 @@ class GuildPremiumFeatures(BaseModel["store_types.GuildPremiumFeaturesResponse"]
     """
 
     __slots__ = (
+        *BaseModel.__slots__,
         "additional_emoji_slots",
         "additional_sound_slots",
         "additional_sticker_slots",
@@ -371,6 +381,7 @@ class PartialGuildPowerupMetadata(BaseModel["store_types.PartialGuildPowerupMeta
     """
 
     __slots__ = (
+        *BaseModel.__slots__,
         "animated_image_url",
         "category_type",
         "static_image_url",
@@ -415,6 +426,7 @@ class GuildPowerupMetadata(BaseModel["store_types.GuildPowerupMetadata"]):
     """
 
     __slots__ = (
+        *BaseModel.__slots__,
         "animated_image_url",
         "boost_price",
         "category_type",
@@ -475,6 +487,7 @@ class GameServerPowerupMetadata(BaseModel["store_types.GameServerPowerupMetadata
     """
 
     __slots__ = (
+        *BaseModel.__slots__,
         "available_providers",
         "boost_price",
         "category_type",
@@ -522,7 +535,7 @@ class GuildMonetizationMetadata(BaseModel["store_types.GuildMonetizationMetadata
         Game server powerup metadata, if included.
     """
 
-    __slots__ = ("game_server", "powerup")
+    __slots__ = (*BaseModel.__slots__, "game_server", "powerup")
 
     @override
     def _initialize(self, data: store_types.GuildMonetizationMetadata) -> None:
@@ -557,6 +570,7 @@ class SocialLayerMetadata(BaseModel["store_types.SocialLayerMetadata"]):
     """
 
     __slots__ = (
+        *BaseModel.__slots__,
         "card_background_image_asset_id",
         "card_image_asset_id",
         "carousel_items",
@@ -595,7 +609,7 @@ class TenantMetadata(BaseModel["store_types.TenantMetadata"]):
         Social layer metadata, if present.
     """
 
-    __slots__ = ("guild_monetization", "social_layer")
+    __slots__ = (*BaseModel.__slots__, "guild_monetization", "social_layer")
 
     @override
     def _initialize(self, data: store_types.TenantMetadata) -> None:
@@ -626,7 +640,7 @@ class PremiumPrice(BaseModel["store_types.SKUPricePremiumResponse"]):
         The discount percentage for premium users.
     """
 
-    __slots__ = ("amount", "percentage")
+    __slots__ = (*BaseModel.__slots__, "amount", "percentage")
 
     @override
     def _initialize(self, data: store_types.SKUPricePremiumResponse) -> None:
@@ -654,6 +668,7 @@ class Price(BaseModel["store_types.SKUPriceResponse"]):
     """
 
     __slots__ = (
+        *BaseModel.__slots__,
         "amount",
         "currency",
         "currency_exponent",
@@ -693,7 +708,7 @@ class ContentRating(
         Content descriptor values associated with the rating.
     """
 
-    __slots__ = ("agency", "descriptors", "rating")
+    __slots__ = (*BaseModel.__slots__, "agency", "descriptors", "rating")
 
     @override
     def _initialize(self, data: store_types.ContentRatingResponse) -> None:
@@ -764,6 +779,7 @@ class SystemRequirement(
     """
 
     __slots__ = (
+        *BaseModel.__slots__,
         "cpu",
         "directx",
         "disk",
@@ -846,7 +862,7 @@ class SystemRequirements(
         Recommended system requirements, if present.
     """
 
-    __slots__ = ("minimum", "recommended")
+    __slots__ = (*BaseModel.__slots__, "minimum", "recommended")
 
     @override
     def _initialize(self, data: store_types.SystemRequirementsResponse) -> None:
@@ -878,7 +894,7 @@ class ExternalSKUStrategy(BaseModel["store_types.ExternalSKUStrategyResponse"]):
         Additional string metadata for the strategy.
     """
 
-    __slots__ = ("metadata", "type")
+    __slots__ = (*BaseModel.__slots__, "metadata", "type")
 
     @override
     def _initialize(self, data: store_types.ExternalSKUStrategyResponse) -> None:
@@ -901,7 +917,7 @@ class UnitPrice(BaseModel["store_types.UnitPriceResponse"]):
         The currency exponent.
     """
 
-    __slots__ = ("amount", "currency", "exponent")
+    __slots__ = (*BaseModel.__slots__, "amount", "currency", "exponent")
 
     @override
     def _initialize(self, data: store_types.UnitPriceResponse) -> None:
@@ -921,7 +937,7 @@ class CountryPrices(BaseModel["store_types.CountryPricesResponse"]):
         Unit prices returned for the country.
     """
 
-    __slots__ = ("country_code", "prices")
+    __slots__ = (*BaseModel.__slots__, "country_code", "prices")
 
     @override
     def _initialize(self, data: store_types.CountryPricesResponse) -> None:
@@ -942,7 +958,7 @@ class SubscriptionPrices(BaseModel["store_types.SubscriptionPricesResponse"]):
         Unit prices keyed by payment source snowflake.
     """
 
-    __slots__ = ("country_prices", "payment_source_prices")
+    __slots__ = (*BaseModel.__slots__, "country_prices", "payment_source_prices")
 
     @override
     def _initialize(self, data: store_types.SubscriptionPricesResponse) -> None:
@@ -1057,6 +1073,7 @@ class SKU(BaseModelWithSession["store_types.SKU"]):
     """
 
     __slots__ = (
+        *BaseModelWithSession.__slots__,
         "access_type",
         "application",
         "application_id",
@@ -1338,6 +1355,7 @@ class StoreListing(BaseModelWithSession["store_types.StoreListingResponse"]):
     """
 
     __slots__ = (
+        *BaseModelWithSession.__slots__,
         "alternative_skus",
         "assets",
         "benefits",
@@ -1481,6 +1499,7 @@ class SubscriptionPlan(BaseModel["store_types.SubscriptionPlanResponse"]):
     """
 
     __slots__ = (
+        *BaseModel.__slots__,
         "currency",
         "id",
         "interval",
@@ -1532,7 +1551,7 @@ class EULA(BaseModel["store_types.EULAResponse"]):
         The EULA content.
     """
 
-    __slots__ = ("content", "id", "name")
+    __slots__ = (*BaseModel.__slots__, "content", "id", "name")
 
     @override
     def _initialize(self, data: store_types.EULAResponse) -> None:
@@ -1554,7 +1573,12 @@ class StorefrontLeaderboard(BaseModel["store_types.StorefrontLeaderboardResponse
         The background image store asset snowflake, if present.
     """
 
-    __slots__ = ("background_image_asset_id", "description", "title")
+    __slots__ = (
+        *BaseModel.__slots__,
+        "background_image_asset_id",
+        "description",
+        "title",
+    )
 
     @override
     def _initialize(self, data: store_types.StorefrontLeaderboardResponse) -> None:
@@ -1576,7 +1600,7 @@ class StorefrontPageSection(BaseModel["store_types.StorefrontPageSectionResponse
         SKU snowflakes included in the section.
     """
 
-    __slots__ = ("sku_ids", "title")
+    __slots__ = (*BaseModel.__slots__, "sku_ids", "title")
 
     @override
     def _initialize(self, data: store_types.StorefrontPageSectionResponse) -> None:
@@ -1599,7 +1623,7 @@ class StorefrontPage(BaseModel["store_types.StorefrontPageResponse"]):
         Sections contained in the page.
     """
 
-    __slots__ = ("leaderboard", "sections", "sku_ids", "title")
+    __slots__ = (*BaseModel.__slots__, "leaderboard", "sections", "sku_ids", "title")
 
     @override
     def _initialize(self, data: store_types.StorefrontPageResponse) -> None:
@@ -1638,6 +1662,7 @@ class Storefront(BaseModelWithSession["store_types.StorefrontResponse"]):
     """
 
     __slots__ = (
+        *BaseModelWithSession.__slots__,
         "application",
         "application_id",
         "assets",
@@ -1697,6 +1722,7 @@ class StorefrontCollection(BaseModel["store_types.StorefrontCollectionResponse"]
     """
 
     __slots__ = (
+        *BaseModel.__slots__,
         "application_id",
         "created_at",
         "description",
@@ -1732,7 +1758,7 @@ class ProductOption(BaseModel["store_types.ProductOptionResponse"]):
         Allowed option values.
     """
 
-    __slots__ = ("name", "option_values")
+    __slots__ = (*BaseModel.__slots__, "name", "option_values")
 
     @override
     def _initialize(self, data: store_types.ProductOptionResponse) -> None:
@@ -1749,7 +1775,7 @@ class GameServerInstructions(BaseModel["store_types.GameServerInstructionsRespon
         Instructions shown to PC players.
     """
 
-    __slots__ = ("pc",)
+    __slots__ = (*BaseModel.__slots__, "pc")
 
     @override
     def _initialize(self, data: store_types.GameServerInstructionsResponse) -> None:
@@ -1780,6 +1806,7 @@ class GameServerPowerupProductMetadata(
     """
 
     __slots__ = (
+        *BaseModel.__slots__,
         "can_market",
         "deactivation_cooldown_period_days",
         "disabled",
@@ -1817,7 +1844,7 @@ class GuildMonetizationProductMetadata(
         Game server product metadata, if included.
     """
 
-    __slots__ = ("game_server",)
+    __slots__ = (*BaseModel.__slots__, "game_server")
 
     @override
     def _initialize(
@@ -1842,7 +1869,7 @@ class ProductTenantMetadata(BaseModel["store_types.ProductTenantMetadataResponse
         Guild monetization metadata, if included.
     """
 
-    __slots__ = ("guild_monetization",)
+    __slots__ = (*BaseModel.__slots__, "guild_monetization")
 
     @override
     def _initialize(self, data: store_types.ProductTenantMetadataResponse) -> None:
@@ -1867,7 +1894,7 @@ class ProductSKUPlanFeature(BaseModel["store_types.ProductSKUPlanFeatureResponse
         The feature description.
     """
 
-    __slots__ = ("description", "title")
+    __slots__ = (*BaseModel.__slots__, "description", "title")
 
     @override
     def _initialize(self, data: store_types.ProductSKUPlanFeatureResponse) -> None:
@@ -1892,7 +1919,13 @@ class ProductSKUTenantMetadata(
         Plan features shown for the SKU.
     """
 
-    __slots__ = ("boost_price", "category_type", "plan_features", "purchase_limit")
+    __slots__ = (
+        *BaseModel.__slots__,
+        "boost_price",
+        "category_type",
+        "plan_features",
+        "purchase_limit",
+    )
 
     @override
     def _initialize(self, data: store_types.ProductSKUTenantMetadataResponse) -> None:
@@ -1922,7 +1955,7 @@ class ProductSKUOption(BaseModel["store_types.ProductSKUOptionResponse"]):
         The selected option value.
     """
 
-    __slots__ = ("option_name", "option_value")
+    __slots__ = (*BaseModel.__slots__, "option_name", "option_value")
 
     @override
     def _initialize(self, data: store_types.ProductSKUOptionResponse) -> None:
@@ -1962,6 +1995,7 @@ class ProductSKU(BaseModel["store_types.ProductSKUResponse"]):
     """
 
     __slots__ = (
+        *BaseModel.__slots__,
         "application_id",
         "id",
         "name",
@@ -2035,15 +2069,16 @@ class StorefrontProduct(BaseModel["store_types.StorefrontProductResponse"]):
     """
 
     __slots__ = (
-        "application_id",
-        "created_at",
+        *BaseModel.__slots__,
         "id",
+        "application_id",
+        "sku_ids",
         "name",
         "options",
-        "sku_ids",
-        "skus",
-        "tenant_metadata",
+        "created_at",
         "updated_at",
+        "tenant_metadata",
+        "skus",
     )
 
     @override
