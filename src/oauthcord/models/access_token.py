@@ -77,6 +77,16 @@ class AccessTokenResponse(
         instance._initialize(data)
         return instance
 
+    def to_dict(self) -> AccessTokenResponsePayload | RefreshTokenResponsePayload:
+        """Convert this AccessTokenResponse instance back into a dictionary payload.
+
+        Returns
+        -------
+        :class:`dict`
+            The raw access token response data that can be sent to Discord.
+        """
+        return self._to_request()
+
     @override
     def _to_request(self) -> AccessTokenResponsePayload | RefreshTokenResponsePayload:
         return {
