@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import urllib.parse
-from typing import Self
+from typing import TYPE_CHECKING, Self
 
 import aiohttp
 
@@ -21,6 +21,14 @@ from ._oauth2 import Oauth2ClientMixin
 from ._relationship import RelationshipClientMixin
 from ._store import StoreClientMixin
 from ._user import UserClientMixin
+
+if TYPE_CHECKING:
+    from ..internals._types.token import (
+        AccessTokenResponse as AccessTokenResponsePayload,
+    )
+    from ..internals._types.token import (
+        RefreshTokenResponse as RefreshTokenResponsePayload,
+    )
 
 
 class Client:
@@ -173,6 +181,63 @@ class AuthorisedSession(
 
     def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None:
         pass
+
+    @classmethod
+    def from_token(
+        cls,
+        client: Client,
+        token: AccessTokenResponse,
+    ) -> AuthorisedSession:
+        """Create an authorised session from an existing access token.
+
+        Parameters
+        ----------
+        client: :class:`Client`
+            Parent OAuth2 client that created the session.
+        token: :class:`AccessTokenResponse`
+            Access token data to initialize the session with.
+
+        Returns
+        -------
+        :class:`AuthorisedSession`
+            Session initialized with the provided access token.
+        """
+        return cls(client, token=token)
+
+    @classmethod
+    def from_dict(
+        cls,
+        client: Client,
+        data: AccessTokenResponsePayload | RefreshTokenResponsePayload,
+    ) -> AuthorisedSession:
+        """Create an authorised session from a dictionary payload.
+
+        Parameters
+        ----------
+        client: :class:`Client`
+            Parent OAuth2 client that created the session.
+        data: :class:`dict`
+            Raw access token response data as returned by Discord.
+
+        Returns
+        -------
+        :class:`AuthorisedSession`
+            Session initialized with the provided access token data.
+        """
+        token = AccessTokenResponse.from_dict(data)
+        return cls(client, token=token)
+
+    def to_dict(
+        self,
+    ) -> AccessTokenResponsePayload | RefreshTokenResponsePayload:
+        """Serialize the session's access token data to a dictionary.
+
+        Returns
+        -------
+        :class:`dict`
+            Dictionary containing the session's access token information.
+        """
+        return self.token._to_request()
 
     async def close(self) -> None:
         """Close the session's internal HTTP client.

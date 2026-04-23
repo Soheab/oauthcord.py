@@ -19,7 +19,10 @@ __all__ = ("AccessTokenResponse",)
 
 
 class AccessTokenResponse(
-    BaseModelWithHTTP["AccessTokenResponsePayload | RefreshTokenResponsePayload"]
+    BaseModelWithHTTP[
+        "AccessTokenResponsePayload | RefreshTokenResponsePayload",
+        "AccessTokenResponsePayload | RefreshTokenResponsePayload",
+    ]
 ):
     """Represents an OAuth2 access token response from Discord.
 
@@ -52,6 +55,37 @@ class AccessTokenResponse(
         self.refresh_token: str = data["refresh_token"]
         self._scope: str = data["scope"]
         self._expires_in: int = data["expires_in"]
+
+    @classmethod
+    def from_dict(
+        cls,
+        data: AccessTokenResponsePayload | RefreshTokenResponsePayload,
+    ) -> AccessTokenResponse:
+        """Create an AccessTokenResponse instance from a dictionary payload.
+
+        Parameters
+        ----------
+        data: :class:`dict`
+            The raw access token response data as returned by Discord.
+
+        Returns
+        -------
+        :class:`AccessTokenResponse`
+            The initialized AccessTokenResponse instance.
+        """
+        instance = cls.__new__(cls)
+        instance._initialize(data)
+        return instance
+
+    @override
+    def _to_request(self) -> AccessTokenResponsePayload | RefreshTokenResponsePayload:
+        return {
+            "token_type": self.token_type,
+            "access_token": self.access_token,
+            "refresh_token": self.refresh_token,
+            "scope": self._scope,
+            "expires_in": self._expires_in,
+        }
 
     def expires_at(self) -> datetime.datetime:
         """:class:`datetime.datetime`: When the token expires, calculated from
