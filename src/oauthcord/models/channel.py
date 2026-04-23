@@ -599,7 +599,7 @@ class GroupDMChannel(PrivateChannel["GroupDMChannelResponse"]):
         )
 
 
-class EphemeralDMChannel(PrivateChannel[EphemeralDMChannelResponse]):
+class EphemeralDMChannel(PrivateChannel["EphemeralDMChannelResponse"]):
     """Represents Discord API data for `EphemeralDMChannel`."""
 
 
