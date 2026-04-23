@@ -74,6 +74,18 @@ class BaseModel[D: Any, R: Any = None]:
     def _from_response(cls, data: D) -> Self:
         return cls(data=data)
 
+    def __repr__(self) -> str:
+        try:
+            attributes = self.__slots__
+        except AttributeError:
+            attributes = [
+                attr
+                for attr in dir(self)
+                if not attr.startswith("_") and not callable(getattr(self, attr))
+            ]
+        attr_str = ", ".join(f"{attr}={getattr(self, attr)!r}" for attr in attributes)
+        return f"{self.__class__.__name__}({attr_str})"
+
     def _construct_other(
         self,
         cls: type[BaseModel[Any, Any]],
