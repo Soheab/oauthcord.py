@@ -213,7 +213,7 @@ class OptionChoiceBuilder(WithNameLocalizationsMixin):
             model_data["name_localizations"] = _serialize_localizations(
                 self.name_localizations
             )
-        return command_models.OptionChoice(data=model_data)._to_request()
+        return command_models.OptionChoice(data=model_data).to_dict()
 
     def __repr__(self) -> str:
         return f"<OptionChoiceBuilder name={self.name!r} value={self.value!r}>"
@@ -427,7 +427,7 @@ class OptionBuilder(WithNameLocalizationsMixin, WithDescriptionLocalizationsMixi
         if self.choices is not None:
             model_data["choices"] = [choice.to_request() for choice in self.choices]
 
-        return command_models.Option(data=model_data)._to_request()
+        return command_models.Option(data=model_data).to_dict()
 
 
 class _BaseApplicationCommandBuilder(WithNameLocalizationsMixin):
@@ -544,7 +544,7 @@ class ChatInputCommandBuilder(_BaseChatInputCommandBuilder, WithContextsMixin):
         if self.nsfw:
             model_data["nsfw"] = self.nsfw
 
-        return command_models.RequestCommand(data=model_data)._to_request()
+        return command_models.RequestCommand(data=model_data).to_dict()
 
 
 class ChatInputSubCommandBuilder(_BaseChatInputCommandBuilder):
@@ -598,7 +598,7 @@ class ChatInputSubCommandBuilder(_BaseChatInputCommandBuilder):
             model_data["description_localizations"] = _serialize_localizations(
                 self.description_localizations
             )
-        return command_models.Option(data=model_data)._to_request()
+        return command_models.Option(data=model_data).to_dict()
 
 
 class ChatInputGroupCommandBuilder(_BaseApplicationCommandBuilder):
@@ -749,7 +749,7 @@ class ChatInputGroupCommandBuilder(_BaseApplicationCommandBuilder):
                 )
             if self.nsfw:
                 model_data["nsfw"] = self.nsfw
-            return command_models.RequestCommand(data=model_data)._to_request()
+            return command_models.RequestCommand(data=model_data).to_dict()
 
         return self._to_option_request()
 
@@ -771,7 +771,7 @@ class ChatInputGroupCommandBuilder(_BaseApplicationCommandBuilder):
             model_data["description_localizations"] = _serialize_localizations(
                 self.description_localizations
             )
-        return command_models.Option(data=model_data)._to_request()
+        return command_models.Option(data=model_data).to_dict()
 
 
 class PrimaryEntryPointCommandBuilder(
@@ -834,7 +834,7 @@ class PrimaryEntryPointCommandBuilder(
         if self.contexts is not None:
             model_data["contexts"] = [context.value for context in self.contexts]
 
-        return command_models.RequestCommand(data=model_data)._to_request()
+        return command_models.RequestCommand(data=model_data).to_dict()
 
 
 class _BaseContextMenuCommandBuilder(_BaseApplicationCommandBuilder, WithContextsMixin):
@@ -891,7 +891,7 @@ class MessageCommandBuilder(_BaseContextMenuCommandBuilder):
             ]
         if self.contexts is not None:
             model_data["contexts"] = [context.value for context in self.contexts]
-        return command_models.RequestCommand(data=model_data)._to_request()
+        return command_models.RequestCommand(data=model_data).to_dict()
 
 
 class UserCommandBuilder(_BaseContextMenuCommandBuilder):
@@ -926,7 +926,7 @@ class UserCommandBuilder(_BaseContextMenuCommandBuilder):
             ]
         if self.contexts is not None:
             model_data["contexts"] = [context.value for context in self.contexts]
-        return command_models.RequestCommand(data=model_data)._to_request()
+        return command_models.RequestCommand(data=model_data).to_dict()
 
 
 def _coerce_enum[E: Enum](enum_cls: type[E], value: E | int | str) -> E:

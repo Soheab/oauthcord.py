@@ -237,7 +237,7 @@ class AuthorisedSession(
         :class:`dict`
             Dictionary containing the session's access token information.
         """
-        return self.token._to_request()
+        return self.token.to_dict()
 
     async def close(self) -> None:
         """Close the session's internal HTTP client.

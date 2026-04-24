@@ -45,7 +45,7 @@ class PollBuilder(BaseModel[None, "PollCreateRequest"]):
         self.answers.append(answer)
         return answer
 
-    def _to_request(self) -> PollCreateRequest:
+    def to_dict(self) -> PollCreateRequest:
         duration_seconds: int = 0
         if isinstance(self.duration, datetime.timedelta):
             duration_seconds = int(self.duration.total_seconds())
@@ -65,7 +65,7 @@ class PollBuilder(BaseModel[None, "PollCreateRequest"]):
             "question": {
                 "text": self.question,
             },
-            "answers": [answer._to_request() for answer in self.answers],
+            "answers": [answer.to_dict() for answer in self.answers],
             "duration": duration_seconds,
             "allow_multiselect": self.allow_multiselect,
             "layout_type": self.layout.value
@@ -84,14 +84,12 @@ class PollAnswerBuilder(BaseModel[None, "PollAnswerRequest"]):
         self.text: str = text
         self.emoji: str | Emoji | None = emoji
 
-    def _to_request(self) -> PollAnswerRequest:
+    def to_dict(self) -> PollAnswerRequest:
         base = {
             "text": self.text,
         }
         if self.emoji is not None:
             base["emoji"] = (  # type: ignore
-                self.emoji._to_request()
-                if isinstance(self.emoji, Emoji)
-                else self.emoji
+                self.emoji.to_dict() if isinstance(self.emoji, Emoji) else self.emoji
             )
         return {"poll_media": base}  # type: ignore

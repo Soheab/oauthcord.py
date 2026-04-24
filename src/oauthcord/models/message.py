@@ -7,7 +7,7 @@ from ..utils import convert_snowflake, iso_to_datetime
 from ._base import BaseModelWithSession
 from .attachment import Attachment
 from .channel import BaseChannel, PartialChannel, _from_data
-from .components import BaseComponent, component_from_response
+from .components import BaseComponent, componentfrom_dict
 from .embeds import Embed
 from .user import PartialUser
 
@@ -138,7 +138,7 @@ class Message(BaseModelWithSession["MessagePayload"]):
             for attachment in data.get("attachments", [])
         ]
         self.embeds: list[Embed] = [
-            Embed._from_response(embed) for embed in data.get("embeds", [])
+            Embed.from_dict(embed) for embed in data.get("embeds", [])
         ]
         self.reactions: list[ReactionPayload] = data.get("reactions", [])
         self.nonce: int | str | None = data.get("nonce")
@@ -149,8 +149,7 @@ class Message(BaseModelWithSession["MessagePayload"]):
         self.type: int = data.get("type", 0)
         self.flags: int = data.get("flags", 0)
         self.components: list[BaseComponent] = [
-            component_from_response(component)
-            for component in data.get("components", [])
+            componentfrom_dict(component) for component in data.get("components", [])
         ]
 
         thread_data = data.get("thread")

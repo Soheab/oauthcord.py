@@ -146,7 +146,7 @@ class LocalizedString(
         )
 
     @override
-    def _to_request(self) -> store_types.LocalizedString:
+    def to_dict(self) -> store_types.LocalizedString:
         payload: store_types.LocalizedString = {"default": self.default}
         if self.localizations:
             payload["localizations"] = cast(
@@ -296,7 +296,7 @@ class StoreCarouselItem(
         )
 
     @override
-    def _to_request(self) -> store_types.StoreCarouselItemResponse:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def to_dict(self) -> store_types.StoreCarouselItemResponse:  # pyright: ignore[reportIncompatibleMethodOverride]
         payload: store_types.StoreCarouselItemResponse = {}
         if self.youtube_video_id is not None:
             payload["youtube_video_id"] = self.youtube_video_id
@@ -719,7 +719,7 @@ class ContentRating(
         )
 
     @classmethod
-    def _from_response(
+    def from_dict(
         cls,
         data: store_types.ContentRatingResponse,
         *,
@@ -739,7 +739,7 @@ class ContentRating(
         return self
 
     @override
-    def _to_request(self) -> store_types.ContentRatingResponse:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def to_dict(self) -> store_types.ContentRatingResponse:  # pyright: ignore[reportIncompatibleMethodOverride]
         return cast(
             "store_types.ContentRatingResponse",
             {
@@ -821,7 +821,7 @@ class SystemRequirement(
         )
 
     @override
-    def _to_request(self) -> store_types.SystemRequirementResponse:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def to_dict(self) -> store_types.SystemRequirementResponse:  # pyright: ignore[reportIncompatibleMethodOverride]
         payload: store_types.SystemRequirementResponse = {}
         if self.ram is not None:
             payload["ram"] = self.ram
@@ -829,20 +829,20 @@ class SystemRequirement(
             payload["disk"] = self.disk
         if self.operating_system_version is not None:
             payload["operating_system_version"] = (
-                self.operating_system_version._to_request()
+                self.operating_system_version.to_dict()
             )
         if self.cpu is not None:
-            payload["cpu"] = self.cpu._to_request()
+            payload["cpu"] = self.cpu.to_dict()
         if self.gpu is not None:
-            payload["gpu"] = self.gpu._to_request()
+            payload["gpu"] = self.gpu.to_dict()
         if self.sound_card is not None:
-            payload["sound_card"] = self.sound_card._to_request()
+            payload["sound_card"] = self.sound_card.to_dict()
         if self.directx is not None:
-            payload["directx"] = self.directx._to_request()
+            payload["directx"] = self.directx.to_dict()
         if self.network is not None:
-            payload["network"] = self.network._to_request()
+            payload["network"] = self.network.to_dict()
         if self.notes is not None:
-            payload["notes"] = self.notes._to_request()
+            payload["notes"] = self.notes.to_dict()
         return payload
 
 
@@ -874,12 +874,12 @@ class SystemRequirements(
         )
 
     @override
-    def _to_request(self) -> store_types.SystemRequirementsResponse:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def to_dict(self) -> store_types.SystemRequirementsResponse:  # pyright: ignore[reportIncompatibleMethodOverride]
         payload: store_types.SystemRequirementsResponse = {}
         if self.minimum is not None:
-            payload["minimum"] = self.minimum._to_request()
+            payload["minimum"] = self.minimum.to_dict()
         if self.recommended is not None:
-            payload["recommended"] = self.recommended._to_request()
+            payload["recommended"] = self.recommended.to_dict()
         return payload
 
 
@@ -1213,7 +1213,7 @@ class SKU(BaseModelWithSession["store_types.SKU"]):
             ContentRatingAgency, data.get("content_rating_agency")
         )
         self.content_rating: ContentRating | None = (
-            ContentRating._from_response(
+            ContentRating.from_dict(
                 data["content_rating"],
                 agency=self.content_rating_agency,
             )
@@ -1228,7 +1228,7 @@ class SKU(BaseModelWithSession["store_types.SKU"]):
                 )
             except ValueError:
                 rating_key = int(raw_key)
-            self.content_ratings[rating_key] = ContentRating._from_response(
+            self.content_ratings[rating_key] = ContentRating.from_dict(
                 raw_value,
                 agency=int(raw_key),
             )

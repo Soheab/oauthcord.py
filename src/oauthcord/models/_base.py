@@ -67,11 +67,11 @@ class BaseModel[D: Any, R: Any = None]:
     def _initialize(self, data: D) -> None:
         pass
 
-    def _to_request(self) -> R | None:
+    def to_dict(self) -> R | None:
         pass
 
     @classmethod
-    def _from_response(cls, data: D) -> Self:
+    def from_dict(cls, data: D) -> Self:
         return cls(data=data)
 
     def __repr__(self) -> str:

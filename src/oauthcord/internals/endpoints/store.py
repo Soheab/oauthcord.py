@@ -89,9 +89,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
             "application_id": application_id,
             "name": cast(
                 "store_types.LocalizedString",
-                cast("Any", name)._to_request()
-                if hasattr(name, "_to_request")
-                else name,
+                cast("Any", name).to_dict() if hasattr(name, "to_dict") else name,
             ),
         }
         if flags is not None:
@@ -99,8 +97,8 @@ class StoreHTTPClientMixin(BaseHTTPClient):
         if legal_notice is not None:
             data["legal_notice"] = cast(
                 "store_types.LocalizedString",
-                cast("Any", legal_notice)._to_request()
-                if hasattr(legal_notice, "_to_request")
+                cast("Any", legal_notice).to_dict()
+                if hasattr(legal_notice, "to_dict")
                 else legal_notice,
             )
         if dependent_sku_id is not None:
@@ -123,8 +121,8 @@ class StoreHTTPClientMixin(BaseHTTPClient):
             data["content_ratings"] = {  # pyright: ignore[reportGeneralTypeIssues]
                 int(agency): cast(
                     "store_types.ContentRatingResponse",
-                    cast("Any", rating)._to_request()
-                    if hasattr(rating, "_to_request")
+                    cast("Any", rating).to_dict()
+                    if hasattr(rating, "to_dict")
                     else rating,
                 )
                 for agency, rating in content_ratings.items()
@@ -133,9 +131,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
             data["system_requirements"] = {  # pyright: ignore[reportGeneralTypeIssues]
                 int(os): cast(
                     "store_types.SystemRequirementsResponse",
-                    cast("Any", req)._to_request()
-                    if hasattr(req, "_to_request")
-                    else req,
+                    cast("Any", req).to_dict() if hasattr(req, "to_dict") else req,
                 )
                 for os, req in system_requirements.items()
             }
@@ -215,17 +211,15 @@ class StoreHTTPClientMixin(BaseHTTPClient):
         if name is not None:
             data["name"] = cast(
                 "store_types.LocalizedString",
-                cast("Any", name)._to_request()
-                if hasattr(name, "_to_request")
-                else name,
+                cast("Any", name).to_dict() if hasattr(name, "to_dict") else name,
             )
         if flags is not None:
             data["flags"] = flags
         if legal_notice is not None:
             data["legal_notice"] = cast(
                 "store_types.LocalizedString",
-                cast("Any", legal_notice)._to_request()
-                if hasattr(legal_notice, "_to_request")
+                cast("Any", legal_notice).to_dict()
+                if hasattr(legal_notice, "to_dict")
                 else legal_notice,
             )
         if dependent_sku_id is not None:
@@ -255,8 +249,8 @@ class StoreHTTPClientMixin(BaseHTTPClient):
                     _coerce_store_literal(agency),
                 ): cast(
                     "store_types.ContentRatingResponse",
-                    cast("Any", rating)._to_request()
-                    if hasattr(rating, "_to_request")
+                    cast("Any", rating).to_dict()
+                    if hasattr(rating, "to_dict")
                     else rating,
                 )
                 for agency, rating in content_ratings.items()
@@ -265,9 +259,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
             data["system_requirements"] = {
                 cast("store_types.OperatingSystem", _coerce_store_literal(os)): cast(
                     "store_types.SystemRequirementsResponse",
-                    cast("Any", req)._to_request()
-                    if hasattr(req, "_to_request")
-                    else req,
+                    cast("Any", req).to_dict() if hasattr(req, "to_dict") else req,
                 )
                 for os, req in system_requirements.items()
             }
@@ -338,14 +330,14 @@ class StoreHTTPClientMixin(BaseHTTPClient):
             "sku_id": sku_id,
             "summary": cast(
                 "store_types.LocalizedString",
-                cast("Any", summary)._to_request()
-                if hasattr(summary, "_to_request")
+                cast("Any", summary).to_dict()
+                if hasattr(summary, "to_dict")
                 else summary,
             ),
             "description": cast(
                 "store_types.LocalizedString",
-                cast("Any", description)._to_request()
-                if hasattr(description, "_to_request")
+                cast("Any", description).to_dict()
+                if hasattr(description, "to_dict")
                 else description,
             ),
         }
@@ -354,8 +346,8 @@ class StoreHTTPClientMixin(BaseHTTPClient):
         if tagline is not None:
             data["tagline"] = cast(
                 "store_types.LocalizedString",
-                cast("Any", tagline)._to_request()
-                if hasattr(tagline, "_to_request")
+                cast("Any", tagline).to_dict()
+                if hasattr(tagline, "to_dict")
                 else tagline,
             )
         if published is not None:
@@ -364,9 +356,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
             data["carousel_items"] = [
                 cast(
                     "store_types.StoreCarouselItemResponse",
-                    cast("Any", item)._to_request()
-                    if hasattr(item, "_to_request")
-                    else item,
+                    cast("Any", item).to_dict() if hasattr(item, "to_dict") else item,
                 )
                 for item in carousel_items
             ]
@@ -445,22 +435,22 @@ class StoreHTTPClientMixin(BaseHTTPClient):
         if summary is not None:
             data["summary"] = cast(
                 "store_types.LocalizedString",
-                cast("Any", summary)._to_request()
-                if hasattr(summary, "_to_request")
+                cast("Any", summary).to_dict()
+                if hasattr(summary, "to_dict")
                 else summary,
             )
         if description is not None:
             data["description"] = cast(
                 "store_types.LocalizedString",
-                cast("Any", description)._to_request()
-                if hasattr(description, "_to_request")
+                cast("Any", description).to_dict()
+                if hasattr(description, "to_dict")
                 else description,
             )
         if tagline is not None:
             data["tagline"] = cast(
                 "store_types.LocalizedString",
-                cast("Any", tagline)._to_request()
-                if hasattr(tagline, "_to_request")
+                cast("Any", tagline).to_dict()
+                if hasattr(tagline, "to_dict")
                 else tagline,
             )
         if published is not None:
@@ -469,9 +459,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
             data["carousel_items"] = [
                 cast(
                     "store_types.StoreCarouselItemResponse",
-                    cast("Any", item)._to_request()
-                    if hasattr(item, "_to_request")
-                    else item,
+                    cast("Any", item).to_dict() if hasattr(item, "to_dict") else item,
                 )
                 for item in carousel_items
             ]

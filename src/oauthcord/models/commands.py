@@ -56,7 +56,7 @@ class OptionChoice(
         self.value: str | int | float = data["value"]
 
     @override
-    def _to_request(self) -> commands.ApplicationCommandOptionChoiceRequest:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def to_dict(self) -> commands.ApplicationCommandOptionChoiceRequest:  # pyright: ignore[reportIncompatibleMethodOverride]
         payload: commands.ApplicationCommandOptionChoiceRequest = {
             "name": self.name,
             "value": self.value,
@@ -146,7 +146,7 @@ class Option(
         )
 
     @override
-    def _to_request(self) -> commands.ApplicationCommandOptionRequest:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def to_dict(self) -> commands.ApplicationCommandOptionRequest:  # pyright: ignore[reportIncompatibleMethodOverride]
         payload: commands.ApplicationCommandOptionRequest = {
             "type": self.type.value,
             "name": self.name,
@@ -164,7 +164,7 @@ class Option(
         if self.required is not None:
             payload["required"] = self.required
         if self.choices is not None:
-            payload["choices"] = [choice._to_request() for choice in self.choices]
+            payload["choices"] = [choice.to_dict() for choice in self.choices]
         if self.min_value is not None:
             payload["min_value"] = self.min_value
         if self.max_value is not None:
@@ -180,7 +180,7 @@ class Option(
                 channel_type.value for channel_type in self.channel_types
             ]
         if self.options is not None:
-            payload["options"] = [option._to_request() for option in self.options]
+            payload["options"] = [option.to_dict() for option in self.options]
 
         return payload
 
@@ -249,7 +249,7 @@ class RequestCommand(BaseModel["commands.ApplicationCommandRequest"]):
         )
 
     @override
-    def _to_request(self) -> commands.ApplicationCommandRequest:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def to_dict(self) -> commands.ApplicationCommandRequest:  # pyright: ignore[reportIncompatibleMethodOverride]
         payload: commands.ApplicationCommandRequest = {
             "type": self.type.value,
             "name": self.name,
@@ -280,7 +280,7 @@ class RequestCommand(BaseModel["commands.ApplicationCommandRequest"]):
         if self.handler is not None:
             payload["handler"] = self.handler.value
         if self.options is not None:
-            payload["options"] = [option._to_request() for option in self.options]
+            payload["options"] = [option.to_dict() for option in self.options]
         return payload
 
 

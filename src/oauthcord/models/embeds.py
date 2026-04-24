@@ -38,7 +38,7 @@ class EmbedFooter(
         self.proxy_icon_url: str | None = proxy_icon_url
 
     @override
-    def _to_request(self) -> message_types.EmbedFooterRequest:
+    def to_dict(self) -> message_types.EmbedFooterRequest:
         payload: message_types.EmbedFooterRequest = {"text": self.text}
         if self.icon_url is not None:
             payload["icon_url"] = self.icon_url
@@ -46,7 +46,7 @@ class EmbedFooter(
 
     @override
     @classmethod
-    def _from_response(cls, data: message_types.EmbedFooterResponse) -> Self:
+    def from_dict(cls, data: message_types.EmbedFooterResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(
             data["text"],
@@ -102,7 +102,7 @@ class EmbedMedia(
         self.placeholder: str | None = placeholder
 
     @override
-    def _to_request(self) -> message_types.EmbedMediaRequest:
+    def to_dict(self) -> message_types.EmbedMediaRequest:
         payload: message_types.EmbedMediaRequest = {"url": self.url}
         if self.description is not None:
             payload["description"] = self.description
@@ -110,7 +110,7 @@ class EmbedMedia(
 
     @classmethod
     @override
-    def _from_response(cls, data: message_types.EmbedMediaResponse) -> Self:
+    def from_dict(cls, data: message_types.EmbedMediaResponse) -> Self:
         return cls(
             data["url"],
             proxy_url=data.get("proxy_url"),
@@ -145,7 +145,7 @@ class EmbedAuthor(
         self.proxy_icon_url = proxy_icon_url
 
     @override
-    def _to_request(self) -> message_types.EmbedAuthorRequest:
+    def to_dict(self) -> message_types.EmbedAuthorRequest:
         """Serialize this object into a Discord API request payload."""
         payload: message_types.EmbedAuthorRequest = {"name": self.name}
         if self.url is not None:
@@ -156,7 +156,7 @@ class EmbedAuthor(
 
     @classmethod
     @override
-    def _from_response(cls, data: message_types.EmbedAuthorResponse) -> Self:
+    def from_dict(cls, data: message_types.EmbedAuthorResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(
             data["name"],
@@ -180,7 +180,7 @@ class EmbedField(
         self.inline = inline
 
     @override
-    def _to_request(self) -> message_types.EmbedFieldRequest:
+    def to_dict(self) -> message_types.EmbedFieldRequest:
         """Serialize this object into a Discord API request payload."""
         payload: message_types.EmbedFieldRequest = {
             "name": self.name,
@@ -192,7 +192,7 @@ class EmbedField(
 
     @classmethod
     @override
-    def _from_response(cls, data: message_types.EmbedFieldResponse) -> Self:
+    def from_dict(cls, data: message_types.EmbedFieldResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(data["name"], data["value"], inline=data.get("inline"))
 
@@ -257,7 +257,7 @@ class Embed(BaseModel["message_types.EmbedResponse", "message_types.EmbedRequest
         self.flags = flags
 
     @override
-    def _to_request(self) -> message_types.EmbedRequest:
+    def to_dict(self) -> message_types.EmbedRequest:
         """Serialize this object into a Discord API request payload."""
         payload: message_types.EmbedRequest = {}
         if self.title is not None:
@@ -271,20 +271,20 @@ class Embed(BaseModel["message_types.EmbedResponse", "message_types.EmbedRequest
         if self.color is not None:
             payload["color"] = self.color
         if self.footer is not None:
-            payload["footer"] = self.footer._to_request()
+            payload["footer"] = self.footer.to_dict()
         if self.image is not None:
-            payload["image"] = self.image._to_request()
+            payload["image"] = self.image.to_dict()
         if self.thumbnail is not None:
-            payload["thumbnail"] = self.thumbnail._to_request()
+            payload["thumbnail"] = self.thumbnail.to_dict()
         if self.author is not None:
-            payload["author"] = self.author._to_request()
+            payload["author"] = self.author.to_dict()
         if self.fields:
-            payload["fields"] = [field._to_request() for field in self.fields]
+            payload["fields"] = [field.to_dict() for field in self.fields]
         return payload
 
     @classmethod
     @override
-    def _from_response(cls, data: message_types.EmbedResponse) -> Self:
+    def from_dict(cls, data: message_types.EmbedResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(
             title=data.get("title"),
@@ -294,34 +294,24 @@ class Embed(BaseModel["message_types.EmbedResponse", "message_types.EmbedRequest
             timestamp=data.get("timestamp"),
             color=data.get("color"),
             footer=(
-                EmbedFooter._from_response(fdata)
-                if (fdata := data.get("footer"))
-                else None
+                EmbedFooter.from_dict(fdata) if (fdata := data.get("footer")) else None
             ),
             image=(
-                EmbedMedia._from_response(idata)
-                if (idata := data.get("image"))
-                else None
+                EmbedMedia.from_dict(idata) if (idata := data.get("image")) else None
             ),
             thumbnail=(
-                EmbedMedia._from_response(tdata)
+                EmbedMedia.from_dict(tdata)
                 if (tdata := data.get("thumbnail"))
                 else None
             ),
             video=(
-                EmbedMedia._from_response(vdata)
-                if (vdata := data.get("video"))
-                else None
+                EmbedMedia.from_dict(vdata) if (vdata := data.get("video")) else None
             ),
             provider=data.get("provider"),  # type: ignore
             author=(
-                EmbedAuthor._from_response(adata)
-                if (adata := data.get("author"))
-                else None
+                EmbedAuthor.from_dict(adata) if (adata := data.get("author")) else None
             ),
-            fields=[
-                EmbedField._from_response(field) for field in data.get("fields", [])
-            ],
+            fields=[EmbedField.from_dict(field) for field in data.get("fields", [])],
             reference_id=data.get("reference_id"),
             content_scan_version=data.get("content_scan_version"),
             flags=data.get("flags"),

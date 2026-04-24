@@ -96,7 +96,7 @@ class Attachment(BaseModel["AttachmentPayload", "PartialAttachmentRequest"]):
         self.flags: AttachmentFlags = AttachmentFlags(data.get("flags", 0))
 
     @override
-    def _to_request(
+    def to_dict(
         self, *, uploaded_filename: str | None = None
     ) -> PartialAttachmentRequest:
         payload: PartialAttachmentRequest = {"id": self.id}

@@ -181,16 +181,18 @@ class OAuth2HTTPClient(
     BASE_URL: ClassVar[str] = "https://discord.com/oauth2/authorize"
     CDN_URL: ClassVar[str] = "https://cdn.discordapp.com"
 
-    RETRYABLE_SERVER_STATUSES: ClassVar[frozenset[int]] = frozenset({
-        500,
-        502,
-        503,
-        504,
-        521,
-        522,
-        523,
-        524,
-    })
+    RETRYABLE_SERVER_STATUSES: ClassVar[frozenset[int]] = frozenset(
+        {
+            500,
+            502,
+            503,
+            504,
+            521,
+            522,
+            523,
+            524,
+        }
+    )
     CONNECTION_RESET_ERRNOS: ClassVar[frozenset[int]] = frozenset({54, 10054})
 
     __get_client: Callable[[], Client]

@@ -95,12 +95,12 @@ class UnfurledMediaItem:
         self.loading_state = loading_state
         self.attachment_id = attachment_id
 
-    def _to_request(self) -> component_types.UnfurledMediaItemRequest:
+    def to_dict(self) -> component_types.UnfurledMediaItemRequest:
         """Serialize this object into a Discord API request payload."""
         return {"url": self.url}
 
     @classmethod
-    def _from_response(cls, data: component_types.UnfurledMediaItemResponse) -> Self:
+    def from_dict(cls, data: component_types.UnfurledMediaItemResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(
             url=data["url"],
@@ -137,7 +137,7 @@ class SelectOption:
         self.emoji = emoji
         self.default = default
 
-    def _to_request(self) -> component_types.SelectOptionRequest:
+    def to_dict(self) -> component_types.SelectOptionRequest:
         """Serialize this object into a Discord API request payload."""
         payload: component_types.SelectOptionRequest = {
             "label": self.label,
@@ -146,13 +146,13 @@ class SelectOption:
         if self.description is not None:
             payload["description"] = self.description
         if self.emoji is not None:
-            payload["emoji"] = self.emoji._to_request()  # type: ignore[assignment]
+            payload["emoji"] = self.emoji.to_dict()  # type: ignore[assignment]
         if self.default is not None:
             payload["default"] = self.default
         return payload
 
     @classmethod
-    def _from_response(cls, data: component_types.SelectOptionResponse) -> Self:
+    def from_dict(cls, data: component_types.SelectOptionResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(
             label=data["label"],
@@ -171,12 +171,12 @@ class SelectDefaultValue:
         self.id = id
         self.type = type
 
-    def _to_request(self) -> component_types.SelectDefaultValueRequest:
+    def to_dict(self) -> component_types.SelectDefaultValueRequest:
         """Serialize this object into a Discord API request payload."""
         return {"id": self.id, "type": self.type}
 
     @classmethod
-    def _from_response(cls, data: component_types.SelectDefaultValueResponse) -> Self:
+    def from_dict(cls, data: component_types.SelectDefaultValueResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(id=data["id"], type=data["type"])
 
@@ -189,7 +189,7 @@ class BaseComponent:
         self.type = type
         self.id = id
 
-    def _to_request(self) -> component_types.ComponentRequest:
+    def to_dict(self) -> component_types.ComponentRequest:
         """Serialize this object into a Discord API request payload."""
         return {
             "type": self.type,
@@ -210,23 +210,23 @@ class ActionRow(BaseComponent):
         super().__init__(type=1, id=id)
         self.components = list(components)
 
-    def _to_request(self) -> component_types.ActionRowRequest:
+    def to_dict(self) -> component_types.ActionRowRequest:
         """Serialize this object into a Discord API request payload."""
         payload: component_types.ActionRowRequest = {
             "type": 1,
-            "components": [component._to_request() for component in self.components],
+            "components": [component.to_dict() for component in self.components],
         }
         if self.id is not None:
             payload["id"] = self.id
         return payload
 
     @classmethod
-    def _from_response(cls, data: component_types.ActionRowResponse) -> Self:
+    def from_dict(cls, data: component_types.ActionRowResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(
             id=data.get("id"),
             components=[
-                component_from_response(component) for component in data["components"]
+                componentfrom_dict(component) for component in data["components"]
             ],
         )
 
@@ -256,7 +256,7 @@ class Button(BaseComponent):
         self.url = url
         self.disabled = disabled
 
-    def _to_request(self) -> component_types.ButtonRequest:
+    def to_dict(self) -> component_types.ButtonRequest:
         """Serialize this object into a Discord API request payload."""
         payload: component_types.ButtonRequest = {"type": 2, "style": self.style}
         if self.id is not None:
@@ -264,7 +264,7 @@ class Button(BaseComponent):
         if self.label is not None:
             payload["label"] = self.label
         if self.emoji is not None:
-            payload["emoji"] = self.emoji._to_request()  # type: ignore[assignment]
+            payload["emoji"] = self.emoji.to_dict()  # type: ignore[assignment]
         if self.custom_id is not None:
             payload["custom_id"] = self.custom_id
         if self.sku_id is not None:
@@ -276,7 +276,7 @@ class Button(BaseComponent):
         return payload
 
     @classmethod
-    def _from_response(cls, data: component_types.ButtonResponse) -> Button:
+    def from_dict(cls, data: component_types.ButtonResponse) -> Button:
         """Construct this object from a Discord API response payload."""
         return cls(
             id=data.get("id"),
@@ -315,12 +315,12 @@ class StringSelect(BaseComponent):
         self.required = required
         self.disabled = disabled
 
-    def _to_request(self) -> component_types.StringSelectRequest:
+    def to_dict(self) -> component_types.StringSelectRequest:
         """Serialize this object into a Discord API request payload."""
         payload: component_types.StringSelectRequest = {
             "type": 3,
             "custom_id": self.custom_id,
-            "options": [opt._to_request() for opt in self.options],
+            "options": [opt.to_dict() for opt in self.options],
         }
         if self.id is not None:
             payload["id"] = self.id
@@ -337,12 +337,12 @@ class StringSelect(BaseComponent):
         return payload
 
     @classmethod
-    def _from_response(cls, data: component_types.StringSelectResponse) -> Self:
+    def from_dict(cls, data: component_types.StringSelectResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(
             id=data.get("id"),
             custom_id=data["custom_id"],
-            options=[SelectOption._from_response(opt) for opt in data["options"]],
+            options=[SelectOption.from_dict(opt) for opt in data["options"]],
             placeholder=data.get("placeholder"),
             min_values=data.get("min_values"),
             max_values=data.get("max_values"),
@@ -385,7 +385,7 @@ class _AutoPopulatedSelect(BaseComponent):
         if self.placeholder is not None:
             payload["placeholder"] = self.placeholder
         if self.default_values:
-            payload["default_values"] = [v._to_request() for v in self.default_values]
+            payload["default_values"] = [v.to_dict() for v in self.default_values]
         if self.min_values is not None:
             payload["min_values"] = self.min_values
         if self.max_values is not None:
@@ -402,7 +402,7 @@ class UserSelect(_AutoPopulatedSelect):
 
     component_type = 5
 
-    def _to_request(self) -> component_types.UserSelectRequest:
+    def to_dict(self) -> component_types.UserSelectRequest:
         """Serialize this object into a Discord API request payload."""
         payload: component_types.UserSelectRequest = {  # pyright: ignore[reportAssignmentType]
             "type": 5,
@@ -413,7 +413,7 @@ class UserSelect(_AutoPopulatedSelect):
         if self.placeholder is not None:
             payload["placeholder"] = self.placeholder
         if self.default_values:
-            payload["default_values"] = [v._to_request() for v in self.default_values]
+            payload["default_values"] = [v.to_dict() for v in self.default_values]
         if self.min_values is not None:
             payload["min_values"] = self.min_values
         if self.max_values is not None:
@@ -425,14 +425,14 @@ class UserSelect(_AutoPopulatedSelect):
         return payload
 
     @classmethod
-    def _from_response(cls, data: component_types.UserSelectResponse) -> Self:
+    def from_dict(cls, data: component_types.UserSelectResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(
             id=data.get("id"),
             custom_id=data["custom_id"],
             placeholder=data.get("placeholder"),
             default_values=[
-                SelectDefaultValue._from_response(value)
+                SelectDefaultValue.from_dict(value)
                 for value in data.get("default_values", [])
             ],
             min_values=data.get("min_values"),
@@ -447,7 +447,7 @@ class RoleSelect(_AutoPopulatedSelect):
 
     component_type = 6
 
-    def _to_request(self) -> component_types.RoleSelectRequest:
+    def to_dict(self) -> component_types.RoleSelectRequest:
         """Serialize this object into a Discord API request payload."""
         payload: component_types.RoleSelectRequest = {  # pyright: ignore[reportAssignmentType]
             "type": 6,
@@ -458,7 +458,7 @@ class RoleSelect(_AutoPopulatedSelect):
         if self.placeholder is not None:
             payload["placeholder"] = self.placeholder
         if self.default_values:
-            payload["default_values"] = [v._to_request() for v in self.default_values]
+            payload["default_values"] = [v.to_dict() for v in self.default_values]
         if self.min_values is not None:
             payload["min_values"] = self.min_values
         if self.max_values is not None:
@@ -470,14 +470,14 @@ class RoleSelect(_AutoPopulatedSelect):
         return payload
 
     @classmethod
-    def _from_response(cls, data: component_types.RoleSelectResponse) -> Self:
+    def from_dict(cls, data: component_types.RoleSelectResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(
             id=data.get("id"),
             custom_id=data["custom_id"],
             placeholder=data.get("placeholder"),
             default_values=[
-                SelectDefaultValue._from_response(value)
+                SelectDefaultValue.from_dict(value)
                 for value in data.get("default_values", [])
             ],
             min_values=data.get("min_values"),
@@ -492,7 +492,7 @@ class MentionableSelect(_AutoPopulatedSelect):
 
     component_type = 7
 
-    def _to_request(self) -> component_types.MentionableSelectRequest:
+    def to_dict(self) -> component_types.MentionableSelectRequest:
         """Serialize this object into a Discord API request payload."""
         payload: component_types.MentionableSelectRequest = {  # pyright: ignore[reportAssignmentType]
             "type": 7,
@@ -503,7 +503,7 @@ class MentionableSelect(_AutoPopulatedSelect):
         if self.placeholder is not None:
             payload["placeholder"] = self.placeholder
         if self.default_values:
-            payload["default_values"] = [v._to_request() for v in self.default_values]
+            payload["default_values"] = [v.to_dict() for v in self.default_values]
         if self.min_values is not None:
             payload["min_values"] = self.min_values
         if self.max_values is not None:
@@ -515,14 +515,14 @@ class MentionableSelect(_AutoPopulatedSelect):
         return payload
 
     @classmethod
-    def _from_response(cls, data: component_types.MentionableSelectResponse) -> Self:
+    def from_dict(cls, data: component_types.MentionableSelectResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(
             id=data.get("id"),
             custom_id=data["custom_id"],
             placeholder=data.get("placeholder"),
             default_values=[
-                SelectDefaultValue._from_response(value)
+                SelectDefaultValue.from_dict(value)
                 for value in data.get("default_values", [])
             ],
             min_values=data.get("min_values"),
@@ -563,7 +563,7 @@ class ChannelSelect(_AutoPopulatedSelect):
         )
         self.channel_types = list(channel_types or [])
 
-    def _to_request(self) -> component_types.ChannelSelectRequest:
+    def to_dict(self) -> component_types.ChannelSelectRequest:
         """Serialize this object into a Discord API request payload."""
         payload: component_types.ChannelSelectRequest = {  # pyright: ignore[reportAssignmentType]
             "type": 8,
@@ -574,7 +574,7 @@ class ChannelSelect(_AutoPopulatedSelect):
         if self.placeholder is not None:
             payload["placeholder"] = self.placeholder
         if self.default_values:
-            payload["default_values"] = [v._to_request() for v in self.default_values]
+            payload["default_values"] = [v.to_dict() for v in self.default_values]
         if self.min_values is not None:
             payload["min_values"] = self.min_values
         if self.max_values is not None:
@@ -588,7 +588,7 @@ class ChannelSelect(_AutoPopulatedSelect):
         return payload
 
     @classmethod
-    def _from_response(cls, data: component_types.ChannelSelectResponse) -> Self:
+    def from_dict(cls, data: component_types.ChannelSelectResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(
             id=data.get("id"),
@@ -596,7 +596,7 @@ class ChannelSelect(_AutoPopulatedSelect):
             channel_types=data.get("channel_types", []),
             placeholder=data.get("placeholder"),
             default_values=[
-                SelectDefaultValue._from_response(value)
+                SelectDefaultValue.from_dict(value)
                 for value in data.get("default_values", [])
             ],
             min_values=data.get("min_values"),
@@ -614,7 +614,7 @@ class TextDisplay(BaseComponent):
         super().__init__(type=10, id=id)
         self.content = content
 
-    def _to_request(self) -> component_types.TextDisplayRequest:
+    def to_dict(self) -> component_types.TextDisplayRequest:
         """Serialize this object into a Discord API request payload."""
         payload: component_types.TextDisplayRequest = {
             "type": 10,
@@ -625,7 +625,7 @@ class TextDisplay(BaseComponent):
         return payload
 
     @classmethod
-    def _from_response(cls, data: component_types.TextDisplayResponse) -> Self:
+    def from_dict(cls, data: component_types.TextDisplayResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(id=data.get("id"), content=data["content"])
 
@@ -647,11 +647,11 @@ class Thumbnail(BaseComponent):
         self.description = description
         self.spoiler = spoiler
 
-    def _to_request(self) -> component_types.ThumbnailRequest:
+    def to_dict(self) -> component_types.ThumbnailRequest:
         """Serialize this object into a Discord API request payload."""
         payload: component_types.ThumbnailRequest = {
             "type": 11,
-            "media": self.media._to_request(),
+            "media": self.media.to_dict(),
         }
         if self.id is not None:
             payload["id"] = self.id
@@ -662,11 +662,11 @@ class Thumbnail(BaseComponent):
         return payload
 
     @classmethod
-    def _from_response(cls, data: component_types.ThumbnailResponse) -> Self:
+    def from_dict(cls, data: component_types.ThumbnailResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(
             id=data.get("id"),
-            media=UnfurledMediaItem._from_response(data["media"]),
+            media=UnfurledMediaItem.from_dict(data["media"]),
             description=data.get("description"),
             spoiler=data.get("spoiler"),
         )
@@ -687,10 +687,10 @@ class MediaGalleryItem:
         self.description = description
         self.spoiler = spoiler
 
-    def _to_request(self) -> component_types.MediaGalleryItemRequest:
+    def to_dict(self) -> component_types.MediaGalleryItemRequest:
         """Serialize this object into a Discord API request payload."""
         payload: component_types.MediaGalleryItemRequest = {
-            "media": self.media._to_request()
+            "media": self.media.to_dict()
         }
         if self.description is not None:
             payload["description"] = self.description
@@ -699,10 +699,10 @@ class MediaGalleryItem:
         return payload
 
     @classmethod
-    def _from_response(cls, data: component_types.MediaGalleryItemResponse) -> Self:
+    def from_dict(cls, data: component_types.MediaGalleryItemResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(
-            media=UnfurledMediaItem._from_response(data["media"]),
+            media=UnfurledMediaItem.from_dict(data["media"]),
             description=data.get("description"),
             spoiler=data.get("spoiler"),
         )
@@ -718,22 +718,22 @@ class MediaGallery(BaseComponent):
         super().__init__(type=12, id=id)
         self.items = list(items)
 
-    def _to_request(self) -> component_types.MediaGalleryRequest:
+    def to_dict(self) -> component_types.MediaGalleryRequest:
         """Serialize this object into a Discord API request payload."""
         payload: component_types.MediaGalleryRequest = {
             "type": 12,
-            "items": [item._to_request() for item in self.items],
+            "items": [item.to_dict() for item in self.items],
         }
         if self.id is not None:
             payload["id"] = self.id
         return payload
 
     @classmethod
-    def _from_response(cls, data: component_types.MediaGalleryResponse) -> Self:
+    def from_dict(cls, data: component_types.MediaGalleryResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(
             id=data.get("id"),
-            items=[MediaGalleryItem._from_response(item) for item in data["items"]],
+            items=[MediaGalleryItem.from_dict(item) for item in data["items"]],
         )
 
 
@@ -756,11 +756,11 @@ class FileComponent(BaseComponent):
         self.name = name
         self.size = size
 
-    def _to_request(self) -> component_types.FileComponentRequest:
+    def to_dict(self) -> component_types.FileComponentRequest:
         """Serialize this object into a Discord API request payload."""
         payload: component_types.FileComponentRequest = {
             "type": 13,
-            "file": self.file._to_request(),
+            "file": self.file.to_dict(),
         }
         if self.id is not None:
             payload["id"] = self.id
@@ -769,11 +769,11 @@ class FileComponent(BaseComponent):
         return payload
 
     @classmethod
-    def _from_response(cls, data: component_types.FileComponentResponse) -> Self:
+    def from_dict(cls, data: component_types.FileComponentResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(
             id=data.get("id"),
-            file=UnfurledMediaItem._from_response(data["file"]),
+            file=UnfurledMediaItem.from_dict(data["file"]),
             spoiler=data.get("spoiler"),
             name=data.get("name"),
             size=data.get("size"),
@@ -795,7 +795,7 @@ class Separator(BaseComponent):
         self.divider = divider
         self.spacing = spacing
 
-    def _to_request(self) -> component_types.SeparatorRequest:
+    def to_dict(self) -> component_types.SeparatorRequest:
         """Serialize this object into a Discord API request payload."""
         payload: component_types.SeparatorRequest = {"type": 14}
         if self.id is not None:
@@ -807,7 +807,7 @@ class Separator(BaseComponent):
         return payload
 
     @classmethod
-    def _from_response(cls, data: component_types.SeparatorResponse) -> Self:
+    def from_dict(cls, data: component_types.SeparatorResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(
             id=data.get("id"),
@@ -831,29 +831,29 @@ class Section(BaseComponent):
         self.components = list(components)
         self.accessory = accessory
 
-    def _to_request(self) -> component_types.SectionRequest:
+    def to_dict(self) -> component_types.SectionRequest:
         """Serialize this object into a Discord API request payload."""
         payload: component_types.SectionRequest = {
             "type": 9,
-            "components": [component._to_request() for component in self.components],
-            "accessory": self.accessory._to_request(),  # pyright: ignore[reportAssignmentType]
+            "components": [component.to_dict() for component in self.components],
+            "accessory": self.accessory.to_dict(),  # pyright: ignore[reportAssignmentType]
         }
         if self.id is not None:
             payload["id"] = self.id
         return payload
 
     @classmethod
-    def _from_response(cls, data: component_types.SectionResponse) -> Self:
+    def from_dict(cls, data: component_types.SectionResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         accessory_data = data["accessory"]
         accessory_type = accessory_data["type"]
         accessory: Thumbnail | Button
         if accessory_type == 11:
-            accessory = Thumbnail._from_response(
+            accessory = Thumbnail.from_dict(
                 accessory_data  # pyright: ignore[reportArgumentType]
             )
         elif accessory_type == 2:
-            accessory = Button._from_response(accessory_data)  # pyright: ignore[reportArgumentType]
+            accessory = Button.from_dict(accessory_data)  # pyright: ignore[reportArgumentType]
         else:
             raise ValueError(
                 f"Unsupported section accessory component type: {accessory_type}"
@@ -862,8 +862,7 @@ class Section(BaseComponent):
         return cls(
             id=data.get("id"),
             components=[
-                TextDisplay._from_response(component)
-                for component in data["components"]
+                TextDisplay.from_dict(component) for component in data["components"]
             ],
             accessory=accessory,
         )
@@ -886,11 +885,11 @@ class Container(BaseComponent):
         self.accent_color = accent_color
         self.spoiler = spoiler
 
-    def _to_request(self) -> component_types.ContainerRequest:
+    def to_dict(self) -> component_types.ContainerRequest:
         """Serialize this object into a Discord API request payload."""
         payload: component_types.ContainerRequest = {
             "type": 17,
-            "components": [component._to_request() for component in self.components],
+            "components": [component.to_dict() for component in self.components],
         }
         if self.id is not None:
             payload["id"] = self.id
@@ -901,12 +900,12 @@ class Container(BaseComponent):
         return payload
 
     @classmethod
-    def _from_response(cls, data: component_types.ContainerResponse) -> Self:
+    def from_dict(cls, data: component_types.ContainerResponse) -> Self:
         """Construct this object from a Discord API response payload."""
         return cls(
             id=data.get("id"),
             components=[
-                component_from_response(component) for component in data["components"]
+                componentfrom_dict(component) for component in data["components"]
             ],
             accent_color=data.get("accent_color"),
             spoiler=data.get("spoiler"),
@@ -924,7 +923,7 @@ class ContentInventoryEntryComponent(BaseComponent):
         self.content_inventory_entry = content_inventory_entry
 
     @classmethod
-    def _from_response(
+    def from_dict(
         cls, data: component_types.ContentInventoryEntryComponentResponse
     ) -> Self:
         return cls(
@@ -944,46 +943,46 @@ class CheckpointCard(BaseComponent):
         self.checkpoint_data = checkpoint_data
 
     @classmethod
-    def _from_response(cls, data: component_types.CheckpointCardResponse) -> Self:
+    def from_dict(cls, data: component_types.CheckpointCardResponse) -> Self:
         return cls(id=data.get("id"), checkpoint_data=data["checkpoint_data"])
 
 
-def component_from_response(data: component_types.ComponentResponse) -> BaseComponent:
+def componentfrom_dict(data: component_types.ComponentResponse) -> BaseComponent:
     component_type = data["type"]
     if component_type == 1:
-        return ActionRow._from_response(data)  # pyright: ignore[reportArgumentType]
+        return ActionRow.from_dict(data)  # pyright: ignore[reportArgumentType]
     if component_type == 2:
-        return Button._from_response(data)  # pyright: ignore[reportArgumentType]
+        return Button.from_dict(data)  # pyright: ignore[reportArgumentType]
     if component_type == 3:
-        return StringSelect._from_response(data)  # pyright: ignore[reportArgumentType]
+        return StringSelect.from_dict(data)  # pyright: ignore[reportArgumentType]
     if component_type == 5:
-        return UserSelect._from_response(data)  # pyright: ignore[reportArgumentType]
+        return UserSelect.from_dict(data)  # pyright: ignore[reportArgumentType]
     if component_type == 6:
-        return RoleSelect._from_response(data)  # pyright: ignore[reportArgumentType]
+        return RoleSelect.from_dict(data)  # pyright: ignore[reportArgumentType]
     if component_type == 7:
-        return MentionableSelect._from_response(
+        return MentionableSelect.from_dict(
             data  # pyright: ignore[reportArgumentType]
         )
     if component_type == 8:
-        return ChannelSelect._from_response(data)  # pyright: ignore[reportArgumentType]
+        return ChannelSelect.from_dict(data)  # pyright: ignore[reportArgumentType]
     if component_type == 9:
-        return Section._from_response(data)  # pyright: ignore[reportArgumentType]
+        return Section.from_dict(data)  # pyright: ignore[reportArgumentType]
     if component_type == 10:
-        return TextDisplay._from_response(data)  # pyright: ignore[reportArgumentType]
+        return TextDisplay.from_dict(data)  # pyright: ignore[reportArgumentType]
     if component_type == 11:
-        return Thumbnail._from_response(data)  # pyright: ignore[reportArgumentType]
+        return Thumbnail.from_dict(data)  # pyright: ignore[reportArgumentType]
     if component_type == 12:
-        return MediaGallery._from_response(data)  # pyright: ignore[reportArgumentType]
+        return MediaGallery.from_dict(data)  # pyright: ignore[reportArgumentType]
     if component_type == 13:
-        return FileComponent._from_response(data)  # pyright: ignore[reportArgumentType]
+        return FileComponent.from_dict(data)  # pyright: ignore[reportArgumentType]
     if component_type == 14:
-        return Separator._from_response(data)  # pyright: ignore[reportArgumentType]
+        return Separator.from_dict(data)  # pyright: ignore[reportArgumentType]
     if component_type == 16:
-        return ContentInventoryEntryComponent._from_response(
+        return ContentInventoryEntryComponent.from_dict(
             data  # pyright: ignore[reportArgumentType]
         )
     if component_type == 17:
-        return Container._from_response(data)  # pyright: ignore[reportArgumentType]
+        return Container.from_dict(data)  # pyright: ignore[reportArgumentType]
     if component_type == 20:
-        return CheckpointCard._from_response(data)  # pyright: ignore[reportArgumentType]
+        return CheckpointCard.from_dict(data)  # pyright: ignore[reportArgumentType]
     return BaseComponent(type=component_type, id=data.get("id"))

@@ -37,7 +37,7 @@ class Emoji(BaseModel[None, dict[str, Any]]):
         return f"<{animated_key}:{self.name}:{self.id}>"
 
     @override
-    def _to_request(
+    def to_dict(
         self,
         *,
         name_key: str | None = "name",
