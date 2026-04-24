@@ -147,9 +147,8 @@ class BaseModel[D: Any, R: Any = None]:
         optional: bool = False,
         possible_keys: _PossibleKeys = None,
     ) -> BaseModel[Any, Any] | None:
-        cls_type = cast("type[BaseModel[Any, Any]]", cls)
         return self._construct_other(
-            cls_type,
+            cls,  # pyright: ignore[reportArgumentType]
             data,
             optional=optional,
             possible_keys=possible_keys,
@@ -219,13 +218,12 @@ class BaseModelWithHTTP[D: Any, R: Any = None](BaseModel[D, R]):
         optional: bool = False,
         possible_keys: _PossibleKeys = None,
     ) -> BaseModel[Any, Any] | None:
-        cls_type = cast("type[BaseModel[Any, Any]]", cls)
         extra_kwargs: dict[str, Any] = {}
-        if issubclass(cls_type, BaseModelWithHTTP):
+        if issubclass(cls, BaseModelWithHTTP):  # pyright: ignore[reportArgumentType]
             extra_kwargs["http"] = self._http
 
         return self._construct_other(
-            cls_type,
+            cls,  # pyright: ignore[reportArgumentType]
             data,
             optional=optional,
             possible_keys=possible_keys,
@@ -330,15 +328,14 @@ class BaseModelWithSession[D: Any, R: Any = None](BaseModel[D, R]):
         optional: bool = False,
         possible_keys: _PossibleKeys = None,
     ) -> BaseModel[Any, Any] | None:
-        cls_type = cast("type[BaseModel[Any, Any]]", cls)
         extra_kwargs: dict[str, Any] = {}
-        if issubclass(cls_type, BaseModelWithHTTP):
+        if issubclass(cls, BaseModelWithHTTP):  # pyright: ignore[reportArgumentType]
             extra_kwargs["http"] = self._session.client.http
-        elif issubclass(cls_type, BaseModelWithSession):
+        elif issubclass(cls, BaseModelWithSession):  # pyright: ignore[reportArgumentType]
             extra_kwargs["session"] = self._session
 
         return self._construct_other(
-            cls_type,
+            cls,  # pyright: ignore[reportArgumentType]
             data,
             optional=optional,
             possible_keys=possible_keys,

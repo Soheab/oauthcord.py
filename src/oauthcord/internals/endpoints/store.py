@@ -87,52 +87,40 @@ class StoreHTTPClientMixin(BaseHTTPClient):
         data: store_types.CreateSKURequest = {
             "type": int(type),  # type: ignore
             "application_id": application_id,
-            "name": cast(
-                "store_types.LocalizedString",
-                cast("Any", name).to_dict() if hasattr(name, "to_dict") else name,
-            ),
+            "name": name.to_dict() if isinstance(name, LocalizedString) else name,
         }
         if flags is not None:
             data["flags"] = flags
         if legal_notice is not None:
-            data["legal_notice"] = cast(
-                "store_types.LocalizedString",
-                cast("Any", legal_notice).to_dict()
-                if hasattr(legal_notice, "to_dict")
-                else legal_notice,
+            data["legal_notice"] = (
+                legal_notice.to_dict()
+                if isinstance(legal_notice, LocalizedString)
+                else legal_notice
             )
         if dependent_sku_id is not None:
             data["dependent_sku_id"] = dependent_sku_id
         if bundled_skus is not None:
             data["bundled_skus"] = bundled_skus
         if access_type is not None:
-            data["access_type"] = int(access_type)  # pyright: ignore[reportGeneralTypeIssues]
+            data["access_type"] = access_type  # pyright: ignore[reportGeneralTypeIssues]
         if manifest_labels is not None:
             data["manifest_labels"] = manifest_labels
         if features is not None:
-            data["features"] = [int(feature) for feature in features]  # pyright: ignore[reportGeneralTypeIssues]
+            data["features"] = features  # pyright: ignore[reportGeneralTypeIssues]
         if locales is not None:
             data["locales"] = locales
         if genres is not None:
-            data["genres"] = [
-                cast("store_types.SKUGenre", int(genre)) for genre in genres
-            ]
+            data["genres"] = genres  # pyright: ignore[reportGeneralTypeIssues]
         if content_ratings is not None:
             data["content_ratings"] = {  # pyright: ignore[reportGeneralTypeIssues]
-                int(agency): cast(
-                    "store_types.ContentRatingResponse",
-                    cast("Any", rating).to_dict()
-                    if hasattr(rating, "to_dict")
-                    else rating,
-                )
+                int(agency): rating.to_dict()
+                if isinstance(rating, ContentRating)
+                else rating
                 for agency, rating in content_ratings.items()
             }
         if system_requirements is not None:
             data["system_requirements"] = {  # pyright: ignore[reportGeneralTypeIssues]
-                int(os): cast(
-                    "store_types.SystemRequirementsResponse",
-                    cast("Any", req).to_dict() if hasattr(req, "to_dict") else req,
-                )
+                int(os): req.to_dict() if isinstance(req, SystemRequirements) else req
                 for os, req in system_requirements.items()
             }
         if price_tier is not None:
@@ -209,58 +197,39 @@ class StoreHTTPClientMixin(BaseHTTPClient):
     ) -> store_types.SKU:
         data: store_types.ModifySKURequest = {}
         if name is not None:
-            data["name"] = cast(
-                "store_types.LocalizedString",
-                cast("Any", name).to_dict() if hasattr(name, "to_dict") else name,
-            )
+            data["name"] = name.to_dict() if isinstance(name, LocalizedString) else name
         if flags is not None:
             data["flags"] = flags
         if legal_notice is not None:
-            data["legal_notice"] = cast(
-                "store_types.LocalizedString",
-                cast("Any", legal_notice).to_dict()
-                if hasattr(legal_notice, "to_dict")
-                else legal_notice,
+            data["legal_notice"] = (
+                legal_notice.to_dict()
+                if isinstance(legal_notice, LocalizedString)
+                else legal_notice
             )
         if dependent_sku_id is not None:
             data["dependent_sku_id"] = dependent_sku_id
         if bundled_skus is not None:
             data["bundled_skus"] = bundled_skus
         if access_type is not None:
-            data["access_type"] = int(access_type)  # pyright: ignore[reportGeneralTypeIssues]
+            data["access_type"] = int(access_type)
         if manifest_labels is not None:
             data["manifest_labels"] = manifest_labels
         if features is not None:
-            data["features"] = [
-                cast("store_types.SKUFeature", _coerce_store_literal(feature))
-                for feature in features
-            ]
+            data["features"] = features
         if locales is not None:
             data["locales"] = locales
         if genres is not None:
-            data["genres"] = [
-                cast("store_types.SKUGenre", _coerce_store_literal(genre))
-                for genre in genres
-            ]
+            data["genres"] = genres
         if content_ratings is not None:
             data["content_ratings"] = {
-                cast(
-                    "store_types.ContentRatingAgency",
-                    _coerce_store_literal(agency),
-                ): cast(
-                    "store_types.ContentRatingResponse",
-                    cast("Any", rating).to_dict()
-                    if hasattr(rating, "to_dict")
-                    else rating,
-                )
+                int(agency): rating.to_dict()
+                if isinstance(rating, ContentRating)
+                else rating
                 for agency, rating in content_ratings.items()
             }
         if system_requirements is not None:
             data["system_requirements"] = {
-                cast("store_types.OperatingSystem", _coerce_store_literal(os)): cast(
-                    "store_types.SystemRequirementsResponse",
-                    cast("Any", req).to_dict() if hasattr(req, "to_dict") else req,
-                )
+                int(os): req.to_dict() if isinstance(req, SystemRequirements) else req
                 for os, req in system_requirements.items()
             }
         if price_tier is not None:
@@ -328,36 +297,24 @@ class StoreHTTPClientMixin(BaseHTTPClient):
         data: store_types.CreateStoreListingRequest = {
             "application_id": application_id,
             "sku_id": sku_id,
-            "summary": cast(
-                "store_types.LocalizedString",
-                cast("Any", summary).to_dict()
-                if hasattr(summary, "to_dict")
-                else summary,
-            ),
-            "description": cast(
-                "store_types.LocalizedString",
-                cast("Any", description).to_dict()
-                if hasattr(description, "to_dict")
-                else description,
-            ),
+            "summary": summary.to_dict()
+            if isinstance(summary, LocalizedString)
+            else summary,
+            "description": description.to_dict()
+            if isinstance(description, LocalizedString)
+            else description,
         }
         if child_sku_ids is not None:
             data["child_sku_ids"] = child_sku_ids
         if tagline is not None:
-            data["tagline"] = cast(
-                "store_types.LocalizedString",
-                cast("Any", tagline).to_dict()
-                if hasattr(tagline, "to_dict")
-                else tagline,
+            data["tagline"] = (
+                tagline.to_dict() if isinstance(tagline, LocalizedString) else tagline
             )
         if published is not None:
             data["published"] = published
         if carousel_items is not None:
             data["carousel_items"] = [
-                cast(
-                    "store_types.StoreCarouselItemResponse",
-                    cast("Any", item).to_dict() if hasattr(item, "to_dict") else item,
-                )
+                item.to_dict() if isinstance(item, StoreCarouselItem) else item
                 for item in carousel_items
             ]
         if guild_id is not None:
@@ -433,34 +390,24 @@ class StoreHTTPClientMixin(BaseHTTPClient):
         if child_sku_ids is not None:
             data["child_sku_ids"] = child_sku_ids
         if summary is not None:
-            data["summary"] = cast(
-                "store_types.LocalizedString",
-                cast("Any", summary).to_dict()
-                if hasattr(summary, "to_dict")
-                else summary,
+            data["summary"] = (
+                summary.to_dict() if isinstance(summary, LocalizedString) else summary
             )
         if description is not None:
-            data["description"] = cast(
-                "store_types.LocalizedString",
-                cast("Any", description).to_dict()
-                if hasattr(description, "to_dict")
-                else description,
+            data["description"] = (
+                description.to_dict()
+                if isinstance(description, LocalizedString)
+                else description
             )
         if tagline is not None:
-            data["tagline"] = cast(
-                "store_types.LocalizedString",
-                cast("Any", tagline).to_dict()
-                if hasattr(tagline, "to_dict")
-                else tagline,
+            data["tagline"] = (
+                tagline.to_dict() if isinstance(tagline, LocalizedString) else tagline
             )
         if published is not None:
             data["published"] = published
         if carousel_items is not None:
             data["carousel_items"] = [
-                cast(
-                    "store_types.StoreCarouselItemResponse",
-                    cast("Any", item).to_dict() if hasattr(item, "to_dict") else item,
-                )
+                item.to_dict() if isinstance(item, StoreCarouselItem) else item
                 for item in carousel_items
             ]
         if guild_id is not None:

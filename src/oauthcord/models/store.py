@@ -32,6 +32,7 @@ from .user import PartialUser
 
 if TYPE_CHECKING:
     from ..internals._types import store as store_types
+    from ..internals._types.base import Locale as LocalePayload
 
 __all__ = (
     "EULA",
@@ -84,11 +85,11 @@ def _iso_to_date(value: str | None) -> datetime.date | None:
     return datetime.date.fromisoformat(value)
 
 
-def _parse_locale_map(data: Any) -> dict[Locale | str, str]:
+def _parse_locale_map(data: Any) -> dict[Locale | LocalePayload, str]:
     if not data:
         return {}
 
-    parsed: dict[Locale | str, str] = {}
+    parsed: dict[Locale | LocalePayload, str] = {}
     for key, value in data.items():
         try:
             parsed[to_enum(Locale, key)] = value
@@ -98,20 +99,20 @@ def _parse_locale_map(data: Any) -> dict[Locale | str, str]:
 
 
 def _serialize_locale_map(
-    data: dict[Locale | str, str] | None,
-) -> dict[str, str]:
+    data: dict[Locale | LocalePayload, str] | None,
+) -> dict[LocalePayload, str]:
     if not data:
         return {}
 
     if all(isinstance(key, Locale) for key in data):
-        return _serialize_localizations(cast("dict[Locale, str]", data))
+        return _serialize_localizations(data)  # pyright: ignore[reportReturnType, reportArgumentType]
 
-    serialized: dict[str, str] = {}
+    serialized: dict[LocalePayload, str] = {}
     for key, value in data.items():
         if isinstance(key, Locale):
             serialized[key.value] = value
         else:
-            serialized[str(key)] = value
+            serialized[str(key)] = value  # pyright: ignore[reportArgumentType]
     return serialized
 
 
@@ -141,7 +142,7 @@ class LocalizedString(
     @override
     def _initialize(self, data: store_types.LocalizedString) -> None:
         self.default: str = data["default"]
-        self.localizations: dict[Locale | str, str] = _parse_locale_map(
+        self.localizations: dict[Locale | LocalePayload, str] = _parse_locale_map(
             data.get("localizations")
         )
 
@@ -149,9 +150,7 @@ class LocalizedString(
     def to_dict(self) -> store_types.LocalizedString:
         payload: store_types.LocalizedString = {"default": self.default}
         if self.localizations:
-            payload["localizations"] = cast(
-                "Any", _serialize_locale_map(self.localizations)
-            )
+            payload["localizations"] = _serialize_locale_map(self.localizations)
         return payload
 
 
@@ -739,14 +738,11 @@ class ContentRating(
         return self
 
     @override
-    def to_dict(self) -> store_types.ContentRatingResponse:  # pyright: ignore[reportIncompatibleMethodOverride]
-        return cast(
-            "store_types.ContentRatingResponse",
-            {
-                "rating": int(self.rating),
-                "descriptors": [int(descriptor) for descriptor in self.descriptors],
-            },
-        )
+    def to_dict(self) -> store_types.ContentRatingResponse:
+        return {
+            "rating": int(self.rating),  # pyright: ignore[reportReturnType]
+            "descriptors": [int(descriptor) for descriptor in self.descriptors],
+        }
 
 
 class SystemRequirement(
