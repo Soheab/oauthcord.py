@@ -115,7 +115,7 @@ class Client:
         if self._state:
             params["state"] = self._state
 
-        url = urllib.parse.urljoin(self.http.BASE_URL, "/oauth2/authorize?")
+        url = urllib.parse.urljoin(self.http.BASE_URL, "/oauth2/authorize")
         url += "?" + urllib.parse.urlencode(params)
         return url
 
