@@ -20,10 +20,6 @@ if TYPE_CHECKING:
     from .base import ValidToken
 
 
-def _coerce_store_literal(value: int | object) -> int:
-    return int(value)  # type: ignore[arg-type]
-
-
 class StoreHTTPClientMixin(BaseHTTPClient):
     async def get_application_skus(
         self,
