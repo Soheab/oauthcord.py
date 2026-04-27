@@ -3,10 +3,12 @@ from __future__ import annotations
 import datetime
 from typing import TYPE_CHECKING, Self, override
 
+from .. import utils
 from ..enums import Scope
 from ._base import BaseModelWithHTTP
 
 if TYPE_CHECKING:
+    from ..client import AuthorisedSession, Client
     from ..internals._types.token import (
         AccessTokenResponse as AccessTokenResponsePayload,
     )
@@ -57,14 +59,18 @@ class AccessTokenResponse(
         self._expires_in: int = data["expires_in"]
 
     @classmethod
-    def from_dict(
+    @override
+    def from_dict(  # type: ignore
         cls,
+        client: Client | AuthorisedSession,
         data: AccessTokenResponsePayload | RefreshTokenResponsePayload,
     ) -> AccessTokenResponse:
         """Create an AccessTokenResponse instance from a dictionary payload.
 
         Parameters
         ----------
+        client: :class:`Client` | :class:`AuthorisedSession`
+            The client or authorised session to get the HTTP client from.
         data: :class:`dict`
             The raw access token response data as returned by Discord.
 
@@ -73,8 +79,7 @@ class AccessTokenResponse(
         :class:`AccessTokenResponse`
             The initialized AccessTokenResponse instance.
         """
-        instance = cls.__new__(cls)
-        instance._initialize(data)
+        instance = utils._construct_model(cls, data=data, http=client.http)
         return instance
 
     @override

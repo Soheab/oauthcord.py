@@ -54,6 +54,62 @@ Typical flow:
 6. Refresh with `await session.refresh()` when needed.
 7. Revoke with `await session.revoke()` if needed.
 
+## Session management
+
+`Client` can keep an in-memory registry of `AuthorisedSession` instances for applications that need to look up a user's OAuth session after the callback has finished.
+
+Session storage is opt-in. Pass `store_session=True` to automatically store sessions created by `exchange_token()`, and pass `session_identifier` when you want a stable key such as your own user ID instead of using the access token as the lookup key. If storage is enabled globally but one specific session should not be added to the registry, pass `session_identifier=None` for that exchange.
+
+```python
+client = Client(
+    client_id=123456789012345678,
+    client_secret="your-client-secret",
+    redirect_uri="http://127.0.0.1:8000/callback",
+    scopes=[Scope.IDENTIFY, Scope.GUILDS],
+    store_session=True,  # enabling
+)
+
+session = await client.exchange_token(
+    code,
+    session_identifier="internal-user-id",
+)
+
+same_session = client.get_session("internal-user-id")
+
+temporary_session = await client.exchange_token(
+    another_code,
+    session_identifier=None,
+)
+```
+
+You can also manage sessions manually:
+
+```python
+session = client.create_session(token_data)
+client.add_session(session, identifier="internal-user-id")
+
+stored = client.get_session("internal-user-id")
+
+client.remove_session("internal-user-id")
+client.clear_sessions()
+
+# session.close() # <- calls client.remove_session(session.identifie)
+```
+
+Refreshing a session updates its token in place:
+
+```python
+await session.refresh(check_expired=True)
+```
+
+Closing a session removes it from the client's registry. If the client was created with `revoke_tokens_on_session_close=True`, closing the session also revokes the current access token.
+
+```python
+await session.close()
+```
+
+The registry is process-local and in-memory only. Persist `session.to_dict()` yourself if sessions must survive restarts, then recreate them later with `client.create_session(token_data, store=True)`.
+
 ## Quick start
 
 ```python
