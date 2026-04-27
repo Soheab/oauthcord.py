@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import urllib.parse
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Literal, Self
 
 import aiohttp
 
@@ -114,6 +114,80 @@ class Client:
         }
         if self._state:
             params["state"] = self._state
+
+        url = urllib.parse.urljoin(self.http.BASE_URL, "/oauth2/authorize")
+        url += "?" + urllib.parse.urlencode(params)
+        return url
+
+    async def get_bot_authorization_url(
+        self,
+        *,
+        permissions: int = utils.NotSet,
+        integration_type: Literal[0, 1] = utils.NotSet,
+        guild_id: int = utils.NotSet,
+        disable_guild_select: bool = False,
+        application_id: int | str = utils.NotSet,
+    ) -> str:
+        """Build the Discord OAuth2 URL for authorizing a bot to join a server.
+
+        Parameters
+        ----------
+        permissions: :class:`int`
+            Bitwise permissions integer representing the permissions to request for the bot.
+        guild_id: :class:`int` | :data:`None`
+            Optional guild ID to pre-select in the authorization screen. If ``None``, no guild will be pre-selected.
+        disable_guild_select: :class:`bool`
+            Whether to disable the guild selection dropdown in the authorization screen. Defaults to ``False``.
+
+            ``guild_id`` must be provided if this is set to ``True``.
+        application_id: :class:`int` | :data:`None`
+            Optional application ID to specify the bot for authorization. Defaults to the client ID of
+            the current application if not provided.
+        integration_type: :class:`int`
+            Optional integration type to specify the scope of the authorization. Must be either 0 (Guild) or 1 (User).
+
+            Defaults to 0 (Guild) if not provided. If set to 1 (User), the scope will be set to
+            ``applications.commands`` instead of ``bot+applications.commands``.
+
+        Returns
+        -------
+        :class:`str`
+            Authorization URL for inviting the bot with the specified parameters.
+        """
+        params = {
+            "client_id": str(self.http.client_id)
+            if application_id is utils.NotSet
+            else str(application_id),
+        }
+
+        if permissions is not utils.NotSet:
+            params["permissions"] = str(permissions)
+        if guild_id is not utils.NotSet:
+            params["guild_id"] = str(guild_id)
+        if disable_guild_select:
+            if guild_id is utils.NotSet:
+                raise ValueError(
+                    "guild_id must be provided if disable_guild_select is True"
+                )
+
+            params["disable_guild_select"] = "true"
+
+        integration_type = (
+            integration_type if integration_type is not utils.NotSet else 0
+        )
+
+        if integration_type is not utils.NotSet:
+            if integration_type not in (0, 1):
+                raise ValueError(
+                    "integration_type must be either 0 (Guild) or 1 (User)"
+                )
+
+            params["integration_type"] = str(integration_type)
+
+        if integration_type == 1:
+            params["scope"] = "applications.commands"
+        else:
+            params["scope"] = "bot+applications.commands"
 
         url = urllib.parse.urljoin(self.http.BASE_URL, "/oauth2/authorize")
         url += "?" + urllib.parse.urlencode(params)
