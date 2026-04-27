@@ -236,13 +236,13 @@ class BaseChannel[D: Any = "_BaseChannelResponse"](BaseModelWithSession[D]):
 
     @override
     def _initialize(self, data: D) -> None:  # type: ignore
-        _data: _BaseChannelResponse = data  # pyright: ignore[reportAssignmentType]
+        data_: _BaseChannelResponse = data  # pyright: ignore[reportAssignmentType]
 
-        self.id: int = convert_snowflake(_data, "id")
-        self.type: ChannelType = to_enum(ChannelType, _data["type"])
-        self.flags: ChannelFlags = ChannelFlags(_data.get("flags", 0))
+        self.id: int = convert_snowflake(data_, "id")
+        self.type: ChannelType = to_enum(ChannelType, data_["type"])
+        self.flags: ChannelFlags = ChannelFlags(data_.get("flags", 0))
         self.last_message_id: int | None = convert_snowflake(
-            _data, "last_message_id", always_available=False
+            data_, "last_message_id", always_available=False
         )
 
 
