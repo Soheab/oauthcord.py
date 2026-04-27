@@ -186,7 +186,9 @@ class AuthorisedSession(
     def from_token(
         cls,
         client: Client,
-        token: AccessTokenResponse,
+        token: AccessTokenResponse
+        | AccessTokenResponsePayload
+        | RefreshTokenResponsePayload,
     ) -> AuthorisedSession:
         """Create an authorised session from an existing access token.
 
@@ -194,7 +196,7 @@ class AuthorisedSession(
         ----------
         client: :class:`Client`
             Parent OAuth2 client that created the session.
-        token: :class:`AccessTokenResponse`
+        token: :class:`AccessTokenResponse` | :class:`AccessTokenResponsePayload` | :class:`RefreshTokenResponsePayload`
             Access token data to initialize the session with.
 
         Returns
@@ -202,29 +204,9 @@ class AuthorisedSession(
         :class:`AuthorisedSession`
             Session initialized with the provided access token.
         """
-        return cls(client, token=token)
+        if not isinstance(token, AccessTokenResponse):
+            token = AccessTokenResponse.from_dict(token)
 
-    @classmethod
-    def from_dict(
-        cls,
-        client: Client,
-        data: AccessTokenResponsePayload | RefreshTokenResponsePayload,
-    ) -> AuthorisedSession:
-        """Create an authorised session from a dictionary payload.
-
-        Parameters
-        ----------
-        client: :class:`Client`
-            Parent OAuth2 client that created the session.
-        data: :class:`dict`
-            Raw access token response data as returned by Discord.
-
-        Returns
-        -------
-        :class:`AuthorisedSession`
-            Session initialized with the provided access token data.
-        """
-        token = AccessTokenResponse.from_dict(data)
         return cls(client, token=token)
 
     def to_dict(
