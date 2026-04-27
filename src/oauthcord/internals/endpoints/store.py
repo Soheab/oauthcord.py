@@ -211,24 +211,24 @@ class StoreHTTPClientMixin(BaseHTTPClient):
         if bundled_skus is not None:
             data["bundled_skus"] = bundled_skus
         if access_type is not None:
-            data["access_type"] = int(access_type)
+            data["access_type"] = int(access_type)  # pyright: ignore[reportGeneralTypeIssues]
         if manifest_labels is not None:
             data["manifest_labels"] = manifest_labels
         if features is not None:
-            data["features"] = features
+            data["features"] = features  # pyright: ignore[reportGeneralTypeIssues]
         if locales is not None:
             data["locales"] = locales
         if genres is not None:
-            data["genres"] = genres
+            data["genres"] = genres  # pyright: ignore[reportGeneralTypeIssues]
         if content_ratings is not None:
-            data["content_ratings"] = {
+            data["content_ratings"] = {  # pyright: ignore[reportGeneralTypeIssues]
                 int(agency): rating.to_dict()
                 if isinstance(rating, ContentRating)
                 else rating
                 for agency, rating in content_ratings.items()
             }
         if system_requirements is not None:
-            data["system_requirements"] = {
+            data["system_requirements"] = {  # pyright: ignore[reportGeneralTypeIssues]
                 int(os): req.to_dict() if isinstance(req, SystemRequirements) else req
                 for os, req in system_requirements.items()
             }
