@@ -31,6 +31,30 @@ if TYPE_CHECKING:
     )
 
 
+def _validate_scopes(scopes: list[Scope | str]) -> list[Scope | str]:
+    """Validate and convert a list of scopes into Scope enums or strings."""
+    if not isinstance(scopes, list):
+        raise ValueError("scopes must be a list of Scope or str")
+
+    scopes_: list[Scope | str] = []
+    for scope in scopes:
+        if isinstance(scope, Scope):
+            scopes_.append(scope)
+            continue
+
+        if not isinstance(scope, str):
+            raise ValueError(
+                f"scopes must be a list of Scope or str, got {type(scope)}"
+            )
+
+        try:
+            scopes_.append(Scope(scope))
+        except ValueError:
+            scopes_.append(scope)
+
+    return scopes_
+
+
 class Client:
     """Discord OAuth2 client.
 
@@ -54,14 +78,22 @@ class Client:
         Discord application client secret used for OAuth2 token exchange,
         refresh, and revoke requests.
     redirect_uri: :class:`str`
-        Redirect URI configured for the Discord application. This exact value
-        is sent during authorization-code exchange.
+        Redirect URI configured for the Discord application.
+
+        You may also set this per authorization URL with :meth:`get_authorization_url` in case
+        of different redirect URIs for different URLs.
+        This value will be used as default.
     scopes: :class:`list`[:class:`Scope` | :class:`str`]
-        OAuth2 scopes to request during authorization. String values are
-        normalized to :class:`Scope` instances during initialization.
+        OAuth2 scopes to request during authorization.
+
+        You may also set this per authorization URL with :meth:`get_authorization_url` in case of
+        different scopes for different URLs or users.
+        This value will be used as default.
     state: :class:`str` | :data:`None`
-        Optional state value to include in the authorization URL for caller-side
-        CSRF protection or request correlation.
+        Optional state value to include in the authorization URL.
+
+        You may also set this per authorization URL with :meth:`get_authorization_url` in case of
+        different state values for different URLs or users.
     session: :class:`aiohttp.ClientSession`
         Existing HTTP session to reuse for API requests. When provided, the
         internal HTTP client uses it instead of creating its own
@@ -124,26 +156,7 @@ class Client:
             session=session,
         )
 
-        if not isinstance(scopes, list):
-            raise ValueError("scopes must be a list of Scope or str")
-
-        scopes_: list[Scope | str] = []
-        for scope in scopes:
-            if isinstance(scope, Scope):
-                scopes_.append(scope)
-                continue
-
-            if not isinstance(scope, str):
-                raise ValueError(
-                    f"scopes must be a list of Scope or str, got {type(scope)}"
-                )
-
-            try:
-                scopes_.append(Scope(scope))
-            except ValueError:
-                scopes_.append(scope)
-
-        self._scopes: list[Scope | str] = scopes_
+        self._scopes: list[Scope | str] = _validate_scopes(scopes)
         self._redirect_uri: str = redirect_uri
         self._state: str | None = state
 
@@ -410,26 +423,52 @@ class Client:
 
     def get_authorization_url(
         self,
+        *,
+        redirect_uri: str = utils.NotSet,
+        scopes: list[Scope | str] = utils.NotSet,
+        state: str = utils.NotSet,
     ) -> str:
         """Build the Discord OAuth2 authorization URL.
 
-        The URL is built from the client's configured application ID, redirect
-        URI, scopes, and optional state value. Send users to this URL to begin
-        the authorization-code flow.
+        Send users to this URL to start the authorization-code flow.
+
+        Parameters
+        ----------
+        redirect_uri: :class:`str`
+            Optional redirect URI to use in the URL. Defaults to the client's
+            configured redirect URI.
+        scopes: :class:`list`[:class:`Scope` | :class:`str`]
+            Optional list of scopes to request. Defaults to the client's
+            configured scopes.
+
+            You may combine this with the client's :attr:`Client.scopes`.
+        state: :class:`str`
+            Optional state value to include in the URL. Defaults to the client's
+            configured state.
+
+            You may combine this with the client's :attr:`Client.state`.
 
         Returns
         -------
         :class:`str`
             Discord authorization URL for the configured OAuth2 flow.
         """
+        scopes_ = (
+            _validate_scopes(scopes) if scopes is not utils.NotSet else self._scopes
+        )
+        redirect_uri_ = (
+            redirect_uri if redirect_uri is not utils.NotSet else self._redirect_uri
+        )
+        state_ = state if state is not utils.NotSet else self._state
+
         params = {
             "client_id": str(self.http.client_id),
             "response_type": "code",
-            "redirect_uri": self._redirect_uri,
-            "scope": "+".join(str(scope) for scope in self._scopes),
+            "redirect_uri": redirect_uri_,
+            "scope": "+".join(str(scope) for scope in scopes_),
         }
-        if self._state:
-            params["state"] = self._state
+        if state_:
+            params["state"] = state_
 
         url = urllib.parse.urljoin(self.http.BASE_URL, "/oauth2/authorize")
         url += "?" + urllib.parse.urlencode(params)
