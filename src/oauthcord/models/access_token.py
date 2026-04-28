@@ -107,13 +107,6 @@ class AccessTokenResponse(
         return self.expires_at() <= datetime.datetime.now(datetime.UTC)
 
     @property
-    def token_with_type(self) -> str:
-        """:class:`str`: The full token string including the token type, formatted as
-        "{token_type} {access_token}".
-        """
-        return f"{self.token_type} {self.access_token}"
-
-    @property
     def scopes(self) -> list[Scope]:
         """:class:`list[Scope]`: The list of scopes associated with this token, parsed
         from the `scope` string.
