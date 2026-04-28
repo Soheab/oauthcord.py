@@ -127,12 +127,23 @@ class Client:
         if not isinstance(scopes, list):
             raise ValueError("scopes must be a list of Scope or str")
 
-        try:
-            parsed_scopes = [Scope(scope) for scope in scopes]
-        except ValueError as exc:
-            raise ValueError("scopes must be a list of valid Scope values") from exc
+        scopes_: list[Scope | str] = []
+        for scope in scopes:
+            if isinstance(scope, Scope):
+                scopes_.append(scope)
+                continue
 
-        self._scopes: list[Scope] = parsed_scopes
+            if not isinstance(scope, str):
+                raise ValueError(
+                    f"scopes must be a list of Scope or str, got {type(scope)}"
+                )
+
+            try:
+                scopes_.append(Scope(scope))
+            except ValueError:
+                scopes_.append(scope)
+
+        self._scopes: list[Scope | str] = scopes_
         self._redirect_uri: str = redirect_uri
         self._state: str | None = state
 
@@ -415,7 +426,7 @@ class Client:
             "client_id": str(self.http.client_id),
             "response_type": "code",
             "redirect_uri": self._redirect_uri,
-            "scope": "+".join(scope.value for scope in self._scopes),
+            "scope": "+".join(str(scope) for scope in self._scopes),
         }
         if self._state:
             params["state"] = self._state

@@ -190,6 +190,9 @@ class Scope(StrEnum):
         """Convert this object into a serialized or display-friendly representation."""
         return " ".join(cls(scope).value for scope in scopes)
 
+    def __str__(self) -> str:
+        return self.value
+
 
 class Locale(StrEnum):
     """Enumeration of Discord API values used by this wrapper."""
