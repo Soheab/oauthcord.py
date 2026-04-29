@@ -58,7 +58,7 @@ Typical flow:
 
 `Client` can keep an in-memory registry of `AuthorisedSession` instances for applications that need to look up a user's OAuth session after the callback has finished.
 
-Session storage is opt-in. Pass `store_session=True` to automatically store sessions created by `exchange_token()`, and pass `session_identifier` when you want a stable key such as your own user ID instead of using the access token as the lookup key. If storage is enabled globally but one specific session should not be added to the registry, pass `session_identifier=None` for that exchange.
+Session storage is opt-in. Pass `store_session=True` to automatically store sessions created by `exchange_token()`, and pass `session_identifier` when you want a stable key such as your own user ID instead of a generated UUID lookup key. If storage is enabled globally but one specific session should not be added to the registry, pass `session_identifier=None` for that exchange.
 
 ```python
 client = Client(
@@ -85,7 +85,7 @@ temporary_session = await client.exchange_token(
 You can also manage sessions manually:
 
 ```python
-session = client.create_session(token_data)
+session = AuthorisedSession.from_token(client, token_data)
 client.add_session(session, identifier="internal-user-id")
 
 stored = client.get_session("internal-user-id")
@@ -93,7 +93,7 @@ stored = client.get_session("internal-user-id")
 client.remove_session("internal-user-id")
 client.clear_sessions()
 
-# session.close() # <- calls client.remove_session(session.identifie)
+await session.close()
 ```
 
 Refreshing a session updates its token in place:
@@ -108,7 +108,7 @@ Closing a session removes it from the client's registry. If the client was creat
 await session.close()
 ```
 
-The registry is process-local and in-memory only. Persist `session.to_dict()` yourself if sessions must survive restarts, then recreate them later with `client.create_session(token_data, store=True)`.
+The registry is process-local and in-memory only. Persist `session.to_dict()` yourself if sessions must survive restarts, then recreate them later with `AuthorisedSession.from_token(client, token_data, identifier="internal-user-id")` while `store_session=True` is enabled on the client.
 
 ## Quick start
 
