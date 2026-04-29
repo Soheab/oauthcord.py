@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, Literal, NotRequired, Protocol, TypedDict
 import aiohttp
 
 if TYPE_CHECKING:
-    from ...models.access_token import AccessTokenResponse
+    from ...models.access_token import AccessToken
 
 
 class AccessTokenAttr(Protocol):
@@ -41,7 +41,7 @@ class RefreshTokenDict(TypedDict):
 
 
 type ValidToken = (
-    AccessTokenResponse | AccessTokenAttr | RestTokenAttrs | TokenDict | str
+    AccessToken | AccessTokenAttr | RestTokenAttrs | TokenDict | str
 )
 type HTTPMethod = Literal["GET", "POST", "PUT", "DELETE", "PATCH"]
 type ResponsePayload = dict[str, Any] | list[Any] | str

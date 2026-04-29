@@ -8,7 +8,7 @@ import aiohttp
 from .. import utils
 from ..enums import Scope
 from ..internals.http import OAuth2HTTPClient
-from ..models.access_token import AccessTokenResponse
+from ..models.access_token import AccessToken
 from ..models.current_auth import CurrentInformation
 from ._application import ApplicationClientMixin
 from ._channel import ChannelClientMixin
@@ -592,27 +592,27 @@ class AuthorisedSession(
     client: :class:`Client`
         Parent OAuth2 client that created the session and owns the internal HTTP
         client used for all requests.
-    token: :class:`AccessTokenResponse`
         Current access token data for the session. Refreshing the session
         updates this object in place.
     identifier: :class:`str`
         Effective identifier for the session. This is a custom identifier when
         one was provided, otherwise it falls back to the current access token
         string.
+    token: :class:`AccessToken`
     """
 
     def __init__(
         self,
         client: Client,
         *,
-        token: AccessTokenResponse,
         identifier: str | None = utils.NotSet,
+        token: AccessToken,
     ) -> None:
         self._identifier: str | None = identifier
         self.__identifier_is_access_token: bool = identifier is utils.NotSet
 
         self.client: Client = client
-        self.token: AccessTokenResponse = token
+        self.token: AccessToken = token
 
         self._current_authorization_information: CurrentInformation | None = None
 
@@ -675,7 +675,7 @@ class AuthorisedSession(
     def from_token(
         cls,
         client: Client,
-        token: AccessTokenResponse
+        token: AccessToken
         | AccessTokenResponsePayload
         | RefreshTokenResponsePayload,
         *,
@@ -693,8 +693,8 @@ class AuthorisedSession(
         ----------
         client: :class:`Client`
             Parent OAuth2 client that the session should use for HTTP requests.
-        token: :class:`AccessTokenResponse` | :class:`AccessTokenResponsePayload` | :class:`RefreshTokenResponsePayload`
             Existing access token model or raw Discord token payload.
+        token: :class:`AccessToken` | :class:`dict`
         identifier: :class:`str` | :data:`None`
             Optional custom identifier to associate with the session.
 
@@ -707,9 +707,9 @@ class AuthorisedSession(
         -------
         :class:`AuthorisedSession`
             Session initialized with the provided token data.
+            Session initialized with the exchanged access token.
         """
         if not isinstance(token, AccessTokenResponse):
-            token = AccessTokenResponse.from_dict(client, token)
 
         return cls(client, token=token, identifier=identifier)
 
@@ -796,7 +796,6 @@ class AuthorisedSession(
         Returns
         -------
         :class:`AccessTokenResponse`
-            Current token data after the refresh check completes. This is the
             same token object stored on :attr:`token`.
         """
         current_identifier = self.identifier

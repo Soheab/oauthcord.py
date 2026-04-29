@@ -29,7 +29,7 @@ from .user import *
 __all__ = (
     "EULA",
     "SKU",
-    "AccessTokenResponse",
+    "AccessToken",
     "ActionRow",
     "ActivityLink",
     "ActivityLinkType",

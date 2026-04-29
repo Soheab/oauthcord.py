@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
-    from ..models.access_token import AccessTokenResponse
+    from ..models.access_token import AccessToken
     from ..models.current_auth import CurrentInformation
     from . import Client
 
 
 class _AuthorisedSessionProto(Protocol):  # pyright: ignore[reportUnusedClass]
     client: Client
-    token: AccessTokenResponse
+    token: AccessToken
 
     @property
     def current_authorization_information(self) -> CurrentInformation | None: ...

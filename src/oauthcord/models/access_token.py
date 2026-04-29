@@ -17,16 +17,16 @@ if TYPE_CHECKING:
     )
 
 
-__all__ = ("AccessTokenResponse",)
+__all__ = ("AccessToken",)
 
 
-class AccessTokenResponse(
+class AccessToken(
     BaseModelWithHTTP[
         "AccessTokenResponsePayload | RefreshTokenResponsePayload",
         "AccessTokenResponsePayload | RefreshTokenResponsePayload",
     ]
 ):
-    """Represents an OAuth2 access token response from Discord.
+    """Represents an OAuth2 access token from Discord.
 
     Attributes
     ----------
@@ -64,8 +64,8 @@ class AccessTokenResponse(
         cls,
         client: Client | AuthorisedSession,
         data: AccessTokenResponsePayload | RefreshTokenResponsePayload,
-    ) -> AccessTokenResponse:
-        """Create an AccessTokenResponse instance from a dictionary payload.
+    ) -> AccessToken:
+        """Create an AccessToken instance from a dictionary payload.
 
         Parameters
         ----------
@@ -76,8 +76,8 @@ class AccessTokenResponse(
 
         Returns
         -------
-        :class:`AccessTokenResponse`
-            The initialized AccessTokenResponse instance.
+        :class:`AccessToken`
+            The initialized AccessToken instance.
         """
         instance = utils._construct_model(cls, data=data, http=client.http)
         return instance
@@ -124,7 +124,7 @@ class AccessTokenResponse(
         self._initialize(data)
         return self
 
-    async def refresh(self, *, check_expired: bool = False) -> AccessTokenResponse:
+    async def refresh(self, *, check_expired: bool = False) -> AccessToken:
         """Refresh this token.
 
         This invalidates the current token and returns a new one.
@@ -138,7 +138,7 @@ class AccessTokenResponse(
 
         Returns
         -------
-        :class:`AccessTokenResponse`
+        :class:`AccessToken`
             The new access token response obtained from refreshing.
         """
         if not self.refresh_token:
