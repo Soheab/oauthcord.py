@@ -151,5 +151,10 @@ class AccessToken(
         return self._update(res)
 
     async def revoke(self) -> None:
-        """Revoke this token. This will invalidate the token and it can no longer be used for authorization."""
+        """Revoke this token.
+
+        .. note::
+
+            This will revoke all access and refresh tokens associated with the current authorization.
+        """
         await self._http.revoke_token(self)
