@@ -13,7 +13,21 @@ __all__ = (
     "EmbedField",
     "EmbedFooter",
     "EmbedMedia",
+    "EmbedProvider",
 )
+
+
+class EmbedProvider(
+    BaseModel[
+        "message_types.EmbedProviderResponse", "message_types.EmbedProviderResponse"
+    ]
+):
+    __slots__ = (*BaseModel.__slots__, "name", "url")
+
+    @override
+    def _initialize(self, data: message_types.EmbedProviderResponse) -> None:
+        self.name: str | None = data.get("name")
+        self.url: str | None = data.get("url")
 
 
 class EmbedFooter(
@@ -233,7 +247,7 @@ class Embed(BaseModel["message_types.EmbedResponse", "message_types.EmbedRequest
         fields: list[EmbedField] | None = None,
         type: str | None = None,
         video: EmbedMedia | None = None,
-        provider: dict[str, object] | None = None,
+        provider: EmbedProvider | None = None,
         reference_id: int | str | None = None,
         content_scan_version: int | None = None,
         flags: int | None = None,
@@ -278,6 +292,8 @@ class Embed(BaseModel["message_types.EmbedResponse", "message_types.EmbedRequest
             payload["thumbnail"] = self.thumbnail.to_dict()
         if self.author is not None:
             payload["author"] = self.author.to_dict()
+        if self.provider is not None:
+            payload["provider"] = self.provider.to_dict()
         if self.fields:
             payload["fields"] = [field.to_dict() for field in self.fields]
         return payload
@@ -307,7 +323,11 @@ class Embed(BaseModel["message_types.EmbedResponse", "message_types.EmbedRequest
             video=(
                 EmbedMedia.from_dict(vdata) if (vdata := data.get("video")) else None
             ),
-            provider=data.get("provider"),  # type: ignore
+            provider=(
+                EmbedProvider.from_dict(pdata)
+                if (pdata := data.get("provider"))
+                else None
+            ),
             author=(
                 EmbedAuthor.from_dict(adata) if (adata := data.get("author")) else None
             ),

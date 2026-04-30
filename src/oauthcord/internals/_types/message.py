@@ -25,6 +25,11 @@ EmbedType = Literal[
 ]
 
 
+class EmbedProvider(TypedDict):
+    name: NotRequired[str]
+    url: NotRequired[str]
+
+
 class PartialEmojiResponse(TypedDict):
     id: Snowflake | None
     name: str | None
@@ -78,6 +83,7 @@ class EmbedRequest(TypedDict):
     thumbnail: NotRequired[EmbedMediaRequest]
     author: NotRequired[EmbedAuthorRequest]
     fields: NotRequired[list[EmbedFieldRequest]]
+    provider: NotRequired[EmbedProvider]
 
 
 class UnfurledMediaItemRequest(TypedDict):
