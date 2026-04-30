@@ -66,8 +66,8 @@ class BaseModel[D: Any, R: Any = None]:
     def _initialize(self, data: D) -> None:
         pass
 
-    def to_dict(self) -> R | None:
-        pass
+    def to_dict(self) -> R:
+        return self.data  # pyright: ignore[reportReturnType]
 
     @classmethod
     def from_dict(cls, data: D) -> Self:
