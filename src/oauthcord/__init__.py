@@ -154,6 +154,8 @@ __all__ = (
     "PrimaryEntryPointCommandBuilder",
     "PrimaryGuild",
     "PrivateChannel",
+    "QuestPlatformType",
+    "QuestRewardCode",
     "QuestRewardsMetadata",
     "RateLimited",
     "RecipientFlags",

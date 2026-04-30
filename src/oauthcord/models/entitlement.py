@@ -8,15 +8,18 @@ from ..enums import (
     EntitlementSourceType,
     EntitlementType,
     GiftStyle,
+    QuestPlatformType,
     to_enum,
 )
 from ..utils import convert_snowflake, iso_to_datetime
 from ._base import BaseModel, BaseModelWithSession
 from .user import PartialUser
+from .store import SKU, SubscriptionPlan
 
 if TYPE_CHECKING:
     from ..internals._types.entitlement import (
         EntitlementResponse,
+        QuestRewardCodeResponse,
         QuestRewardsMetadataResponse,
         TenantMetadataResponse,
     )
@@ -24,9 +27,33 @@ if TYPE_CHECKING:
 
 __all__ = (
     "Entitlement",
+    "QuestRewardCode",
     "QuestRewardsMetadata",
     "TenantMetadata",
 )
+
+
+class QuestRewardCode(BaseModel["QuestRewardCodeResponse"]):
+    """Quest reward code metadata returned with entitlement tenant data."""
+
+    __slots__ = (
+        *BaseModel.__slots__,
+        "claimed_at",
+        "code",
+        "platform",
+        "quest_id",
+        "tier",
+        "user_id",
+    )
+
+    @override
+    def _initialize(self, data: QuestRewardCodeResponse) -> None:
+        self.quest_id: int = convert_snowflake(data, "quest_id")
+        self.code: str = data["code"]
+        self.platform: QuestPlatformType = to_enum(QuestPlatformType, data["platform"])
+        self.user_id: int = data["user_id"]
+        self.claimed_at: datetime.datetime = iso_to_datetime(data["claimed_at"])
+        self.tier: int | None = data["tier"]
 
 
 class QuestRewardsMetadata(BaseModel["QuestRewardsMetadataResponse"]):
@@ -37,7 +64,9 @@ class QuestRewardsMetadata(BaseModel["QuestRewardsMetadataResponse"]):
     @override
     def _initialize(self, data: QuestRewardsMetadataResponse) -> None:
         self.tag: int = data["tag"]
-        self.reward_code: dict[str, object] | None = data.get("reward_code")
+        self.reward_code: QuestRewardCode | None = self._initialize_other(
+            QuestRewardCode, data, possible_keys="reward_code"
+        )
 
 
 class TenantMetadata(BaseModel["TenantMetadataResponse"]):
@@ -129,7 +158,9 @@ class Entitlement(BaseModelWithSession["EntitlementResponse"]):
             EntitlementSourceType, data.get("source_type")
         )
         self.tenant_metadata: TenantMetadata | None = self._initialize_other(
-            TenantMetadata, data, possible_keys="tenant_metadata"
+            TenantMetadata, data, possible_keys="tenant_metadata", optional=True
         )
-        self.sku: dict[str, object] | None = data.get("sku")
-        self.subscription_plan: dict[str, object] | None = data.get("subscription_plan")
+        self.sku: SKU | None = self._initialize_other(SKU, data, possible_keys="sku")
+        self.subscription_plan: SubscriptionPlan | None = self._initialize_other(
+            SubscriptionPlan, data, possible_keys="subscription_plan", optional=True
+        )

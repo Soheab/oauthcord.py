@@ -1,12 +1,30 @@
-from typing import NotRequired, TypedDict
+from typing import Literal, NotRequired, TypedDict
 
 from .base import Snowflake
 from .user import PartialUserResponse
+from .store import SKU, SubscriptionPlanResponse
+
+QuestPlatformType = Literal[
+    0,  # CROSS_PLATFORM
+    1,  # XBOX
+    2,  # PLAYSTATION
+    3,  # SWITCH
+    4,  # PC
+]
+
+
+class QuestRewardCodeResponse(TypedDict):
+    quest_id: Snowflake
+    code: str
+    platform: QuestPlatformType
+    user_id: int
+    claimed_at: str  # iso
+    tier: int | None
 
 
 class QuestRewardsMetadataResponse(TypedDict):
     tag: int
-    reward_code: NotRequired[dict[str, object]]
+    reward_code: NotRequired[QuestRewardCodeResponse]
 
 
 class TenantMetadataResponse(TypedDict):
@@ -37,8 +55,8 @@ class EntitlementResponse(TypedDict):
     fulfilled_at: NotRequired[str]
     source_type: NotRequired[int]
     tenant_metadata: NotRequired[TenantMetadataResponse]
-    sku: NotRequired[dict[str, object]]
-    subscription_plan: NotRequired[dict[str, object]]
+    sku: NotRequired[SKU]
+    subscription_plan: NotRequired[SubscriptionPlanResponse]
 
 
 class GetApplicationEntitlementsRequest(TypedDict):

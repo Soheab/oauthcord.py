@@ -169,6 +169,8 @@ __all__ = (
     "PrimaryEntryPointCommandBuilder",
     "PrimaryGuild",
     "PrivateChannel",
+    "QuestPlatformType",
+    "QuestRewardCode",
     "QuestRewardsMetadata",
     "RecipientFlags",
     "Relationship",

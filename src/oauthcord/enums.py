@@ -44,6 +44,7 @@ __all__ = (
     "PermissionOverwriteType",
     "PollLayoutType",
     "PremiumType",
+    "QuestPlatformType",
     "RelationshipType",
     "SKUAccessType",
     "SKUFeature",
@@ -742,6 +743,16 @@ class EntitlementSourceType(IntEnum):
     FRACTIONAL_PREMIUM_GIVEBACK = 8
     SUBSCRIPTION = 9
     SUBSCRIPTION_MEMBER = 11
+
+
+class QuestPlatformType(IntEnum):
+    """Quest reward code platform values."""
+
+    CROSS_PLATFORM = 0
+    XBOX = 1
+    PLAYSTATION = 2
+    SWITCH = 3
+    PC = 4
 
 
 class GiftStyle(IntEnum):
