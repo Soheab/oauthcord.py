@@ -510,7 +510,7 @@ class SharedClientThemeResponse(TypedDict):
 
 
 class MessageSnapshotResponse(TypedDict):
-    message: dict[str, object]
+    message: MessageResponse
 
 
 class PartialMessageResponse(TypedDict):
@@ -600,7 +600,7 @@ class MessageResponse(TypedDict):
     application_id: NotRequired[Snowflake]
     flags: int
     message_reference: NotRequired[MessageReferenceResponse]
-    referenced_message: NotRequired[dict[str, object] | None]
+    referenced_message: NotRequired[MessageResponse | None]
     message_snapshots: NotRequired[list[MessageSnapshotResponse]]
     call: NotRequired[MessageCallResponse]
     interaction: NotRequired[dict[str, object]]
