@@ -37,6 +37,10 @@ If the sources disagree, follow the official Discord documentation.
   `Modify*` type and payload names are acceptable when they mirror Discord API terminology.
 - When a method accepts enum or flags models, also accept raw serialized values.
   Use unions such as `MyIntEnum | int`, `MyStrEnum | str`, and `MyFlags | int`.
+- If an integer field has known literal values from docs or from inline comments,
+  create an enum for model attributes and parsing logic. Keep payload `TypedDict`
+  files as raw serialized types, such as a commented `Literal[...]`, instead of
+  importing the public enum into `_types` files.
 - If typing or linting becomes noisy on a specific line, use targeted ignores such as `# pyright: ignore[...]` or `# noqa: ...`.
 
 ## Model and `__slots__` rules
