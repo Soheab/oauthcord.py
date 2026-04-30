@@ -266,6 +266,427 @@ For the current concrete route list implemented by the wrapper:
 
 </details>
 
+<details>
+<summary>Development tracking: missing models and model method candidates</summary>
+
+<details>
+<summary>Missing model tracking</summary>
+
+### Missing Model Tracking
+
+Raw `dict[...]` fields, raw nested payload attributes, or overly generic
+`TypedDict` fields that likely need dedicated models or more specific payload
+types. Ordinary maps such as localization dictionaries, metadata maps, price
+maps, caches, headers, and serializer scratch dictionaries are intentionally
+excluded.
+
+#### `models/attachment.py`
+
+- [ ] `Attachment.application`
+  - Payload-only gap right now: `internals/_types/message.py` has
+    `AttachmentResponse.application`, but `models/attachment.py` currently uses
+    `internals/_types/attachment.py.Attachment`, which does not include
+    `application` or `application_id`.
+
+#### `models/components.py`
+
+- [x] `UnfurledMediaItem.content_scan_metadata`
+  - Uses `ContentScanMetadata`.
+- [ ] `ContentInventoryEntryComponent.content_inventory_entry`
+  - Currently stores `ContentInventoryEntryDataResponse` directly.
+- [ ] `CheckpointCard.checkpoint_data`
+  - Currently stores `CheckpointDataResponse` directly.
+
+#### `models/embeds.py`
+
+- [x] `EmbedMedia.content_scan_metadata`
+  - Uses `ContentScanMetadata`.
+- [x] `Embed.provider`
+  - Uses `EmbedProvider`.
+
+#### `models/entitlement.py`
+
+- [x] `QuestRewardsMetadata.reward_code`
+- [x] `Entitlement.sku`
+- [x] `Entitlement.subscription_plan`
+
+#### `models/invite.py`
+
+- [ ] `Invite.profile`
+- [ ] `Invite.roles`
+- [ ] `Invite.stage_instance`
+- [ ] `Invite.guild_scheduled_event`
+- [ ] `Invite.guild_join_request`
+
+#### `models/member.py`
+
+- [ ] `ThreadMember.mute_config`
+
+#### `models/store.py`
+
+- [ ] `StoreListing.guild`
+- [ ] `StorefrontCollection.tenant_metadata`
+
+#### `internals/_types/channels.py`
+
+- [ ] `ThreadMemberResponse.mute_config`
+  - Undocumented.
+
+#### `internals/_types/components.py`
+
+- [x] `UnfurledMediaItemResponse.content_scan_metadata`
+  - Uses `ContentScanMetadataResponse`.
+- [ ] `ContentInventoryEntryDataResponse.traits`
+- [ ] `ContentInventoryEntryDataResponse.extra`
+- [ ] `ContentInventoryEntryDataResponse.signature`
+- [ ] `CheckpointDataResponse.top_guild`
+- [ ] `CheckpointDataResponse.top_emoji`
+- [ ] `CheckpointDataResponse.top_game`
+
+#### `internals/_types/entitlement.py`
+
+- [x] `QuestRewardsMetadataResponse.reward_code`
+- [x] `EntitlementResponse.sku`
+- [x] `EntitlementResponse.subscription_plan`
+
+#### `internals/_types/invite.py`
+
+- [ ] `InviteResponse.profile`
+- [ ] `InviteResponse.roles`
+- [ ] `InviteResponse.stage_instance`
+- [ ] `InviteResponse.guild_scheduled_event`
+- [ ] `InviteResponse.guild_join_request`
+
+#### `internals/_types/lobby.py`
+
+- [x] `CreateLobbyMessageRequest.poll`
+  - Reuses `PollCreateRequest`.
+- [x] `CreateLobbyMessageRequest.shared_client_theme`
+  - Reuses `SharedClientThemeRequest`.
+- [ ] `CreateLobbyMessageRequest.metadata`
+  - Likely intentionally generic metadata, but still tracked because it is a
+    request payload field using `dict[str, object]`.
+
+#### `internals/_types/message.py`
+
+- [ ] `AttachmentResponse.application`
+- [x] `EmbedMediaResponse.content_scan_metadata`
+  - Uses `ContentScanMetadataResponse`.
+- [ ] `MessageReferenceRequest.forward_only`
+- [ ] `MessageReferenceResponse.forward_only`
+- [ ] `MessageInteractionResponse.triggering_interaction_metadata`
+- [ ] `MessagePurchaseNotificationResponse.guild_product_purchase`
+- [ ] `MessageGiftInfoResponse.sound`
+- [x] `MessageSnapshotResponse.message`
+  - Reuses `MessageResponse`.
+- [ ] `MessageResponse.activity`
+- [ ] `MessageResponse.application`
+- [x] `MessageResponse.referenced_message`
+  - Reuses `MessageResponse | None`.
+- [ ] `MessageResponse.interaction`
+- [ ] `MessageResponse.resolved`
+- [ ] `MessageResponse.sticker_items`
+- [ ] `MessageResponse.stickers`
+- [ ] `MessageResponse.soundboard_sounds`
+- [ ] `MessageResponse.potions`
+- [ ] `CreateDMMessageRequest.metadata`
+  - Likely intentionally generic metadata, but still tracked because it is a
+    request payload field using `dict[str, object]`.
+
+#### `internals/_types/store.py`
+
+- [ ] `StoreListingResponse.guild`
+- [ ] `StorefrontCollectionResponse.tenant_metadata`
+
+#### Completed Reuse Candidates
+
+- [x] `CreateLobbyMessageRequest.poll` uses `PollCreateRequest`.
+- [x] `CreateLobbyMessageRequest.shared_client_theme` uses
+  `SharedClientThemeRequest`.
+- [x] `MessageSnapshotResponse.message` and
+  `MessageResponse.referenced_message` use recursive `MessageResponse` payloads.
+
+</details>
+
+<details>
+<summary>Model method candidates</summary>
+
+### Model Method Candidates
+
+This tracks places where a model instance already has the identifiers needed to
+call a session/client method directly, similar to `DMChannel.get_call_eligibility()`.
+
+#### Audit Scope
+
+Audited endpoint/client/model files:
+
+- `internals/endpoints`: `application`, `channel`, `connection`, `current_auth`,
+  `guild`, `invite`, `lobby`, `member`, `message`, `relationship`, `store`,
+  `token`, and `user`.
+- `client`: `_application`, `_channel`, `_connection`, `_guild`, `_invite`,
+  `_lobby`, `_message`, `_oauth2`, `_relationship`, `_store`, and `_user`.
+- Session-backed models: `CurrentApplication`, `CurrentInformation`, `Guild`,
+  `GuildMember`, `ThreadMember`, `Lobby`, `PartialMessage`, `Message`,
+  `PartialApplication`, `Entitlement`, `PartialUser`, `CurrentUser`, channels,
+  relationships, and store models that inherit `BaseModelWithSession`.
+
+#### `AccessToken`
+
+- [x] `refresh(check_expired=...)`
+  - Existing token model method.
+- [x] `revoke()`
+  - Existing token model method.
+
+#### `CurrentApplication`
+
+- [x] `get_partial()`
+  - Forwards `get_partial_application(application_id=self.id)`.
+- [ ] `skus(...)`
+  - Can forward `get_application_skus(application_id=self.id, ...)`.
+- [ ] `create_sku(...)`
+  - Can forward `create_sku(application_id=self.id, ...)`.
+- [ ] `store_assets()`
+  - Can forward `get_application_store_assets(application_id=self.id)`.
+- [ ] `create_store_asset(file=...)`
+  - Can forward `create_application_store_asset(application_id=self.id, file=file)`.
+- [ ] `bulk_identities(user_ids=...)`
+  - Can forward `get_bulk_application_identities(user_ids=...)`.
+  - This is current-application scoped and only correct for the application
+    authorized by the session.
+- [ ] `entitlements(...)`
+  - Can forward `get_application_entitlements(application_id=self.id, ...)`.
+- [ ] `get_entitlement(entitlement_id=...)`
+  - Can forward `get_application_entitlement(application_id=self.id, entitlement_id=...)`.
+
+##### Added But Not Implemented
+
+These are already declared on `CurrentApplication` in
+`src/oauthcord/models/current_auth.py`, but currently only contain `pass`.
+
+- [ ] `get_global_application_commands()`
+  - Likely needs `GET /applications/{application.id}/commands`.
+  - Needs command HTTP/client mixins, then command model construction.
+- [ ] `get_global_application_command(command_id)`
+  - Likely needs `GET /applications/{application.id}/commands/{command.id}`.
+- [ ] `create_global_application_command(data)`
+  - Likely needs `POST /applications/{application.id}/commands`.
+  - Should accept typed command request payloads/builders, not `Any`.
+- [ ] `edit_global_application_command(command_id, data)`
+  - Likely needs `PATCH /applications/{application.id}/commands/{command.id}`.
+- [ ] `delete_global_application_command(command_id)`
+  - Likely needs `DELETE /applications/{application.id}/commands/{command.id}`.
+- [ ] `bulk_overwrite_global_application_commands(data)`
+  - Likely needs `PUT /applications/{application.id}/commands`.
+  - Should return command models if the endpoint response is modeled.
+- [ ] `get_guild_application_commands(guild_id)`
+  - Likely needs `GET /applications/{application.id}/guilds/{guild.id}/commands`.
+- [ ] `get_guild_application_command(guild_id, command_id)`
+  - Likely needs `GET /applications/{application.id}/guilds/{guild.id}/commands/{command.id}`.
+- [ ] `edit_guild_application_command(guild_id, command_id, data)`
+  - Likely needs `PATCH /applications/{application.id}/guilds/{guild.id}/commands/{command.id}`.
+  - Should accept typed command request payloads/builders.
+- [ ] `delete_guild_application_command(guild_id, command_id)`
+  - Likely needs `DELETE /applications/{application.id}/guilds/{guild.id}/commands/{command.id}`.
+- [ ] `bulk_overwrite_guild_application_commands(guild_id, data)`
+  - Likely needs `PUT /applications/{application.id}/guilds/{guild.id}/commands`.
+  - Should return command models if the endpoint response is modeled.
+- [ ] `get_guild_application_command_permissions(guild_id)`
+  - Likely needs `GET /applications/{application.id}/guilds/{guild.id}/commands/permissions`.
+  - Model type likely `GuildApplicationCommandPermissions`.
+- [ ] `get_application_command_permissions(guild_id, command_id)`
+  - Likely needs `GET /applications/{application.id}/guilds/{guild.id}/commands/{command.id}/permissions`.
+  - Model type likely `GuildApplicationCommandPermissions`.
+- [ ] `edit_application_command_permissions(guild_id, command_id, data)`
+  - Likely needs `PUT /applications/{application.id}/guilds/{guild.id}/commands/{command.id}/permissions`.
+  - Should accept typed permission payloads, not `Any`.
+
+#### `CurrentUser`
+
+- [ ] `edit_account(global_name=...)`
+  - Can forward `edit_current_user_account(global_name=...)`.
+  - The session method returns `PartialUser`.
+- [ ] `harvest()`
+  - HTTP endpoint exists as `get_user_harvest()`, but there is no public
+    client/session wrapper yet.
+- [ ] `create_harvest()`
+  - HTTP endpoint exists as `create_user_harvest()`, but there is no public
+    client/session wrapper yet.
+
+#### `DMChannel`
+
+- [x] `get_call_eligibility()`
+  - Existing reference pattern.
+  - Forwards `get_call_eligibility(channel_id=self.id)`.
+- [ ] `messages(limit=...)`
+  - Can forward `get_dm_messages(user_id=..., limit=...)`.
+  - The API takes the recipient user ID, not the channel ID. Only safe for
+    one-to-one DMs via `self.recipients[0].id`.
+- [ ] `send(...)` or `create_message(...)`
+  - Can forward `create_dm_message(user_id=..., ...)`.
+  - Same one-to-one DM caveat as `messages`.
+
+#### `Entitlement`
+
+- [ ] `consume()`
+  - Can forward `consume_application_entitlement(application_id=self.application_id, entitlement_id=self.id)`.
+- [ ] `delete()`
+  - Can forward `delete_application_entitlement(application_id=self.application_id, entitlement_id=self.id)`.
+
+#### `GameRelationship`
+
+- [ ] `delete()`
+  - Can forward `delete_game_relationship(user_id=self.user_id)`.
+
+#### `GroupDMChannel`
+
+- [x] `get_linked_accounts(user_ids=...)`
+  - Existing convenience method.
+  - Forwards `get_channel_linked_accounts(channel_id=self.id, ...)`.
+
+#### `Guild`
+
+- [x] `channels(...)`
+  - Existing convenience method.
+  - Forwards `get_guild_channels(guild_id=self.id, ...)`.
+- [ ] `current_member()`
+  - Can forward `get_current_guild_member(guild_id=self.id)`.
+- [ ] `add_current_user(...)`
+  - Can forward `add_current_user_to_guild(guild_id=self.id, ...)`.
+  - Requires `bot_token` and may need explicit `user_id` when the session lacks
+    `identify`.
+
+#### `Lobby`
+
+- [ ] `leave(user_id=...)`
+  - Can forward `leave_lobby(lobby_id=self.id, user_id=...)`.
+  - Could also offer a current-user shortcut if the session can reliably expose
+    the current user ID.
+- [ ] `create_invite_for_current_user()`
+  - Can forward `create_lobby_invite_for_current_user(lobby_id=self.id)`.
+- [ ] `edit_linked_channel(channel_id=...)`
+  - Can forward `edit_lobby_linked_channel(lobby_id=self.id, channel_id=...)`.
+  - Prefer `edit_*` naming to match repo conventions.
+- [ ] `messages(limit=...)`
+  - Can forward `get_lobby_messages(lobby_id=self.id, limit=...)`.
+- [ ] `send(...)` or `create_message(...)`
+  - Can forward `create_lobby_message(lobby_id=self.id, ...)`.
+  - Should mirror `create_lobby_message` parameters closely.
+
+#### `Message` / `PartialMessage`
+
+- [ ] `edit(content=...)`
+  - Can forward `edit_dm_message(user_id=..., message_id=self.id, ...)`.
+  - Needs reliable recipient/user context. Current message models expose
+    `channel_id`, `lobby_id`, and sometimes `recipient_id`, but the DM message
+    endpoint wants `user_id`.
+- [ ] `delete()`
+  - Can forward `delete_dm_message(user_id=..., message_id=self.id)`.
+  - Same recipient context issue as `edit`.
+
+#### `PartialApplication`
+
+- [x] `create_attachment(file)`
+  - Existing convenience method.
+  - Forwards `create_application_attachment(application_id=self.id, file=file)`.
+- [x] `get_user_role_connection()`
+  - Existing method, but the session method derives the application from current
+    authorization rather than from `self.id`.
+- [x] `edit_user_role_connection(...)`
+  - Same current-authorization caveat as `get_user_role_connection`.
+- [x] `create_quick_link(...)`
+  - Same current-authorization caveat; the lower-level HTTP endpoint takes
+    `application_id`.
+- [ ] `skus(...)`
+  - Can forward `get_application_skus(application_id=self.id, ...)`.
+- [ ] `create_sku(...)`
+  - Can forward `create_sku(application_id=self.id, ...)`.
+- [ ] `store_assets()`
+  - Can forward `get_application_store_assets(application_id=self.id)`.
+- [ ] `create_store_asset(file=...)`
+  - Can forward `create_application_store_asset(application_id=self.id, file=file)`.
+- [ ] `bulk_identities(user_ids=...)`
+  - Can forward `get_bulk_application_identities(user_ids=...)`.
+  - This is current-application scoped and only correct when `self.id` matches
+    the session's authorized application.
+- [ ] `entitlements(...)`
+  - Can forward `get_application_entitlements(application_id=self.id, ...)`.
+- [ ] `get_entitlement(entitlement_id=...)`
+  - Can forward `get_application_entitlement(application_id=self.id, entitlement_id=...)`.
+
+#### `PartialUser`
+
+- [x] `dm_channel()`
+  - Existing convenience method.
+  - Forwards `get_dm_channel(user_id=self.id)`.
+
+#### `PrivateChannel`
+
+- [x] `ring(...)`
+  - Existing convenience method.
+  - Forwards `ring_channel_recipients(channel_id=self.id, ...)`.
+- [x] `stop_ringing(...)`
+  - Existing convenience method.
+  - Forwards `stop_ringing_channel_recipients(channel_id=self.id, ...)`.
+
+#### `Relationship`
+
+- [ ] `delete()`
+  - Can forward `delete_relationship(user_id=self.user.id)`.
+- [ ] `accept()`
+  - Possibly forwards `create_relationship(user_id=self.user.id, ...)` if that is
+    the right action for pending requests.
+
+#### `SKU`
+
+- [ ] `refresh(country_code=..., localize=...)`
+  - Can forward `get_sku(sku_id=self.id, ...)`.
+- [ ] `edit(...)`
+  - Can forward `modify_sku(sku_id=self.id, ...)`.
+  - Method body can mirror `modify_sku` minus `sku_id`.
+- [ ] `store_listings(country_code=..., localize=...)`
+  - Can forward `get_sku_store_listings(sku_id=self.id, ...)`.
+- [ ] `subscription_plans()`
+  - Can forward `get_subscription_plans(sku_id=self.id)`.
+
+#### `StoreListing`
+
+- [ ] `refresh(country_code=..., localize=...)`
+  - Can forward `get_store_listing(listing_id=self.id, ...)`.
+- [ ] `edit(...)`
+  - Can forward `modify_store_listing(listing_id=self.id, ...)`.
+  - Method body can mirror `modify_store_listing` minus `listing_id`.
+- [ ] `delete()`
+  - Can forward `delete_store_listing(listing_id=self.id)`.
+
+#### Deferred Or Ambiguous
+
+- `StoreAsset.delete()`
+  - The delete endpoint needs both `application_id` and `asset_id`, but
+    `StoreAsset` currently only carries `id`. This becomes straightforward if
+    store assets retain their parent application ID when constructed.
+- `DMChannel` message helpers on `PrivateChannel`
+  - Group DMs also inherit `PrivateChannel`, but message history/send endpoints
+    use a user ID route. Keep those helpers on `DMChannel` unless group-DM
+    endpoint semantics are added.
+- `Invite.accept()`
+  - `accept_invite()` returns an `Invite`; accepting an invite from an already
+    accepted `Invite` object is less useful unless invite fetch support is added
+    first.
+- `Connection` list endpoints
+  - `get_current_user_connections()` and `get_current_user_linked_connections()`
+    are current-user collection fetches. They do not fit a specific
+    `Connection` instance.
+- `send_friend_request(username=...)`
+  - Username-based creation has no existing model carrying the required username
+    target in a useful way.
+- Token exchange/client close/OAuth URL helpers
+  - These are client/session lifecycle helpers rather than model instance
+    actions.
+
+</details>
+
+</details>
+
 ## Reference docs
 
 This project tracks Discord behavior against:
