@@ -4,13 +4,43 @@ from typing import TYPE_CHECKING, override
 
 from ..utils import convert_snowflake
 from ._base import BaseModel
-from .flags import AttachmentFlags
+from .flags import AttachmentFlags, ContentScanFlags
 
 if TYPE_CHECKING:
-    from ..internals._types.attachment import Attachment as AttachmentPayload
-    from ..internals._types.message import PartialAttachmentRequest
+    from ..internals._types.attachment import (
+        Attachment as AttachmentPayload,
+    )
+    from ..internals._types.attachment import (
+        ContentScanMetadataResponse,
+    )
+    from ..internals._types.message import (
+        PartialAttachmentRequest,
+    )
 
 __all__ = ("Attachment",)
+
+
+class ContentScanMetadata(BaseModel["ContentScanMetadataResponse"]):
+    """Represents content scan metadata for media.
+
+    Attributes
+    ----------
+    flags: :class:`ContentScanFlags`
+        The content scan flags.
+    version: :class:`int`
+        The content scan version.
+    """
+
+    __slots__ = (
+        *BaseModel.__slots__,
+        "flags",
+        "version",
+    )
+
+    @override
+    def _initialize(self, data: ContentScanMetadataResponse) -> None:
+        self.flags: ContentScanFlags = ContentScanFlags(data["flags"])
+        self.version: int = data["version"]
 
 
 class Attachment(BaseModel["AttachmentPayload", "PartialAttachmentRequest"]):

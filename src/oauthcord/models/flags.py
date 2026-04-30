@@ -148,6 +148,10 @@ if TYPE_CHECKING:
         contains_gore_content: bool
         contains_self_harm_content: bool
 
+    class _ContentScanFlagsKwargs(TypedDict, total=False):
+        explicit: bool
+        gore: bool
+
     class _ApplicationFlagsKwargs(TypedDict, total=False):
         embedded_released: bool
         auto_moderation_rule_create_badge: bool
@@ -198,6 +202,7 @@ __all__ = (
     "AttachmentFlags",
     "BaseFlags",
     "ChannelFlags",
+    "ContentScanFlags",
     "EmbedFlags",
     "Flag",
     "FlagsMeta",
@@ -509,6 +514,17 @@ class AttachmentFlags(BaseFlags):
     is_animated = Flag(1 << 5)
     contains_gore_content = Flag(1 << 6)
     contains_self_harm_content = Flag(1 << 7)
+
+
+class ContentScanFlags(BaseFlags):
+    if TYPE_CHECKING:
+
+        def __init__(
+            self, value: int | None = None, /, **flags: Unpack[_ContentScanFlagsKwargs]
+        ) -> None: ...
+
+    explicit = Flag(1 << 0)
+    gore = Flag(1 << 1)
 
 
 class ApplicationFlags(BaseFlags):

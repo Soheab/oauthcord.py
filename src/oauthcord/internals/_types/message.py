@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Literal, NotRequired, TypedDict
 
 from . import components as component_types
+from .attachment import ContentScanMetadataResponse
 from .base import Snowflake
 from .channels import GuildChannelResponse, PartialChannelResponse
 from .user import PartialUserResponse
@@ -98,7 +99,7 @@ class UnfurledMediaItemResponse(TypedDict):
     width: NotRequired[int | None]
     flags: NotRequired[int]
     content_type: NotRequired[str]
-    content_scan_metadata: NotRequired[dict[str, object]]
+    content_scan_metadata: NotRequired[ContentScanMetadataResponse]
     placeholder_version: NotRequired[int]
     placeholder: NotRequired[str]
     loading_state: NotRequired[int]
@@ -386,7 +387,7 @@ class EmbedMediaResponse(TypedDict):
     flags: NotRequired[int]
     description: NotRequired[str]
     content_type: NotRequired[str]
-    content_scan_metadata: NotRequired[dict[str, object]]
+    content_scan_metadata: NotRequired[ContentScanMetadataResponse]
     placeholder_version: NotRequired[int]
     placeholder: NotRequired[str]
 

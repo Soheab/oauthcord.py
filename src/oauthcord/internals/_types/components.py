@@ -1,5 +1,6 @@
 from typing import NotRequired, TypedDict
 
+from .attachment import ContentScanMetadataResponse
 from .base import Snowflake
 
 
@@ -21,7 +22,7 @@ class UnfurledMediaItemResponse(TypedDict):
     width: NotRequired[int | None]
     flags: NotRequired[int]
     content_type: NotRequired[str]
-    content_scan_metadata: NotRequired[dict[str, object]]
+    content_scan_metadata: NotRequired[ContentScanMetadataResponse]
     placeholder_version: NotRequired[int]
     placeholder: NotRequired[str]
     loading_state: NotRequired[int]

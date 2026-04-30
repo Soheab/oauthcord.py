@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Self
 
+from .attachment import ContentScanMetadata
 from .emoji import Emoji
 
 if TYPE_CHECKING:
@@ -75,7 +76,7 @@ class UnfurledMediaItem:
         width: int | None = None,
         flags: int | None = None,
         content_type: str | None = None,
-        content_scan_metadata: dict[str, object] | None = None,
+        content_scan_metadata: ContentScanMetadata | None = None,
         placeholder_version: int | None = None,
         placeholder: str | None = None,
         loading_state: int | None = None,
@@ -110,7 +111,9 @@ class UnfurledMediaItem:
             width=data.get("width"),
             flags=data.get("flags"),
             content_type=data.get("content_type"),
-            content_scan_metadata=data.get("content_scan_metadata"),
+            content_scan_metadata=ContentScanMetadata.from_dict(csm)
+            if (csm := data.get("content_scan_metadata"))
+            else None,
             placeholder_version=data.get("placeholder_version"),
             placeholder=data.get("placeholder"),
             loading_state=data.get("loading_state"),

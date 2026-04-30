@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Self, override
 
 from ._base import BaseModel
+from .attachment import ContentScanMetadata
 
 if TYPE_CHECKING:
     from ..internals._types import message as message_types
@@ -98,7 +99,7 @@ class EmbedMedia(
         width: int | None = None,
         flags: int | None = None,
         content_type: str | None = None,
-        content_scan_metadata: dict[str, object] | None = None,
+        content_scan_metadata: ContentScanMetadata | None = None,
         placeholder_version: int | None = None,
         placeholder: str | None = None,
     ) -> None:
@@ -111,7 +112,7 @@ class EmbedMedia(
         self.width: int | None = width
         self.flags: int | None = flags
         self.content_type: str | None = content_type
-        self.content_scan_metadata: dict[str, object] | None = content_scan_metadata
+        self.content_scan_metadata: ContentScanMetadata | None = content_scan_metadata
         self.placeholder_version: int | None = placeholder_version
         self.placeholder: str | None = placeholder
 
@@ -133,7 +134,9 @@ class EmbedMedia(
             flags=data.get("flags"),
             description=data.get("description"),
             content_type=data.get("content_type"),
-            content_scan_metadata=data.get("content_scan_metadata"),
+            content_scan_metadata=ContentScanMetadata.from_dict(csm)
+            if (csm := data.get("content_scan_metadata"))
+            else None,
             placeholder_version=data.get("placeholder_version"),
             placeholder=data.get("placeholder"),
         )

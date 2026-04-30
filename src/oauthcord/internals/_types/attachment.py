@@ -21,3 +21,8 @@ class Attachment(TypedDict):
     duration_secs: NotRequired[float]
     waveform: NotRequired[str]
     flags: NotRequired[int]
+
+
+class ContentScanMetadataResponse(TypedDict):
+    flags: int
+    version: int
