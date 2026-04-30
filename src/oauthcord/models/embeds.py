@@ -292,8 +292,6 @@ class Embed(BaseModel["message_types.EmbedResponse", "message_types.EmbedRequest
             payload["thumbnail"] = self.thumbnail.to_dict()
         if self.author is not None:
             payload["author"] = self.author.to_dict()
-        if self.provider is not None:
-            payload["provider"] = self.provider.to_dict()
         if self.fields:
             payload["fields"] = [field.to_dict() for field in self.fields]
         return payload
