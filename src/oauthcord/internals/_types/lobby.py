@@ -10,6 +10,7 @@ from .message import (
     MessageReferenceRequest,
     PartialAttachmentRequest,
     PartialMessageResponse,
+    PollCreateRequest,
 )
 
 
@@ -68,7 +69,7 @@ class CreateLobbyMessageRequest(TypedDict):
     application_id: NotRequired[Snowflake]
     flags: NotRequired[int]
     attachments: NotRequired[list[PartialAttachmentRequest]]
-    poll: NotRequired[dict[str, object]]
+    poll: NotRequired[PollCreateRequest]
     shared_client_theme: NotRequired[dict[str, object]]
     metadata: NotRequired[dict[str, object]]
 
