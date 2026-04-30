@@ -13,8 +13,8 @@ from ..enums import (
 )
 from ..utils import convert_snowflake, iso_to_datetime
 from ._base import BaseModel, BaseModelWithSession
-from .user import PartialUser
 from .store import SKU, SubscriptionPlan
+from .user import PartialUser
 
 if TYPE_CHECKING:
     from ..internals._types.entitlement import (

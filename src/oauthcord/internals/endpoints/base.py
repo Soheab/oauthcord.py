@@ -40,9 +40,7 @@ class RefreshTokenDict(TypedDict):
     expires_at: NotRequired[float]
 
 
-type ValidToken = (
-    AccessToken | AccessTokenAttr | RestTokenAttrs | TokenDict | str
-)
+type ValidToken = AccessToken | AccessTokenAttr | RestTokenAttrs | TokenDict | str
 type HTTPMethod = Literal["GET", "POST", "PUT", "DELETE", "PATCH"]
 type ResponsePayload = dict[str, Any] | list[Any] | str
 type RequestAttemptResult = tuple[Literal["return", "retry"], Any]
