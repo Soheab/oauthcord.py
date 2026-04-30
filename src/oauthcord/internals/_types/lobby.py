@@ -11,6 +11,7 @@ from .message import (
     PartialAttachmentRequest,
     PartialMessageResponse,
     PollCreateRequest,
+    SharedClientThemeRequest,
 )
 
 
@@ -70,7 +71,7 @@ class CreateLobbyMessageRequest(TypedDict):
     flags: NotRequired[int]
     attachments: NotRequired[list[PartialAttachmentRequest]]
     poll: NotRequired[PollCreateRequest]
-    shared_client_theme: NotRequired[dict[str, object]]
+    shared_client_theme: NotRequired[SharedClientThemeRequest]
     metadata: NotRequired[dict[str, object]]
 
 
