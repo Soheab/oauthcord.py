@@ -243,11 +243,16 @@ class CurrentUser(GuildMemberWithUser["CurrentUserResponse"]):
         self.premium_type: PremiumType = to_enum(PremiumType, data["premium_type"])
 
     @property
-    def email(self) -> str:
-        if not self._email:
-            raise ValueError(
-                "Email is not available. Have you requested the `email` scope?"
-            )
+    def email(self) -> str | None:
+        """Get the user's email.
+
+        .. scope:: email
+
+        Returns
+        -------
+        :class:`str` | :data:`None`
+            The user's email.
+        """
         return self._email
 
 
