@@ -125,6 +125,9 @@ class Scope(StrEnum):
     LOBBIES_WRITE = "lobbies.write"
     # Allows retrieving the current user (Public: Yes)
     IDENTIFY = "identify"
+    # Allow retrieving the user's premium type (nitro) (Public: Yes)
+    # This requires discord's approval / is only for approved partners.
+    IDENTITY_PREMIUM = "identify.premium"
     # When using RPC, allows reading messages from all client channels.
     # Otherwise this is restricted to application-managed group DMs. (Public: Yes)
     MESSAGES_READ = "messages.read"

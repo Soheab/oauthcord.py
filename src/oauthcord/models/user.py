@@ -240,7 +240,7 @@ class CurrentUser(GuildMemberWithUser["CurrentUserResponse"]):
         self._email: str | None = data.get("email")
         self.mfa_enabled: bool = data["mfa_enabled"]
         self.locale: Locale = to_enum(Locale, data["locale"])
-        self.premium_type: PremiumType = to_enum(PremiumType, data["premium_type"])
+        self._premium_type: PremiumType = to_enum(PremiumType, data["premium_type"])
 
     @property
     def email(self) -> str | None:
@@ -254,6 +254,19 @@ class CurrentUser(GuildMemberWithUser["CurrentUserResponse"]):
             The user's email.
         """
         return self._email
+
+    @property
+    def premium_type(self) -> PremiumType:
+        """Get the user's premium type.
+
+        .. scope:: identity.premium
+
+        Returns
+        -------
+        :class:`PremiumType`
+            The user's premium type.
+        """
+        return self._premium_type
 
 
 class HarvestMetadata(BaseModel["HarvestMetadataResponse"]):

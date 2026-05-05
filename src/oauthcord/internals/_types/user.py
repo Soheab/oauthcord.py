@@ -84,6 +84,10 @@ class CurrentUserResponse(GuildMemberWithUserResponse):
     email: NotRequired[str]  # required email scope
     mfa_enabled: bool
     locale: Locale
+    # required identify.premium scope,
+    # 0 if the user has no nitro or
+    # hasn't authorized with the scope
+    # or / not approved the scope.
     premium_type: PremiumType
 
 
