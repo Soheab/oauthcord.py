@@ -405,6 +405,30 @@ class Permissions(BaseFlags):
     pin_messages = Flag(1 << 51)
     bypass_slowmode = Flag(1 << 52)
 
+    @classmethod
+    def from_allow_deny(
+        cls, allow: int | Permissions, deny: int | Permissions
+    ) -> Permissions:
+        """Creates a Permissions instance from allow and deny values.
+
+        This uses the allow and deny values to determine which permissions are granted.
+
+        Parameters
+        ----------
+        allow: int | Permissions
+            The permit value or Permissions instance that determines which permissions are allowed.
+        deny: int | Permissions
+            The deny value or Permissions instance that determines which permissions are denied.'
+
+        Returns
+        -------
+        :class:`Permissions`
+            The created Permissions instance.
+        """
+        allow_value = cls._resolve_value(allow)
+        deny_value = cls._resolve_value(deny)
+        return cls(allow_value & ~deny_value)
+
 
 class MemberFlags(BaseFlags):
     if TYPE_CHECKING:
