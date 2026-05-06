@@ -454,16 +454,20 @@ class ThreadChannel(BaseChannel["_ThreadChannelResponse"]):
         "parent_id",
         "permissions",
         "rate_limit_per_user",
-        "thread_metadata",
         "total_message_sent",
+        # METADATA
+        "archive_timestamp",
+        "archived",
+        "auto_archive_duration",
+        "created_at",
+        "invitable",
+        "locked",
     )
 
     @override
     def _initialize(self, data: _ThreadChannelResponse) -> None:
         super()._initialize(data)
-        self.guild_id: int | None = convert_snowflake(
-            data, "guild_id", always_available=False
-        )
+        self.guild_id: int = convert_snowflake(data, "guild_id")
         self.parent_id: int | None = convert_snowflake(
             data, "parent_id", always_available=False
         )
@@ -481,27 +485,37 @@ class ThreadChannel(BaseChannel["_ThreadChannelResponse"]):
         self.message_count: int | None = data.get("message_count")
         self.member_count: int | None = data.get("member_count")
         self.total_message_sent: int | None = data.get("total_message_sent")
-        self.thread_metadata: ThreadMetadata | None = self._initialize_other(
-            ThreadMetadata, data, possible_keys="thread_metadata"
-        )
-        member_data = data.get("member")
+
         self.member: ThreadMember | None = (
-            ThreadMember(
-                session=self._session, data=member_data, guild_id=self.guild_id
-            )
-            if member_data
+            ThreadMember(session=self._session, data=md, guild_id=self.guild_id)
+            if (md := data.get("member"))
             else None
         )
         self.applied_tags: list[int] = [
             int(tag_id) for tag_id in data.get("applied_tags", [])
         ]
-        raw_permissions = data.get("permissions")
         self.permissions: Permissions | None = (
-            Permissions(int(raw_permissions)) if raw_permissions is not None else None
+            Permissions(int(rp))
+            if (rp := data.get("permissions")) is not None
+            else None
         )
         self.member_ids_preview: list[int] = [
             int(member_id) for member_id in data.get("member_ids_preview", [])
         ]
+
+        self.__unwrap_thread_metadata(data.get("thread_metadata", {}))  # type: ignore
+
+    def __unwrap_thread_metadata(self, data: ThreadMetadataResponse) -> None:
+        self.archived: bool = data.get("archived", False)
+        self.auto_archive_duration: int = data.get("auto_archive_duration", 0)
+        self.archive_timestamp: datetime.datetime = iso_to_datetime(
+            data.get("archive_timestamp")
+        )
+        self.locked: bool = data.get("locked", False)
+        self.invitable: bool = data.get("invitable", False)
+        self.created_at: datetime.datetime | None = iso_to_datetime(
+            data.get("create_timestamp")
+        )
 
 
 class PrivateChannel[D = PrivateChannelResponse](BaseChannel[D]):
