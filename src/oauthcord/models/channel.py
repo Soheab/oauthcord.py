@@ -92,6 +92,20 @@ class PermissionOverwrite(BaseModel["PermissionOverwriteResponse"]):
         self.allow: Permissions = Permissions(int(data.get("allow", 0)))
         self.deny: Permissions = Permissions(int(data.get("deny", 0)))
 
+    @property
+    def effective_permissions(self) -> Permissions:
+        """Calculate the effective permissions for this overwrite.
+
+        This is calculated as the allowed permissions minus the denied permissions, meaning
+        that any permission that is both allowed and denied will be denied.
+
+        Returns
+        -------
+        :class:`Permissions`
+            The effective permissions for this overwrite.
+        """
+        return Permissions.from_allow_deny(self.allow, self.deny)
+
 
 class ThreadMetadata(BaseModel["ThreadMetadataResponse"]):
     """Represents Discord API data for `ThreadMetadata`."""
