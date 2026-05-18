@@ -231,7 +231,7 @@ class CurrentUser(GuildMemberWithUser["CurrentUserResponse"]):
         "_email",
         "locale",
         "mfa_enabled",
-        "premium_type",
+        "_premium_type",
     )
 
     @override
