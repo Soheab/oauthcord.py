@@ -109,9 +109,17 @@ class BaseModel[D: Any, R: Any = None]:
 
             for key in possible_keys:
                 try:
-                    return _construct_model(cls, data=data[key], **extra_kwargs)
+                    value = data[key]
+                    if not value:
+                        if optional:
+                            return None
+                        raise ValueError(
+                            f"Data for {cls.__name__} under key '{key}' is required but got {value!r}"
+                        )
                 except KeyError:
                     continue
+                else:
+                    return _construct_model(cls, data=value, **extra_kwargs)
 
         return _construct_model(cls, data=data, **extra_kwargs)
 
