@@ -96,7 +96,7 @@ class GuildMember(BaseModelWithSession["GuildMemberResponse"]):
             data.get("unusual_dm_activity_until")
         )
         self.display_name_styles: DisplayNameStyle | None = self._initialize_other(
-            DisplayNameStyle, data, possible_keys="display_name_styles"
+            DisplayNameStyle, data, possible_keys="display_name_styles", optional=True
         )
         self.mute: bool = data.get("mute", False)
         self.deaf: bool = data.get("deaf", False)
