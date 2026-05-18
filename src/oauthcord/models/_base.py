@@ -95,7 +95,7 @@ class BaseModel[D: Any, R: Any = None]:
         possible_keys: _PossibleKeys = None,
         extra_kwargs: dict[str, Any] | None = None,
     ) -> BaseModel[Any, Any] | None:
-        if data is None:
+        if not data:
             if optional:
                 return None
             raise ValueError(f"Data for {cls.__name__} is required but got None")
