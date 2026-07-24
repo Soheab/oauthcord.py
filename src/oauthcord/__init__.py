@@ -1,4 +1,5 @@
 from .client import AuthorisedSession, Client
+from .enums import *
 from .errors import *
 from .models import *
 
