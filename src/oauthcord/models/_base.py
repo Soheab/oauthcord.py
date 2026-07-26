@@ -85,6 +85,12 @@ class BaseModel[D: Any, R: Any = None]:
         attr_str = ", ".join(f"{attr}={getattr(self, attr)!r}" for attr in attributes)
         return f"{self.__class__.__name__}({attr_str})"
 
+    def __getitem__(self, key: str) -> Any:
+        try:
+            return getattr(self, key)
+        except AttributeError:
+            return self.data[key]
+
     def _construct_other(
         self,
         cls: type[BaseModel[Any, Any]],

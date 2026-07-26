@@ -169,6 +169,12 @@ username = raw["username"]
 print("Username:", username)
 ```
 
+Models also support `instance["key"]` item access: it first looks for a typed attribute named `key`, falling back to `instance.data["key"]` if there isn't one.
+
+```python
+username = me["username"]  # same as me.username
+raw_value = me["some_raw_field"]  # falls back to me.data["some_raw_field"]
+```
 
 ## API coverage
 
