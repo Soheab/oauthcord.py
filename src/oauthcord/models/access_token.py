@@ -9,6 +9,7 @@ from ._base import BaseModelWithHTTP
 
 if TYPE_CHECKING:
     from ..client import AuthorisedSession, Client
+    from ..enums import UnknownScope
     from ..internals._types.token import (
         AccessTokenResponse as AccessTokenResponsePayload,
     )
@@ -107,8 +108,8 @@ class AccessToken(
         return self.expires_at() <= datetime.datetime.now(datetime.UTC)
 
     @property
-    def scopes(self) -> list[Scope]:
-        """:class:`list[Scope]`: The list of scopes associated with this token, parsed
+    def scopes(self) -> list[Scope | UnknownScope]:
+        """:class:`list[Scope | UnknownScope]`: The list of scopes associated with this token, parsed
         from the `scope` string.
         """
         return Scope.from_list(self._scope.split())

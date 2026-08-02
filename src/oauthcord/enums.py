@@ -58,9 +58,32 @@ __all__ = (
     "StoreListingIconType",
     "SubscriptionInterval",
     "SubscriptionPlanPurchaseType",
+    "UnknownScope",
     "VideoQualityMode",
     "Visibility",
 )
+
+
+class UnknownScope:
+    def __init__(self, value: str, /) -> None:
+        self.name = value
+        self.value = value
+
+    def __str__(self) -> str:
+        return self.value
+
+    def __repr__(self) -> str:
+        return f"UnknownScope.{self.name}"
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, UnknownScope):
+            return self.value == other.value
+        elif isinstance(other, str):
+            return self.value == other
+        return NotImplemented
+
+    def __hash__(self) -> int:
+        return hash(self.value)
 
 
 # SOURCE: https://docs.discord.food/topics/oauth2#oauth2-scopes
@@ -180,19 +203,26 @@ class Scope(StrEnum):
     SDK_SOCIAL_LAYER = "sdk.social_layer"
 
     @classmethod
-    def from_list(cls, scopes: list[str], /) -> list[Scope]:
+    def from_list(cls, scopes: list[str], /) -> list[Scope | UnknownScope]:
         """Create this object from a serialized payload."""
-        return [cls(scope) for scope in scopes]
+        final: list[Scope | UnknownScope] = []
+        for scope in scopes:
+            try:
+                final.append(cls(scope))
+            except ValueError:
+                final.append(UnknownScope(scope))
+
+        return final
 
     @classmethod
-    def from_str(cls, scope: str, /) -> list[Scope]:
+    def from_str(cls, scope: str, /) -> list[Scope | UnknownScope]:
         """Create this object from a serialized payload."""
         return cls.from_list([scope])
 
     @classmethod
-    def to_str(cls, scopes: list[Scope | str], /) -> str:
+    def to_str(cls, scopes: list[Scope | UnknownScope], /) -> str:
         """Convert this object into a serialized or display-friendly representation."""
-        return " ".join(cls(scope).value for scope in scopes)
+        return " ".join(str(scope) for scope in scopes)
 
     def __str__(self) -> str:
         return self.value

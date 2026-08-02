@@ -27,7 +27,6 @@ if TYPE_CHECKING:
         ChannelNickResponse,
         DefaultReactionResponse,
         DMChannelResponse,
-        EphemeralDMChannelResponse,  # noqa: F401
         FollowedChannelResponse,
         ForumTagResponse,
         GetChannelLinkedAccountsResponse,

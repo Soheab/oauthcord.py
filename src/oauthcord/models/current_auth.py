@@ -10,6 +10,7 @@ from .application import PartialApplication
 from .user import PartialUser
 
 if TYPE_CHECKING:
+    from ..enums import UnknownScope
     from ..internals._types.current_auth_info import (
         CurrentAuthApplicationResponse as CurrentAuthorizationInformationApplicationResponsePayload,
     )
@@ -126,7 +127,7 @@ class CurrentInformation(
             data["expires"]
         )
 
-        self.scopes: list[Scope] = Scope.from_list(data["scopes"])
+        self.scopes: list[Scope | UnknownScope] = Scope.from_list(data["scopes"])
         self.application = self._initialize_other(
             CurrentApplication, data, possible_keys="application"
         )
