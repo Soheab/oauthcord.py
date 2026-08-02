@@ -73,9 +73,11 @@ class UnknownScope:
     ``"some.scope" in access_token.scopes`` works the same as it does for
     :class:`Scope`.
 
-    If you encounter this for a scope that Discord documents, please open an
-    issue at https://github.com/Soheab/oauthcord.py/issues so it can be added
-    to :class:`Scope`.
+    If you encounter this for a scope that Discord (or userdoccers_) documents,
+    please open an issue at https://github.com/Soheab/oauthcord.py/issues so it
+    can be added to :class:`Scope`.
+
+    .. _userdoccers: https://docs.discord.food/topics/oauth2#oauth2-scopes
 
     Attributes
     ----------
@@ -108,6 +110,12 @@ class UnknownScope:
 
 # SOURCE: https://docs.discord.food/topics/oauth2#oauth2-scopes
 class Scope(StrEnum):
+    """Enumeration of the OAuth2 scopes that Discord supports.
+
+    Any scope not listed here is returned as an :class:`UnknownScope` rather
+    than raising an error.
+    """
+
     # OAuth2 Scopes
     # These are all the OAuth2 scopes that Discord supports.
     # Some scopes require approval from Discord to use.
@@ -123,8 +131,6 @@ class Scope(StrEnum):
     # Allows updating user presence and creating headless sessions (Public: No)
     # ACTIVITIES_WRITE = "activities.write"
     # Allows reading branch and build data for the user's applications (Public: Yes)
-    """Enumeration of Discord API values used by this wrapper."""
-
     APPLICATIONS_BUILDS_READ = "applications.builds.read"
     # Allows uploading builds to the user's applications (Public: No)
     # APPLICATIONS_BUILDS_UPLOAD = "applications.builds.upload"
