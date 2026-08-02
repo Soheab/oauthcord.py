@@ -65,6 +65,26 @@ __all__ = (
 
 
 class UnknownScope:
+    """An OAuth2 scope that is not recognised by this library.
+
+    Discord may add new scopes at any time. Rather than raising an error,
+    :meth:`Scope.from_list` wraps any unrecognised value in this class so that
+    parsing never fails. Instances compare equal to their string value, so
+    ``"some.scope" in access_token.scopes`` works the same as it does for
+    :class:`Scope`.
+
+    If you encounter this for a scope that Discord documents, please open an
+    issue at https://github.com/Soheab/oauthcord.py/issues so it can be added
+    to :class:`Scope`.
+
+    Attributes
+    ----------
+    name: :class:`str`
+        The raw scope value. Identical to :attr:`value`.
+    value: :class:`str`
+        The raw scope value as returned by Discord.
+    """
+
     def __init__(self, value: str, /) -> None:
         self.name = value
         self.value = value
