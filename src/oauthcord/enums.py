@@ -229,10 +229,16 @@ class Scope(StrEnum):
     SDK_SOCIAL_LAYER = "sdk.social_layer"
 
     @classmethod
-    def from_list(cls, scopes: list[str], /) -> list[Scope | UnknownScope]:
+    def from_list(
+        cls, scopes: list[str | Scope | UnknownScope], /
+    ) -> list[Scope | UnknownScope]:
         """Create this object from a serialized payload."""
         final: list[Scope | UnknownScope] = []
         for scope in scopes:
+            if isinstance(scope, (Scope, UnknownScope)):
+                final.append(scope)
+                continue
+
             try:
                 final.append(cls(scope))
             except ValueError:
@@ -243,12 +249,11 @@ class Scope(StrEnum):
     @classmethod
     def from_str(cls, scope: str, /) -> list[Scope | UnknownScope]:
         """Create this object from a serialized payload."""
-        return cls.from_list([scope])
+        return cls.from_list(list(scope.split(" ")))
 
     @classmethod
     def to_str(cls, scopes: list[Scope | UnknownScope], /) -> str:
-        """Convert this object into a serialized or display-friendly representation."""
-        return " ".join(str(scope) for scope in scopes)
+        return "+".join(str(scope) for scope in scopes)
 
     def __str__(self) -> str:
         return self.value
