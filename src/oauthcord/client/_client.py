@@ -32,6 +32,9 @@ if TYPE_CHECKING:
     from ..internals._types.token import (
         RefreshTokenResponse as RefreshTokenResponsePayload,
     )
+else:
+    AccessTokenResponsePayload = dict[str, Any]
+    RefreshTokenResponsePayload = dict[str, Any]
 
 AuthorisedSessionPayload = AccessTokenResponsePayload
 
