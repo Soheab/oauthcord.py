@@ -490,10 +490,14 @@ class AuthorisedSession(
         return self._identifier
 
     @classmethod
-    def from_token(
+    def from_dict(
         cls,
         client: Client,
-        token: AccessToken | AccessTokenResponsePayload | RefreshTokenResponsePayload,
+        data: AccessToken
+        | AccessTokenResponsePayload
+        | RefreshTokenResponsePayload
+        | AuthorisedSessionPayload
+        | AuthorisedSessionPayloadWithExtras,
         *,
         identifier: str | None = utils.NotSet,
         ignore_existing_identifier: bool = False,
@@ -512,9 +516,12 @@ class AuthorisedSession(
         ----------
         client: :class:`Client`
             The client to create the session for.
-        token: :class:`AccessToken` | :class:`dict`
-            The access token data to initialize the session with, either as a raw response payload
-            or an already parsed :class:`AccessToken` object.
+        data: :class:`AccessToken` | :class:`dict`
+            The data to create the session from. This can be either an :class:`AccessToken` object
+            or a raw response payload from the Discord API.
+
+            Or the dict received from :meth:`AuthorisedSession.to_dict`, which can be used to create a new session with
+            the same token.
         identifier: :class:`str` | :data:`None`
             The session's registry identifier. If :data:`None`, the session is not stored even
             if ``store_session`` is enabled.
@@ -534,6 +541,9 @@ class AuthorisedSession(
         extras: :class:`dict`
             Optional extra data to associate with the session.
 
+            This can also be included in the ``data`` dict under the key ``"extras"``, or
+            passed separately to this parameter.
+
             This is never used by the library itself, but can be used to store arbitrary data
             associated with the session, such as user IDs, guild IDs, or other metadata.
 
@@ -543,11 +553,15 @@ class AuthorisedSession(
         :class:`AuthorisedSession`
             Session initialized with the exchanged access token.
         """
-        token = (
-            token
-            if isinstance(token, AccessToken)
-            else AccessToken.from_dict(client, token)
-        )
+        extras_: dict[str, Any] = {}
+        if isinstance(data, AccessToken):
+            token = data
+        else:
+            extras_ = data.pop("extras", {})  # type: ignore
+            token = AccessToken.from_dict(client, data)
+
+        if extras is not utils.NotSet:
+            extras_ |= extras
 
         if identifier not in (utils.NotSet, None) and not ignore_existing_identifier:
             existing_session = client.get_session(identifier)
@@ -556,7 +570,7 @@ class AuthorisedSession(
                     existing_session.token = token
                 return existing_session
 
-        inst = cls(client, token=token, extras=extras or {})
+        inst = cls(client, token=token, extras=extras_)
 
         if identifier is not None and client._store_session:
             client.add_session(inst, identifier=identifier)
