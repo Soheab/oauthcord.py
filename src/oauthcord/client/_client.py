@@ -24,6 +24,7 @@ from ._store import StoreClientMixin
 from ._user import UserClientMixin
 
 if TYPE_CHECKING:
+    from ..enums import UnknownScope
     from ..internals._types.token import (
         AccessTokenResponse as AccessTokenResponsePayload,
     )
@@ -35,30 +36,6 @@ if TYPE_CHECKING:
 def _generate_session_identifier() -> str:
     """Generate a random session identifier."""
     return str(uuid.uuid4())
-
-
-def _validate_scopes(scopes: list[Scope | str]) -> list[Scope | str]:
-    """Validate and convert a list of scopes into Scope enums or strings."""
-    if not isinstance(scopes, list):
-        raise ValueError("scopes must be a list of Scope or str")
-
-    scopes_: list[Scope | str] = []
-    for scope in scopes:
-        if isinstance(scope, Scope):
-            scopes_.append(scope)
-            continue
-
-        if not isinstance(scope, str):
-            raise ValueError(
-                f"scopes must be a list of Scope or str, got {type(scope)}"
-            )
-
-        try:
-            scopes_.append(Scope(scope))
-        except ValueError:
-            scopes_.append(scope)
-
-    return scopes_
 
 
 class Client:
@@ -128,7 +105,7 @@ class Client:
         client_id: int | str,
         client_secret: str,
         redirect_uri: str,
-        scopes: list[Scope | str],
+        scopes: list[Scope | UnknownScope | str],
         state: str | None = None,
         session: aiohttp.ClientSession = utils.NotSet,
         store_session: bool = False,
@@ -141,13 +118,26 @@ class Client:
             session=session,
         )
 
-        self._scopes: list[Scope | str] = _validate_scopes(scopes)
+        self._scopes: list[Scope | UnknownScope] = []
+        self.scopes = scopes
+
         self._redirect_uri: str = redirect_uri
         self._state: str | None = state
 
         self._store_session: bool = store_session
         self._sessions: dict[str, AuthorisedSession] = {}
         self._revoke_tokens_on_session_close: bool = revoke_tokens_on_session_close
+
+    @property
+    def scopes(self) -> list[Scope | UnknownScope]:
+        return self._scopes
+
+    @scopes.setter
+    def scopes(self, value: list[Scope | UnknownScope | str]) -> None:
+        if not isinstance(value, list):
+            raise TypeError("scopes must be a list")
+
+        self._scopes = Scope.from_list(value)
 
     async def exchange_token(
         self,
@@ -263,7 +253,8 @@ class Client:
         self,
         *,
         redirect_uri: str = utils.NotSet,
-        scopes: list[Scope | str] = utils.NotSet,
+        scopes: list[Scope | UnknownScope | str] = utils.NotSet,
+        append_scopes: bool = False,
         state: str = utils.NotSet,
     ) -> str:
         """Build the Discord OAuth2 authorization URL.
@@ -275,11 +266,15 @@ class Client:
         redirect_uri: :class:`str`
             Optional redirect URI to use in the URL. Defaults to the client's
             configured redirect URI.
-        scopes: :class:`list`[:class:`Scope` | :class:`str`]
+        scopes: :class:`list`[:class:`Scope` | :class:`UnknownScope` | :class:`str`]
             Optional list of scopes to request. Defaults to the client's
             configured scopes.
 
             You may combine this with the client's :attr:`Client.scopes`.
+        append_scopes: :class:`bool`
+            Whether to append the provided scopes to the client's configured scopes.
+
+            Defaults to ``False``, which means you must provide the full list of scopes to request.
         state: :class:`str`
             Optional state value to include in the URL. Defaults to the client's
             configured state.
@@ -291,9 +286,13 @@ class Client:
         :class:`str`
             Discord authorization URL for the configured OAuth2 flow.
         """
-        scopes_ = (
-            _validate_scopes(scopes) if scopes is not utils.NotSet else self._scopes
-        )
+        scopes_ = Scope.from_list(scopes) if scopes is not utils.NotSet else []
+        if append_scopes:
+            scopes_ = list(set(self._scopes + scopes_))
+
+        if not scopes_:
+            scopes = list(self._scopes)
+
         redirect_uri_ = (
             redirect_uri if redirect_uri is not utils.NotSet else self._redirect_uri
         )
