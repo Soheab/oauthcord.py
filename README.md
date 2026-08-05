@@ -2,6 +2,14 @@
 > This library is under active development. Public APIs and internal structures may change without notice.
 >
 > Expect breaking changes. Do not treat the current API as production-stable.
+>
+> PRs are welcome, but since I'm actively working on this and may redesign things, please open an issue or contact me before working on anything beyond a fix or critical bug.
+
+## Contact
+
+Feel free to contact me on Discord @`soheab_` (ID `150665783268212746`). DMing or mentioning me in any server is fine to me.
+
+You can also open an issue for anything, whether it's a question, a bug, or a feature idea.
 
 # oauthcord.py
 
@@ -23,7 +31,6 @@ This is not a gateway or bot framework. If you need bot events, shards, or gatew
 ### Requirements
 
 - Python `3.13+`
-
 
 Install directly from GitHub:
 
@@ -296,7 +303,7 @@ excluded.
 
 #### `models/components.py`
 
-- [x] `UnfurledMediaItem.content_scan_metadata`
+- [X] `UnfurledMediaItem.content_scan_metadata`
   - Uses `ContentScanMetadata`.
 - [ ] `ContentInventoryEntryComponent.content_inventory_entry`
   - Currently stores `ContentInventoryEntryDataResponse` directly.
@@ -305,16 +312,16 @@ excluded.
 
 #### `models/embeds.py`
 
-- [x] `EmbedMedia.content_scan_metadata`
+- [X] `EmbedMedia.content_scan_metadata`
   - Uses `ContentScanMetadata`.
-- [x] `Embed.provider`
+- [X] `Embed.provider`
   - Uses `EmbedProvider`.
 
 #### `models/entitlement.py`
 
-- [x] `QuestRewardsMetadata.reward_code`
-- [x] `Entitlement.sku`
-- [x] `Entitlement.subscription_plan`
+- [X] `QuestRewardsMetadata.reward_code`
+- [X] `Entitlement.sku`
+- [X] `Entitlement.subscription_plan`
 
 #### `models/invite.py`
 
@@ -340,7 +347,7 @@ excluded.
 
 #### `internals/_types/components.py`
 
-- [x] `UnfurledMediaItemResponse.content_scan_metadata`
+- [X] `UnfurledMediaItemResponse.content_scan_metadata`
   - Uses `ContentScanMetadataResponse`.
 - [ ] `ContentInventoryEntryDataResponse.traits`
 - [ ] `ContentInventoryEntryDataResponse.extra`
@@ -351,9 +358,9 @@ excluded.
 
 #### `internals/_types/entitlement.py`
 
-- [x] `QuestRewardsMetadataResponse.reward_code`
-- [x] `EntitlementResponse.sku`
-- [x] `EntitlementResponse.subscription_plan`
+- [X] `QuestRewardsMetadataResponse.reward_code`
+- [X] `EntitlementResponse.sku`
+- [X] `EntitlementResponse.subscription_plan`
 
 #### `internals/_types/invite.py`
 
@@ -365,9 +372,9 @@ excluded.
 
 #### `internals/_types/lobby.py`
 
-- [x] `CreateLobbyMessageRequest.poll`
+- [X] `CreateLobbyMessageRequest.poll`
   - Reuses `PollCreateRequest`.
-- [x] `CreateLobbyMessageRequest.shared_client_theme`
+- [X] `CreateLobbyMessageRequest.shared_client_theme`
   - Reuses `SharedClientThemeRequest`.
 - [ ] `CreateLobbyMessageRequest.metadata`
   - Likely intentionally generic metadata, but still tracked because it is a
@@ -376,18 +383,18 @@ excluded.
 #### `internals/_types/message.py`
 
 - [ ] `AttachmentResponse.application`
-- [x] `EmbedMediaResponse.content_scan_metadata`
+- [X] `EmbedMediaResponse.content_scan_metadata`
   - Uses `ContentScanMetadataResponse`.
 - [ ] `MessageReferenceRequest.forward_only`
 - [ ] `MessageReferenceResponse.forward_only`
 - [ ] `MessageInteractionResponse.triggering_interaction_metadata`
 - [ ] `MessagePurchaseNotificationResponse.guild_product_purchase`
 - [ ] `MessageGiftInfoResponse.sound`
-- [x] `MessageSnapshotResponse.message`
+- [X] `MessageSnapshotResponse.message`
   - Reuses `MessageResponse`.
 - [ ] `MessageResponse.activity`
 - [ ] `MessageResponse.application`
-- [x] `MessageResponse.referenced_message`
+- [X] `MessageResponse.referenced_message`
   - Reuses `MessageResponse | None`.
 - [ ] `MessageResponse.interaction`
 - [ ] `MessageResponse.resolved`
@@ -406,10 +413,10 @@ excluded.
 
 #### Completed Reuse Candidates
 
-- [x] `CreateLobbyMessageRequest.poll` uses `PollCreateRequest`.
-- [x] `CreateLobbyMessageRequest.shared_client_theme` uses
+- [X] `CreateLobbyMessageRequest.poll` uses `PollCreateRequest`.
+- [X] `CreateLobbyMessageRequest.shared_client_theme` uses
   `SharedClientThemeRequest`.
-- [x] `MessageSnapshotResponse.message` and
+- [X] `MessageSnapshotResponse.message` and
   `MessageResponse.referenced_message` use recursive `MessageResponse` payloads.
 
 </details>
@@ -438,14 +445,14 @@ Audited endpoint/client/model files:
 
 #### `AccessToken`
 
-- [x] `refresh(check_expired=...)`
+- [X] `refresh(check_expired=...)`
   - Existing token model method.
-- [x] `revoke()`
+- [X] `revoke()`
   - Existing token model method.
 
 #### `CurrentApplication`
 
-- [x] `get_partial()`
+- [X] `get_partial()`
   - Forwards `get_partial_application(application_id=self.id)`.
 - [ ] `skus(...)`
   - Can forward `get_application_skus(application_id=self.id, ...)`.
@@ -520,7 +527,7 @@ These are already declared on `CurrentApplication` in
 
 #### `DMChannel`
 
-- [x] `get_call_eligibility()`
+- [X] `get_call_eligibility()`
   - Existing reference pattern.
   - Forwards `get_call_eligibility(channel_id=self.id)`.
 - [ ] `messages(limit=...)`
@@ -545,13 +552,13 @@ These are already declared on `CurrentApplication` in
 
 #### `GroupDMChannel`
 
-- [x] `get_linked_accounts(user_ids=...)`
+- [X] `get_linked_accounts(user_ids=...)`
   - Existing convenience method.
   - Forwards `get_channel_linked_accounts(channel_id=self.id, ...)`.
 
 #### `Guild`
 
-- [x] `channels(...)`
+- [X] `channels(...)`
   - Existing convenience method.
   - Forwards `get_guild_channels(guild_id=self.id, ...)`.
 - [ ] `current_member()`
@@ -591,15 +598,15 @@ These are already declared on `CurrentApplication` in
 
 #### `PartialApplication`
 
-- [x] `create_attachment(file)`
+- [X] `create_attachment(file)`
   - Existing convenience method.
   - Forwards `create_application_attachment(application_id=self.id, file=file)`.
-- [x] `get_user_role_connection()`
+- [X] `get_user_role_connection()`
   - Existing method, but the session method derives the application from current
     authorization rather than from `self.id`.
-- [x] `edit_user_role_connection(...)`
+- [X] `edit_user_role_connection(...)`
   - Same current-authorization caveat as `get_user_role_connection`.
-- [x] `create_quick_link(...)`
+- [X] `create_quick_link(...)`
   - Same current-authorization caveat; the lower-level HTTP endpoint takes
     `application_id`.
 - [ ] `skus(...)`
@@ -621,16 +628,16 @@ These are already declared on `CurrentApplication` in
 
 #### `PartialUser`
 
-- [x] `dm_channel()`
+- [X] `dm_channel()`
   - Existing convenience method.
   - Forwards `get_dm_channel(user_id=self.id)`.
 
 #### `PrivateChannel`
 
-- [x] `ring(...)`
+- [X] `ring(...)`
   - Existing convenience method.
   - Forwards `ring_channel_recipients(channel_id=self.id, ...)`.
-- [x] `stop_ringing(...)`
+- [X] `stop_ringing(...)`
   - Existing convenience method.
   - Forwards `stop_ringing_channel_recipients(channel_id=self.id, ...)`.
 
@@ -699,7 +706,6 @@ This project tracks Discord behavior against:
 
 - Unofficial docs: https://docs.discord.food/
 - Official docs: https://docs.discord.com/
-
 
 ## Credits
 
