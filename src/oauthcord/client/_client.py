@@ -461,6 +461,8 @@ class AuthorisedSession(
         token: AccessToken | AccessTokenResponsePayload | RefreshTokenResponsePayload,
         *,
         identifier: str | None = utils.NotSet,
+        ignore_existing_identifier: bool = False,
+        replace_token_of_existing_session: bool = True,
     ) -> AuthorisedSession:
         """Create a new session from an access token response/payload.
 
@@ -481,15 +483,36 @@ class AuthorisedSession(
             The session's registry identifier. If :data:`None`, the session is not stored even
             if ``store_session`` is enabled.
 
+            Also see ``ignore_existing_identifier`` to control whether the session's existing identifier is used.
             Defaults to a random UUID string if ``store_session`` is enabled.
+        ignore_existing_identifier: :class:`bool`
+            Whether to ignore the session's existing identifier when storing it in the client registry.
+
+            Defaults to ``False``, which means that if the session already has an identifier,
+            it will be used instead of generating a new one.
+        replace_token_of_existing_session: :class:`bool`
+            Whether to replace the token of an existing session with the same identifier.
+
+            Defaults to ``True``, which means that if the session already has an identifier,
+            its token will be replaced with the new one.
 
         Returns
         -------
         :class:`AuthorisedSession`
             Session initialized with the exchanged access token.
         """
-        if not isinstance(token, AccessToken):
-            token = AccessToken.from_dict(client, token)
+        token = (
+            token
+            if isinstance(token, AccessToken)
+            else AccessToken.from_dict(client, token)
+        )
+
+        if identifier not in (utils.NotSet, None) and not ignore_existing_identifier:
+            existing_session = client.get_session(identifier)
+            if existing_session is not None:
+                if replace_token_of_existing_session:
+                    existing_session.token = token
+                return existing_session
 
         inst = cls(client, token=token)
 
