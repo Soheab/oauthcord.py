@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import urllib.parse
 import uuid
-from typing import TYPE_CHECKING, Literal, Self
+from typing import TYPE_CHECKING, Any, Literal, Self, overload
 
 import aiohttp
 
@@ -31,6 +31,11 @@ if TYPE_CHECKING:
     from ..internals._types.token import (
         RefreshTokenResponse as RefreshTokenResponsePayload,
     )
+
+    AuthorisedSessionPayload = AccessTokenResponsePayload
+
+    class AuthorisedSessionPayloadWithExtras(AuthorisedSessionPayload):
+        extras: dict[str, Any]
 
 
 def _generate_session_identifier() -> str:
@@ -144,6 +149,7 @@ class Client:
         code: str,
         *,
         session_identifier: str | None = utils.NotSet,
+        extras: dict[str, Any] = utils.NotSet,
     ) -> AuthorisedSession:
         """Exchange an authorization code for an authorised session.
 
@@ -159,6 +165,11 @@ class Client:
             if ``store_session`` is enabled.
 
             Defaults to a random UUID string if ``store_session`` is enabled.
+        extras: :class:`dict`
+            Optional extra data to associate with the session.
+
+            This is never used by the library itself, but can be used to store arbitrary data
+            associated with the session, such as user IDs, guild IDs, or other metadata.
 
         Returns
         -------
@@ -166,7 +177,9 @@ class Client:
             Session initialized with the exchanged access token.
         """
         res = await self.http.exchange_token(code, redirect_uri=self._redirect_uri)
-        session = AuthorisedSession.from_token(self, res, identifier=session_identifier)
+        session = AuthorisedSession.from_token(
+            self, res, identifier=session_identifier, extras=extras
+        )
         return session
 
     async def close(self) -> None:
@@ -407,6 +420,11 @@ class AuthorisedSession(
         Parent OAuth2 client.
     token: :class:`AccessToken`
         Current access token data.
+    extras: :class:`dict`
+        Optional extra data associated with the session.
+
+        This is never used by the library itself, but can be used to store arbitrary data
+        associated with the session, such as user IDs, guild IDs, or other metadata.
     """
 
     def __init__(
@@ -414,6 +432,7 @@ class AuthorisedSession(
         client: Client,
         *,
         token: AccessToken,
+        **extras: Any,
     ) -> None:
         self._identifier: str | None = None
 
@@ -421,6 +440,8 @@ class AuthorisedSession(
         self.token: AccessToken = token
 
         self._current_authorization_information: CurrentInformation | None = None
+
+        self.extras: dict[str, Any] = extras
 
     def __enter__(self) -> Self:
         return self
@@ -462,6 +483,7 @@ class AuthorisedSession(
         identifier: str | None = utils.NotSet,
         ignore_existing_identifier: bool = False,
         replace_token_of_existing_session: bool = True,
+        extras: dict[str, Any] = utils.NotSet,
     ) -> AuthorisedSession:
         """Create a new session from an access token response/payload.
 
@@ -494,6 +516,12 @@ class AuthorisedSession(
 
             Defaults to ``True``, which means that if the session already has an identifier,
             its token will be replaced with the new one.
+        extras: :class:`dict`
+            Optional extra data to associate with the session.
+
+            This is never used by the library itself, but can be used to store arbitrary data
+            associated with the session, such as user IDs, guild IDs, or other metadata.
+
 
         Returns
         -------
@@ -520,17 +548,41 @@ class AuthorisedSession(
 
         return inst
 
+    @overload
     def to_dict(
-        self,
-    ) -> AccessTokenResponsePayload | RefreshTokenResponsePayload:
+        self, *, include_extras: Literal[True] = ...
+    ) -> AuthorisedSessionPayloadWithExtras: ...
+
+    @overload
+    def to_dict(
+        self, *, include_extras: Literal[False] = ...
+    ) -> AuthorisedSessionPayload: ...
+
+    @overload
+    def to_dict(
+        self, *, include_extras: bool = ...
+    ) -> AuthorisedSessionPayload | AuthorisedSessionPayloadWithExtras: ...
+
+    @overload
+    def to_dict(self) -> AuthorisedSessionPayload: ...
+
+    def to_dict(
+        self, *, include_extras: bool = False
+    ) -> AuthorisedSessionPayload | AuthorisedSessionPayloadWithExtras:
         """Serialize the session's current token data.
+
+        You can pass this to :meth:`AuthorisedSession.from_token` to create a
+        new session with the same token.
 
         Returns
         -------
         :class:`dict`
             Dictionary containing the current OAuth2 token payload.
         """
-        return self.token.to_dict()
+        res = self.token.to_dict()
+        if include_extras:
+            res |= {"extras": self.extras}
+        return res  # type: ignore
 
     async def close(self) -> None:
         """Close this session from the client's perspective.
