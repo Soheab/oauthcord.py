@@ -1,3 +1,8 @@
-from ._client import AuthorisedSession, Client
+from ._client import *
 
-__all__ = ("AuthorisedSession", "Client")
+__all__ = (
+    "AuthorisedSession",
+    "AuthorisedSessionPayload",
+    "AuthorisedSessionPayloadWithExtras",
+    "Client",
+)

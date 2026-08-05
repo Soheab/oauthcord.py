@@ -33,10 +33,19 @@ if TYPE_CHECKING:
         RefreshTokenResponse as RefreshTokenResponsePayload,
     )
 
-    AuthorisedSessionPayload = AccessTokenResponsePayload
+AuthorisedSessionPayload = AccessTokenResponsePayload
 
-    class AuthorisedSessionPayloadWithExtras(AuthorisedSessionPayload):
-        extras: dict[str, Any]
+
+class AuthorisedSessionPayloadWithExtras(AuthorisedSessionPayload):
+    extras: dict[str, Any]
+
+
+__all__ = (
+    "AuthorisedSession",
+    "AuthorisedSessionPayload",
+    "AuthorisedSessionPayloadWithExtras",
+    "Client",
+)
 
 
 def _generate_session_identifier() -> str:

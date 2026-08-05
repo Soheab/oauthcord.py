@@ -1,4 +1,4 @@
-from .client import AuthorisedSession, Client
+from .client import *
 from .enums import *
 from .errors import *
 from .models import *
@@ -28,6 +28,8 @@ __all__ = (
     "Attachment",
     "AttachmentFlags",
     "AuthorisedSession",
+    "AuthorisedSessionPayload",
+    "AuthorisedSessionPayloadWithExtras",
     "AvatarDecorationData",
     "BadRequest",
     "BaseChannel",
