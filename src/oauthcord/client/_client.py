@@ -556,7 +556,7 @@ class AuthorisedSession(
                     existing_session.token = token
                 return existing_session
 
-        inst = cls(client, token=token)
+        inst = cls(client, token=token, extras=extras or {})
 
         if identifier is not None and client._store_session:
             client.add_session(inst, identifier=identifier)
