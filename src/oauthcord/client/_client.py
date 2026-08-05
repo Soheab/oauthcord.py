@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import urllib.parse
 import uuid
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, Literal, Self, overload
 
 import aiohttp
@@ -110,7 +111,7 @@ class Client:
         client_id: int | str,
         client_secret: str,
         redirect_uri: str,
-        scopes: list[Scope | UnknownScope | str],
+        scopes: Sequence[Scope | UnknownScope | str],
         state: str | None = None,
         session: aiohttp.ClientSession = utils.NotSet,
         store_session: bool = False,
@@ -138,9 +139,9 @@ class Client:
         return self._scopes
 
     @scopes.setter
-    def scopes(self, value: list[Scope | UnknownScope | str]) -> None:
-        if not isinstance(value, list):
-            raise TypeError("scopes must be a list")
+    def scopes(self, value: Sequence[Scope | UnknownScope | str]) -> None:
+        if not isinstance(value, (list, tuple)):
+            raise TypeError("scopes must be a list or tuple")
 
         self._scopes = Scope.from_list(value)
 
@@ -266,7 +267,7 @@ class Client:
         self,
         *,
         redirect_uri: str = utils.NotSet,
-        scopes: list[Scope | UnknownScope | str] = utils.NotSet,
+        scopes: Sequence[Scope | UnknownScope | str] = utils.NotSet,
         append_scopes: bool = False,
         state: str = utils.NotSet,
     ) -> str:
@@ -279,11 +280,13 @@ class Client:
         redirect_uri: :class:`str`
             Optional redirect URI to use in the URL. Defaults to the client's
             configured redirect URI.
-        scopes: :class:`list`[:class:`Scope` | :class:`UnknownScope` | :class:`str`]
-            Optional list of scopes to request. Defaults to the client's
+        scopes: :class:`Sequence`[:class:`Scope` | :class:`UnknownScope` | :class:`str`]
+            Optional list or tuple of scopes to request. Defaults to the client's
             configured scopes.
 
             You may combine this with the client's :attr:`Client.scopes`.
+            Also see the ``append_scopes`` parameter to control whether the provided
+            scopes are appended or replace the client's configured scopes.
         append_scopes: :class:`bool`
             Whether to append the provided scopes to the client's configured scopes.
 
@@ -299,7 +302,7 @@ class Client:
         :class:`str`
             Discord authorization URL for the configured OAuth2 flow.
         """
-        scopes_ = Scope.from_list(scopes) if scopes is not utils.NotSet else []
+        scopes_ = Scope.from_list(scopes) if scopes else []
         if append_scopes:
             scopes_ = list(set(self._scopes + scopes_))
 

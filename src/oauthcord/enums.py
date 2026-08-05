@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
 from enum import Enum, IntEnum, StrEnum
 from typing import Literal, overload
 
@@ -230,7 +231,7 @@ class Scope(StrEnum):
 
     @classmethod
     def from_list(
-        cls, scopes: list[str | Scope | UnknownScope], /
+        cls, scopes: Sequence[str | Scope | UnknownScope], /
     ) -> list[Scope | UnknownScope]:
         """Create this object from a serialized payload."""
         final: list[Scope | UnknownScope] = []
@@ -252,7 +253,7 @@ class Scope(StrEnum):
         return cls.from_list(list(scope.split(" ")))
 
     @classmethod
-    def to_str(cls, scopes: list[Scope | UnknownScope], /) -> str:
+    def to_str(cls, scopes: Sequence[Scope | UnknownScope], /) -> str:
         return "+".join(str(scope) for scope in scopes)
 
     def __str__(self) -> str:
