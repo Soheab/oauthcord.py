@@ -124,6 +124,7 @@ class AccessToken(
         """
         return self._created_at
 
+    @property
     def expires_at(self) -> datetime.datetime:
         """:class:`datetime.datetime`: When the token expires.
 
@@ -131,11 +132,12 @@ class AccessToken(
         """
         return self._created_at + datetime.timedelta(seconds=self._expires_in)
 
+    @property
     def is_expired(self) -> bool:
         """:class:`bool`: Whether the token is expired based on the current time
         and the :attr:`expires_at` value.
         """
-        return self.expires_at() <= datetime.datetime.now(datetime.UTC)
+        return self.expires_at <= datetime.datetime.now(datetime.UTC)
 
     @property
     def scopes(self) -> list[Scope | UnknownScope]:

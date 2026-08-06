@@ -4,7 +4,7 @@ import datetime
 import urllib.parse
 import uuid
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Literal, Self, overload
+from typing import TYPE_CHECKING, Any, Literal, Self, TypedDict, overload
 
 import aiohttp
 
@@ -38,18 +38,16 @@ else:
     RefreshTokenResponsePayload = dict[str, Any]
 
 
-class AuthorisedSessionPayload(AccessTokenResponsePayload):
+class AuthorisedSessionPayload(TypedDict):
+    token: AccessTokenResponsePayload | RefreshTokenResponsePayload
+    expires_at: float
     created_at: float
-
-
-class AuthorisedSessionPayloadWithExtras(AuthorisedSessionPayload):
     extras: dict[str, Any]
 
 
 __all__ = (
     "AuthorisedSession",
     "AuthorisedSessionPayload",
-    "AuthorisedSessionPayloadWithExtras",
     "Client",
 )
 
@@ -520,8 +518,7 @@ class AuthorisedSession(
         data: AccessToken
         | AccessTokenResponsePayload
         | RefreshTokenResponsePayload
-        | AuthorisedSessionPayload
-        | AuthorisedSessionPayloadWithExtras,
+        | AuthorisedSessionPayload,
         *,
         identifier: str | None = utils.NotSet,
         ignore_existing_identifier: bool = False,
@@ -585,9 +582,13 @@ class AuthorisedSession(
         if isinstance(data, AccessToken):
             token = data
         else:
-            extras_ = data.pop("extras", {})  # type: ignore
-            created_at_timestamp = data.get("created_at")
-            token = AccessToken.from_dict(client, data)
+            if "token" in data:
+                token_data = data["token"]
+                created_at_timestamp = data.get("created_at")
+                extras_ = data.get("extras", {})
+                token = AccessToken.from_dict(client, token_data)
+            else:
+                token = AccessToken.from_dict(client, data)
 
         if extras is not utils.NotSet:
             extras_ |= extras
@@ -613,27 +614,9 @@ class AuthorisedSession(
 
         return inst
 
-    @overload
     def to_dict(
-        self, *, include_extras: Literal[True] = ...
-    ) -> AuthorisedSessionPayloadWithExtras: ...
-
-    @overload
-    def to_dict(
-        self, *, include_extras: Literal[False] = ...
-    ) -> AuthorisedSessionPayload: ...
-
-    @overload
-    def to_dict(
-        self, *, include_extras: bool = ...
-    ) -> AuthorisedSessionPayload | AuthorisedSessionPayloadWithExtras: ...
-
-    @overload
-    def to_dict(self) -> AuthorisedSessionPayload: ...
-
-    def to_dict(
-        self, *, include_extras: bool = False, include_token_created_at: bool = True
-    ) -> AuthorisedSessionPayload | AuthorisedSessionPayloadWithExtras:
+        self,
+    ) -> AuthorisedSessionPayload:
         """Serialize the session's current token data.
 
         You can pass this to :meth:`AuthorisedSession.from_token` to create a
@@ -642,16 +625,14 @@ class AuthorisedSession(
         Returns
         -------
         :class:`dict`
-            Dictionary containing the current OAuth2 token payload.
+            Dictionary containing the session's current token data, and optionally the extras and creation timestamp.
         """
-        res = self.token.to_dict()
-
-        if include_extras:
-            res |= {"extras": self.extras}
-
-        if include_token_created_at:
-            res |= {"created_at": self.token._created_at.timestamp()}
-        return res  # type: ignore
+        return {
+            "token": self.token.to_dict(),
+            "expires_at": self.token.expires_at.timestamp(),
+            "created_at": self.token.created_at.timestamp(),
+            "extras": self.extras,
+        }
 
     async def close(self) -> None:
         """Close this session from the client's perspective.

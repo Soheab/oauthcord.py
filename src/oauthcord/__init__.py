@@ -29,7 +29,6 @@ __all__ = (
     "AttachmentFlags",
     "AuthorisedSession",
     "AuthorisedSessionPayload",
-    "AuthorisedSessionPayloadWithExtras",
     "AvatarDecorationData",
     "BadRequest",
     "BaseChannel",
