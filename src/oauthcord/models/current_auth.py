@@ -137,5 +137,5 @@ class CurrentInformation(
 
     @property
     def expires_at(self) -> datetime.datetime:
-        """Return the calculated expiration timestamp."""
+        """:class:`datetime.datetime`: The time at which the current access token will expire."""
         return self._expires

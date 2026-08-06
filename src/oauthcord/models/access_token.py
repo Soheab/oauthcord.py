@@ -46,6 +46,7 @@ class AccessToken(
         "refresh_token",
         "_scope",
         "_expires_in",
+        "_created_at",
     )
 
     @override
@@ -59,12 +60,16 @@ class AccessToken(
         self._scope: str = data["scope"]
         self._expires_in: int = data["expires_in"]
 
+        self._created_at: datetime.datetime = datetime.datetime.now(datetime.UTC)
+
     @classmethod
     @override
     def from_dict(  # type: ignore
         cls,
         client: Client | AuthorisedSession,
         data: AccessTokenResponsePayload | RefreshTokenResponsePayload,
+        *,
+        created_at: datetime.datetime | None = None,
     ) -> AccessToken:
         """Create an AccessToken instance from a dictionary payload.
 
@@ -74,6 +79,10 @@ class AccessToken(
             The client or authorised session to get the HTTP client from.
         data: :class:`dict`
             The raw access token response data as returned by Discord.
+        created_at: :class:`datetime.datetime` | None
+            The time when the token was created. If not provided, it will default to the current time.
+
+            See :attr:`created_at` for more information.
 
         Returns
         -------
@@ -93,24 +102,45 @@ class AccessToken(
             "expires_in": self._expires_in,
         }
 
-    def expires_at(self) -> datetime.datetime:
-        """:class:`datetime.datetime`: When the token expires, calculated from
-        the current time and the `expires_in` value.
+    @property
+    def expires_in(self) -> int:
+        """:class:`int`: The number of seconds until the token expires."""
+        return self._expires_in
+
+    @property
+    def created_at(self) -> datetime.datetime:
+        """:class:`datetime.datetime`: When this object was created, representing when the token was obtained.
+
+        This is used to calculate the expiration time of the token.
+        This is also reset when the token is refreshed, so it always represents the time of the most recent token.
+
+        This will NOT be accurate if you manually create an AccessToken instance using :meth:`from_dict` without
+        specifying the `created_at` parameter, or :meth:`__init__`,  as it will be set to the current
+        time at the moment of creation.
+
+        This will be accurate if this object was received via :attr:`AuthorisedSession.token` as
+        :meth:`AuthorisedSession.from_dict` will fetch the current authorization information and set this value to the
+        correct time.
         """
-        return datetime.datetime.now(datetime.UTC) + datetime.timedelta(
-            seconds=self._expires_in
-        )
+        return self._created_at
+
+    def expires_at(self) -> datetime.datetime:
+        """:class:`datetime.datetime`: When the token expires.
+
+        This is calculated by adding the :attr:`expires_in` value to :attr:`created_at`.
+        """
+        return self._created_at + datetime.timedelta(seconds=self._expires_in)
 
     def is_expired(self) -> bool:
         """:class:`bool`: Whether the token is expired based on the current time
-        and the `expires_at` value.
+        and the :attr:`expires_at` value.
         """
         return self.expires_at() <= datetime.datetime.now(datetime.UTC)
 
     @property
     def scopes(self) -> list[Scope | UnknownScope]:
         """:class:`list[Scope | UnknownScope]`: The list of scopes associated with this token, parsed
-        from the `scope` string.
+        from the :attr:`scope` string.
         """
         return Scope.from_list(self._scope.split())
 

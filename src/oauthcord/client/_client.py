@@ -190,8 +190,8 @@ class Client:
             Session initialized with the exchanged access token.
         """
         res = await self.http.exchange_token(code, redirect_uri=self._redirect_uri)
-        session = AuthorisedSession.from_token(
-            self, res, identifier=session_identifier, extras=extras
+        session = await AuthorisedSession._initialise(
+            client=self, data=res, identifier=session_identifier, extras=extras
         )
         return session
 
@@ -467,6 +467,27 @@ class AuthorisedSession(
     def __repr__(self) -> str:
         return f"<AuthorisedSession identifier={self._identifier!r}>"
 
+    @classmethod
+    async def _initialise(
+        cls,
+        client: Client,
+        *,
+        data: AccessTokenResponsePayload | RefreshTokenResponsePayload,
+        identifier: str | None = utils.NotSet,
+        extras: dict[str, Any] = utils.NotSet,
+    ) -> Self:
+        # fmt: off
+        token = AccessToken.from_dict(client, data)
+        self = cls(client, token=token, extras=extras)
+        current_auth = await self.get_current_authorization_information()
+        token._created_at = current_auth.expires_at
+        # fmt: on
+
+        if identifier is not None and client._store_session:
+            client.add_session(self, identifier=identifier)
+
+        return self
+
     @property
     def http(self) -> OAuth2HTTPClient:
         """Parent client's internal HTTP client.
@@ -490,7 +511,7 @@ class AuthorisedSession(
         return self._identifier
 
     @classmethod
-    def from_dict(
+    async def from_dict(
         cls,
         client: Client,
         data: AccessToken
@@ -508,6 +529,9 @@ class AuthorisedSession(
 
         The token can be either a raw response payload or an already parsed
         :class:`AccessToken` object.
+
+        This will also set the :attr:`.current_authorization_information` property to get the
+        current token's expiration date and time.
 
         If ``store_session`` is enabled on the client, the session is stored in memory
         by default unless ``identifier`` is explicitly set to :data:`None`.
@@ -571,6 +595,8 @@ class AuthorisedSession(
                 return existing_session
 
         inst = cls(client, token=token, extras=extras_)
+        current_auth = await inst.get_current_authorization_information()
+        token._created_at = current_auth.expires_at
 
         if identifier is not None and client._store_session:
             client.add_session(inst, identifier=identifier)
@@ -669,9 +695,8 @@ class AuthorisedSession(
         await self.token.refresh(check_expired=check_expired)
 
         if refreshed:
-            self.current_authorization_information = (
-                await self.get_current_authorization_information()
-            )
+            current_auth = await self.get_current_authorization_information()
+            self.token._created_at = current_auth.expires_at
 
         return self.token
 
