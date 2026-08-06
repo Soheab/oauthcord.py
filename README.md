@@ -92,7 +92,7 @@ temporary_session = await client.exchange_token(
 You can also manage sessions manually:
 
 ```python
-session = AuthorisedSession.from_token(client, token_data)
+session = await AuthorisedSession.from_dict(client, token_data)
 client.add_session(session, identifier="internal-user-id")
 
 stored = client.get_session("internal-user-id")
@@ -115,7 +115,7 @@ Closing a session removes it from the client's registry. If the client was creat
 await session.close()
 ```
 
-The registry is process-local and in-memory only. Persist `session.to_dict()` yourself if sessions must survive restarts, then recreate them later with `AuthorisedSession.from_token(client, token_data, identifier="internal-user-id")` while `store_session=True` is enabled on the client.
+The registry is process-local and in-memory only. Persist `session.to_dict()` yourself if sessions must survive restarts, then recreate them later with `await AuthorisedSession.from_dict(client, token_data, identifier="internal-user-id")` while `store_session=True` is enabled on the client.
 
 ## Quick start
 
