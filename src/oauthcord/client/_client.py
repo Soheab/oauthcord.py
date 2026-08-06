@@ -4,7 +4,7 @@ import datetime
 import urllib.parse
 import uuid
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Literal, Self, TypedDict, overload
+from typing import TYPE_CHECKING, Any, Literal, Self, TypedDict
 
 import aiohttp
 
@@ -448,7 +448,7 @@ class AuthorisedSession(
         client: Client,
         *,
         token: AccessToken,
-        **extras: Any,
+        extras: dict[str, Any] = utils.NotSet,
     ) -> None:
         self._identifier: str | None = None
 
@@ -457,7 +457,7 @@ class AuthorisedSession(
 
         self._current_authorization_information: CurrentInformation | None = None
 
-        self.extras: dict[str, Any] = extras
+        self.extras: dict[str, Any] = dict(extras) if extras else {}
 
     def __enter__(self) -> Self:
         return self
@@ -566,7 +566,11 @@ class AuthorisedSession(
             Optional extra data to associate with the session.
 
             This can also be included in the ``data`` dict under the key ``"extras"``, or
-            passed separately to this parameter.
+            passed separately to this parameter. If both are given, they are merged,
+            with this parameter taking precedence on conflicting keys.
+
+            If an existing session is returned for ``identifier``, these are merged into
+            that session's existing extras rather than replacing them.
 
             This is never used by the library itself, but can be used to store arbitrary data
             associated with the session, such as user IDs, guild IDs, or other metadata.
@@ -585,19 +589,21 @@ class AuthorisedSession(
             if "token" in data:
                 token_data = data["token"]
                 created_at_timestamp = data.get("created_at")
-                extras_ = data.get("extras", {})
+                extras_data = data.get("extras", {})
+                extras_.update(extras_data)
                 token = AccessToken.from_dict(client, token_data)
             else:
                 token = AccessToken.from_dict(client, data)
 
         if extras is not utils.NotSet:
-            extras_ |= extras
+            extras_.update(extras)
 
         if identifier not in (utils.NotSet, None) and not ignore_existing_identifier:
             existing_session = client.get_session(identifier)
             if existing_session is not None:
                 if replace_token_of_existing_session:
                     existing_session.token = token
+                existing_session.extras.update(extras_)
                 return existing_session
 
         inst = cls(client, token=token, extras=extras_)
