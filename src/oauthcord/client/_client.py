@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 import urllib.parse
 import uuid
 from collections.abc import Sequence
@@ -36,7 +37,9 @@ else:
     AccessTokenResponsePayload = dict[str, Any]
     RefreshTokenResponsePayload = dict[str, Any]
 
-AuthorisedSessionPayload = AccessTokenResponsePayload
+
+class AuthorisedSessionPayload(AccessTokenResponsePayload):
+    created_at: float
 
 
 class AuthorisedSessionPayloadWithExtras(AuthorisedSessionPayload):
@@ -577,11 +580,13 @@ class AuthorisedSession(
         :class:`AuthorisedSession`
             Session initialized with the exchanged access token.
         """
+        created_at_timestamp = None
         extras_: dict[str, Any] = {}
         if isinstance(data, AccessToken):
             token = data
         else:
             extras_ = data.pop("extras", {})  # type: ignore
+            created_at_timestamp = data.get("created_at")
             token = AccessToken.from_dict(client, data)
 
         if extras is not utils.NotSet:
@@ -595,8 +600,13 @@ class AuthorisedSession(
                 return existing_session
 
         inst = cls(client, token=token, extras=extras_)
-        current_auth = await inst.get_current_authorization_information()
-        token._created_at = current_auth.expires_at
+        if created_at_timestamp is not None:
+            token._created_at = datetime.datetime.fromtimestamp(
+                created_at_timestamp, tz=datetime.UTC
+            )
+        else:
+            current_auth = await inst.get_current_authorization_information()
+            token._created_at = current_auth.expires_at
 
         if identifier is not None and client._store_session:
             client.add_session(inst, identifier=identifier)
@@ -622,7 +632,7 @@ class AuthorisedSession(
     def to_dict(self) -> AuthorisedSessionPayload: ...
 
     def to_dict(
-        self, *, include_extras: bool = False
+        self, *, include_extras: bool = False, include_token_created_at: bool = True
     ) -> AuthorisedSessionPayload | AuthorisedSessionPayloadWithExtras:
         """Serialize the session's current token data.
 
@@ -635,8 +645,12 @@ class AuthorisedSession(
             Dictionary containing the current OAuth2 token payload.
         """
         res = self.token.to_dict()
+
         if include_extras:
             res |= {"extras": self.extras}
+
+        if include_token_created_at:
+            res |= {"created_at": self.token._created_at.timestamp()}
         return res  # type: ignore
 
     async def close(self) -> None:
