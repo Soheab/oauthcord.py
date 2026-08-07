@@ -60,7 +60,6 @@ class GuildMember(BaseModelWithSession["GuildMemberResponse"]):
         data: GuildMemberResponse,
         guild_id: int | None = None,
     ) -> None:
-        """Initialize this object from explicit constructor arguments."""
         self.guild_id: int | None = guild_id
         super().__init__(session=session, data=data)
 

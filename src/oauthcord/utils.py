@@ -54,6 +54,7 @@ def _construct_model[T: BaseModel[Any, Any]](  # pyright: ignore[reportUnusedFun
     /,
     *,
     data: Any,
+    **extra_kwargs: Any,
 ) -> T: ...
 
 
@@ -64,6 +65,7 @@ def _construct_model[T: BaseModelWithHTTP[Any, Any]](  # pyright: ignore[reportU
     *,
     data: Any,
     http: OAuth2HTTPClient,
+    **extra_kwargs: Any,
 ) -> T: ...
 
 
@@ -74,6 +76,7 @@ def _construct_model[T: BaseModelWithSession[Any, Any]](  # pyright: ignore[repo
     *,
     data: Any,
     session: AuthorisedSession | _AuthorisedSessionProto,
+    **extra_kwargs: Any,
 ) -> T: ...
 
 
@@ -88,14 +91,15 @@ def _construct_model(  # pyright: ignore[reportUnusedFunction]
     data: Any,
     session: AuthorisedSession | _AuthorisedSessionProto | None = None,
     http: OAuth2HTTPClient | None = None,
+    **extra_kwargs: Any,
 ) -> BaseModel[Any, Any]:
-    extra_kwargs: dict[str, Any] = {}
+    extra_kwargs_: dict[str, Any] = extra_kwargs or {}
     if session is not None:
-        extra_kwargs["session"] = session
+        extra_kwargs_["session"] = session
     if http is not None:
-        extra_kwargs["http"] = http
+        extra_kwargs_["http"] = http
 
-    return kls(data=data, **extra_kwargs)
+    return kls(data=data, **extra_kwargs_)
 
 
 def maybe_available[T: Any, D: Any = None](

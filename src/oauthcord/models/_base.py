@@ -342,19 +342,20 @@ class BaseModelWithSession[D: Any, R: Any = None](BaseModel[D, R]):
         *,
         optional: bool = False,
         possible_keys: _PossibleKeys = None,
+        **extra_kwargs: Any,
     ) -> BaseModel[Any, Any] | None:
-        extra_kwargs: dict[str, Any] = {}
+        extra_kwargs_: dict[str, Any] = {}
         if issubclass(cls, BaseModelWithHTTP):  # pyright: ignore[reportArgumentType]
-            extra_kwargs["http"] = self._session.client.http
+            extra_kwargs_["http"] = self._session.client.http
         elif issubclass(cls, BaseModelWithSession):  # pyright: ignore[reportArgumentType]
-            extra_kwargs["session"] = self._session
+            extra_kwargs_["session"] = self._session
 
         return self._construct_other(
             cls,  # pyright: ignore[reportArgumentType]
             data,
             optional=optional,
             possible_keys=possible_keys,
-            extra_kwargs=extra_kwargs,
+            extra_kwargs=extra_kwargs_,
         )
 
     def get_asset[**P, AR](
