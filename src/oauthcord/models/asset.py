@@ -318,6 +318,7 @@ class Asset:
     def size(self, value: int) -> None:
         self._size = value
 
-    def is_animated(self) -> bool:
+    @property
+    def animated(self) -> bool:
         """:class:`bool`: Returns whether the asset is animated."""
         return self._animated
