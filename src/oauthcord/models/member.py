@@ -7,7 +7,12 @@ from ..utils import convert_snowflake, iso_to_datetime
 from ._base import BaseModelWithSession
 from .asset import Asset
 from .flags import MemberFlags, Permissions
-from .user import DisplayNameStyle, GuildMemberWithUser
+from .user import (
+    DisplayNameStyle,
+    GuildMemberWithUser,
+    AvatarDecorationData,
+    Collectible,
+)
 
 if TYPE_CHECKING:
     from ..client._client import AuthorisedSession
@@ -43,6 +48,8 @@ class GuildMember(BaseModelWithSession["GuildMemberResponse"]):
         "role_ids",
         "unusual_dm_activity_until",
         "user",
+        "avatar_decoration_data",
+        "collectibles",
     )
 
     @override
@@ -103,7 +110,23 @@ class GuildMember(BaseModelWithSession["GuildMemberResponse"]):
         self.bio: str | None = data.get("bio")
 
         raw_permissions = data.get("permissions")
-        self.permissions: Permissions = Permissions(int(raw_permissions))
+        self.permissions: Permissions = (
+            Permissions(int(raw_permissions))
+            if raw_permissions is not None
+            else Permissions(0)
+        )
+        self.avatar_decoration_data: AvatarDecorationData | None = (
+            self._initialize_other(
+                AvatarDecorationData,
+                data,
+                possible_keys="avatar_decoration_data",
+                optional=True,
+            )
+        )
+
+        self.collectibles: Collectible | None = self._initialize_other(
+            Collectible, data, possible_keys="collectibles", optional=True
+        )
 
 
 class ThreadMember(BaseModelWithSession["ThreadMemberResponse"]):
