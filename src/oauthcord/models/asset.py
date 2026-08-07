@@ -228,6 +228,22 @@ class Asset:
         )
 
     @classmethod
+    def _from_guild_member_banner(
+        cls, http: OAuth2HTTPClient, guild_id: int, member_id: int, banner_hash: str
+    ) -> Self:
+        animated = banner_hash.startswith("a_")
+        ext = "gif" if animated else "png"
+        size = 1024
+        return cls(
+            http,
+            url=f"{cls.BASE}/guilds/{guild_id}/users/{member_id}/banners/{banner_hash}.{ext}?size={size}",
+            key=banner_hash,
+            animated=animated,
+            extension=ext,
+            size=size,
+        )
+
+    @classmethod
     def _from_primary_guild(
         cls, http: OAuth2HTTPClient, guild_id: int, icon_hash: str
     ) -> Self:

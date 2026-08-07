@@ -80,8 +80,8 @@ class GuildMember(BaseModelWithSession["GuildMemberResponse"]):
 
         banner_hash = data.get("banner")
         self.banner: Asset | None = (
-            self.get_asset(Asset._from_user_banner, self.user.id, banner_hash)
-            if banner_hash
+            self.get_asset(Asset._from_guild_member_banner, self.guild_id, self.user.id, banner_hash)
+            if banner_hash and self.guild_id is not None
             else None
         )
 
