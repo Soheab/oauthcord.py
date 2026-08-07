@@ -12,7 +12,7 @@ from typing import (
     overload,
 )
 
-from ..utils import _construct_model
+from ..utils import NotSet, _construct_model
 
 if TYPE_CHECKING:
     from ..client._client import AuthorisedSession
@@ -102,32 +102,32 @@ class BaseModel[D: Any, R: Any = None]:
         extra_kwargs: dict[str, Any] | None = None,
     ) -> BaseModel[Any, Any] | None:
         if not data:
-            if optional:
-                return None
-            raise ValueError(f"Data for {cls.__name__} is required but got None")
+            if not optional:
+                raise ValueError(
+                    f"Data for {cls.__name__} is required but got {data!r}"
+                )
+
+            return None
 
         if extra_kwargs is None:
             extra_kwargs = {}
 
-        if possible_keys is not None:
-            if isinstance(possible_keys, str):
-                possible_keys = (possible_keys,)
+        if not possible_keys:
+            return _construct_model(cls, data=data, **extra_kwargs)
 
-            for key in possible_keys:
-                try:
-                    value = data[key]
-                    if not value:
-                        if optional:
-                            return None
-                        raise ValueError(
-                            f"Data for {cls.__name__} under key '{key}' is required but got {value!r}"
-                        )
-                except KeyError:
-                    continue
-                else:
-                    return _construct_model(cls, data=value, **extra_kwargs)
+        if isinstance(possible_keys, str):
+            possible_keys = (possible_keys,)
 
-        return _construct_model(cls, data=data, **extra_kwargs)
+        for key in possible_keys:
+            value = data.get(key, NotSet)
+            if value is NotSet:
+                if optional:
+                    return None
+                raise ValueError(
+                    f"Data for {cls.__name__} under key {key!r} is required but got {value!r}"
+                )
+
+            return _construct_model(cls, data=value, **extra_kwargs)
 
     @overload
     def _initialize_other(
