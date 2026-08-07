@@ -125,12 +125,21 @@ def convert_snowflake(
 
 
 def convert_snowflake(data: Any, key: str, always_available: bool = True) -> int | None:
-    try:
-        return int(data[key])
-    except (KeyError, TypeError, ValueError):
+    value = data.get(key, NotSet)
+    if value is NotSet:
         if always_available:
-            raise TypeError(f"Missing or invalid snowflake for key: {key}")
+            raise TypeError(
+                f"Cannot get key {key!r} to convert to snowflake: key not found in data"
+            )
+
         return None
+
+    try:
+        return int(value)
+    except (ValueError, TypeError):
+        raise TypeError(
+            f"Cannot convert value of {key!r}: {value!r} to snowflake: value is not an int or str"
+        )
 
 
 @overload
