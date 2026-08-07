@@ -93,13 +93,12 @@ def _construct_model(  # pyright: ignore[reportUnusedFunction]
     http: OAuth2HTTPClient | None = None,
     **extra_kwargs: Any,
 ) -> BaseModel[Any, Any]:
-    extra_kwargs_: dict[str, Any] = extra_kwargs or {}
     if session is not None:
-        extra_kwargs_["session"] = session
+        extra_kwargs["session"] = session
     if http is not None:
-        extra_kwargs_["http"] = http
+        extra_kwargs["http"] = http
 
-    return kls(data=data, **extra_kwargs_)
+    return kls(data=data, **extra_kwargs)
 
 
 def maybe_available[T: Any, D: Any = None](

@@ -140,6 +140,7 @@ class BaseModel[D: Any, R: Any = None]:
         *,
         optional: Literal[False] = ...,
         possible_keys: _PossibleKeys = ...,
+        **extra_kwargs: Any,
     ) -> _BaseModelT_co: ...
 
     @overload
@@ -151,6 +152,7 @@ class BaseModel[D: Any, R: Any = None]:
         *,
         optional: Literal[True],
         possible_keys: _PossibleKeys = ...,
+        **extra_kwargs: Any,
     ) -> _BaseModelT_co | None: ...
 
     def _initialize_other(
@@ -161,12 +163,14 @@ class BaseModel[D: Any, R: Any = None]:
         *,
         optional: bool = False,
         possible_keys: _PossibleKeys = None,
+        **extra_kwargs: Any,
     ) -> BaseModel[Any, Any] | None:
         return self._construct_other(
             cls,  # pyright: ignore[reportArgumentType]
             data,
             optional=optional,
             possible_keys=possible_keys,
+            extra_kwargs=extra_kwargs,
         )
 
 
@@ -186,6 +190,7 @@ class BaseModelWithHTTP[D: Any, R: Any = None](BaseModel[D, R]):
         *,
         optional: Literal[False] = ...,
         possible_keys: _PossibleKeys = ...,
+        **extra_kwargs: Any,
     ) -> _BaseModelT_co: ...
 
     @overload
@@ -197,6 +202,7 @@ class BaseModelWithHTTP[D: Any, R: Any = None](BaseModel[D, R]):
         *,
         optional: Literal[True],
         possible_keys: _PossibleKeys = ...,
+        **extra_kwargs: Any,
     ) -> _BaseModelT_co | None: ...
 
     @overload
@@ -208,6 +214,7 @@ class BaseModelWithHTTP[D: Any, R: Any = None](BaseModel[D, R]):
         *,
         optional: Literal[False] = ...,
         possible_keys: _PossibleKeys = ...,
+        **extra_kwargs: Any,
     ) -> _HTTPBaseModelT_co: ...
 
     @overload
@@ -219,6 +226,7 @@ class BaseModelWithHTTP[D: Any, R: Any = None](BaseModel[D, R]):
         *,
         optional: Literal[True],
         possible_keys: _PossibleKeys = ...,
+        **extra_kwargs: Any,
     ) -> _HTTPBaseModelT_co | None: ...
 
     def _initialize_other(
@@ -232,8 +240,8 @@ class BaseModelWithHTTP[D: Any, R: Any = None](BaseModel[D, R]):
         *,
         optional: bool = False,
         possible_keys: _PossibleKeys = None,
+        **extra_kwargs: Any,
     ) -> BaseModel[Any, Any] | None:
-        extra_kwargs: dict[str, Any] = {}
         if issubclass(cls, BaseModelWithHTTP):  # pyright: ignore[reportArgumentType]
             extra_kwargs["http"] = self._http
 
@@ -273,6 +281,7 @@ class BaseModelWithSession[D: Any, R: Any = None](BaseModel[D, R]):
         *,
         optional: Literal[False] = ...,
         possible_keys: _PossibleKeys = ...,
+        **extra_kwargs: Any,
     ) -> _BaseModelT_co: ...
 
     @overload
@@ -284,6 +293,7 @@ class BaseModelWithSession[D: Any, R: Any = None](BaseModel[D, R]):
         *,
         optional: Literal[True],
         possible_keys: _PossibleKeys = ...,
+        **extra_kwargs: Any,
     ) -> _BaseModelT_co | None: ...
 
     @overload
@@ -295,6 +305,7 @@ class BaseModelWithSession[D: Any, R: Any = None](BaseModel[D, R]):
         *,
         optional: Literal[False] = ...,
         possible_keys: _PossibleKeys = ...,
+        **extra_kwargs: Any,
     ) -> _HTTPBaseModelT_co: ...
 
     @overload
@@ -306,6 +317,7 @@ class BaseModelWithSession[D: Any, R: Any = None](BaseModel[D, R]):
         *,
         optional: Literal[True],
         possible_keys: _PossibleKeys = ...,
+        **extra_kwargs: Any,
     ) -> _HTTPBaseModelT_co | None: ...
 
     @overload
@@ -317,6 +329,7 @@ class BaseModelWithSession[D: Any, R: Any = None](BaseModel[D, R]):
         *,
         optional: Literal[False] = ...,
         possible_keys: _PossibleKeys = ...,
+        **extra_kwargs: Any,
     ) -> _SessionBaseModelT_co: ...
 
     @overload
@@ -328,6 +341,7 @@ class BaseModelWithSession[D: Any, R: Any = None](BaseModel[D, R]):
         *,
         optional: Literal[True],
         possible_keys: _PossibleKeys = ...,
+        **extra_kwargs: Any,
     ) -> _SessionBaseModelT_co | None: ...
 
     def _initialize_other(
@@ -344,18 +358,17 @@ class BaseModelWithSession[D: Any, R: Any = None](BaseModel[D, R]):
         possible_keys: _PossibleKeys = None,
         **extra_kwargs: Any,
     ) -> BaseModel[Any, Any] | None:
-        extra_kwargs_: dict[str, Any] = {}
         if issubclass(cls, BaseModelWithHTTP):  # pyright: ignore[reportArgumentType]
-            extra_kwargs_["http"] = self._session.client.http
+            extra_kwargs["http"] = self._session.client.http
         elif issubclass(cls, BaseModelWithSession):  # pyright: ignore[reportArgumentType]
-            extra_kwargs_["session"] = self._session
+            extra_kwargs["session"] = self._session
 
         return self._construct_other(
             cls,  # pyright: ignore[reportArgumentType]
             data,
             optional=optional,
             possible_keys=possible_keys,
-            extra_kwargs=extra_kwargs_,
+            extra_kwargs=extra_kwargs,
         )
 
     def get_asset[**P, AR](
