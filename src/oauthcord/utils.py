@@ -125,8 +125,8 @@ def convert_snowflake(
 
 
 def convert_snowflake(data: Any, key: str, always_available: bool = True) -> int | None:
-    value = data.get(key, NotSet)
-    if value is NotSet:
+    value = data.get(key)
+    if not value:
         if always_available:
             raise TypeError(
                 f"Cannot get key {key!r} to convert to snowflake: key not found in data"
