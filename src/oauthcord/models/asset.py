@@ -21,22 +21,27 @@ class Asset:
         self,
         http: OAuth2HTTPClient,
         *,
-        url: str,
+        path: str,
         key: str,
-        extension: str,
         size: int,
-        animated: bool = False,
+        animated: bool | None = None,
+        extension: str | None = None,
+        sized: bool = True,
     ) -> None:
         """Initialize this object from explicit constructor arguments."""
         self._http: OAuth2HTTPClient = http
-        self._url: str = url
-        self._animated: bool = animated
-        self._extension: str = extension
+        self._animated: bool = key.startswith("a_") if animated is None else animated
+        self._extension: str = extension or ("webp" if self._animated else "png")
         self._size: int = size
         self._key: str = key
 
+        self._url: str = f"{self.BASE}/{path}.{self._extension}"
+        if sized:
+            query = f"size={size}" + ("&animated=true" if self._animated else "")
+            self._url += f"?{query}"
+
     async def read(self) -> bytes:
-        """Public method for working with this model."""
+        """:class:`bytes`: Read the asset from the CDN and return its bytes."""
         return await self._http.get_from_cdn(self.url)
 
     async def save(
@@ -58,91 +63,66 @@ class Asset:
 
     @classmethod
     def _from_default_avatar(cls, http: OAuth2HTTPClient, index: int) -> Self:
-        ext: str = "png"
-        size = 1024
         return cls(
             http,
-            url=f"{cls.BASE}/embed/avatars/{index}.{ext}?size={size}",
+            path=f"embed/avatars/{index}",
             key=str(index),
-            animated=False,
-            size=size,
-            extension=ext,
+            size=1024,
         )
 
     @classmethod
     def _from_avatar(cls, http: OAuth2HTTPClient, user_id: int, avatar: str) -> Self:
-        animated = avatar.startswith("a_")
-        ext = "gif" if animated else "png"
-        size = 1024
         return cls(
             http,
-            url=f"{cls.BASE}/avatars/{user_id}/{avatar}.{ext}?size={size}",
+            path=f"avatars/{user_id}/{avatar}",
             key=avatar,
-            animated=animated,
-            extension=ext,
-            size=size,
+            size=1024,
         )
 
     @classmethod
     def _from_guild_avatar(
         cls, http: OAuth2HTTPClient, guild_id: int, member_id: int, avatar: str
     ) -> Self:
-        animated = avatar.startswith("a_")
-        ext = "gif" if animated else "png"
-        size = 1024
         return cls(
             http,
-            url=f"{cls.BASE}/guilds/{guild_id}/users/{member_id}/avatars/{avatar}.{ext}?size={size}",
+            path=f"guilds/{guild_id}/users/{member_id}/avatars/{avatar}",
             key=avatar,
-            animated=animated,
-            extension=ext,
-            size=size,
+            size=1024,
         )
 
     @classmethod
     def _from_guild_banner(
         cls, http: OAuth2HTTPClient, guild_id: int, member_id: int, banner: str
     ) -> Self:
-        animated = banner.startswith("a_")
-        ext = "gif" if animated else "png"
-        size = 1024
         return cls(
             http,
-            url=f"{cls.BASE}/guilds/{guild_id}/users/{member_id}/banners/{banner}.{ext}?size={size}",
+            path=f"guilds/{guild_id}/users/{member_id}/banners/{banner}",
             key=banner,
-            animated=animated,
-            extension=ext,
-            size=size,
+            size=1024,
         )
 
     @classmethod
     def _from_avatar_decoration(
         cls, http: OAuth2HTTPClient, avatar_decoration: str
     ) -> Self:
-        ext = "png"
-        size = 96
         return cls(
             http,
-            url=f"{cls.BASE}/avatar-decoration-presets/{avatar_decoration}.png?size={size}",
+            path=f"avatar-decoration-presets/{avatar_decoration}",
             key=avatar_decoration,
             animated=True,
-            extension=ext,
-            size=size,
+            extension="png",
+            size=96,
         )
 
     @classmethod
     def _from_icon(
         cls, http: OAuth2HTTPClient, object_id: int, icon_hash: str, path: str
     ) -> Self:
-        ext = "png"
-        size = 1024
         return cls(
             http,
-            url=f"{cls.BASE}/{path}-icons/{object_id}/{icon_hash}.{ext}?size={size}",
+            path=f"{path}-icons/{object_id}/{icon_hash}",
             key=icon_hash,
-            animated=False,
-            extension=ext,
-            size=size,
+            size=1024,
         )
 
     @classmethod
@@ -153,109 +133,79 @@ class Asset:
         icon_hash: str,
         asset_type: Literal["icon", "cover_image"],
     ) -> Self:
-        ext = "png"
-        size = 1024
         return cls(
             http,
-            url=f"{cls.BASE}/app-icons/{object_id}/{asset_type}.png?size={size}",
+            path=f"app-icons/{object_id}/{asset_type}",
             key=icon_hash,
             animated=False,
-            extension=ext,
-            size=size,
+            size=1024,
         )
 
     @classmethod
     def _from_cover_image(
         cls, http: OAuth2HTTPClient, object_id: int, cover_image_hash: str
     ) -> Self:
-        ext = "png"
-        size = 1024
         return cls(
             http,
-            url=f"{cls.BASE}/app-assets/{object_id}/store/{cover_image_hash}.{ext}?size={size}",
+            path=f"app-assets/{object_id}/store/{cover_image_hash}",
             key=cover_image_hash,
-            animated=False,
-            extension=ext,
-            size=size,
+            size=1024,
         )
 
     @classmethod
     def _from_guild_image(
         cls, http: OAuth2HTTPClient, guild_id: int, image: str, path: str
     ) -> Self:
-        animated = image.startswith("a_")
-        ext = "gif" if animated else "png"
-        size = 1024
         return cls(
             http,
-            url=f"{cls.BASE}/{path}/{guild_id}/{image}.{ext}?size={size}",
+            path=f"{path}/{guild_id}/{image}",
             key=image,
-            animated=animated,
-            extension=ext,
-            size=size,
+            size=1024,
         )
 
     @classmethod
     def _from_guild_icon(
         cls, http: OAuth2HTTPClient, guild_id: int, icon_hash: str
     ) -> Self:
-        animated = icon_hash.startswith("a_")
-        ext = "gif" if animated else "png"
-        size = 1024
         return cls(
             http,
-            url=f"{cls.BASE}/icons/{guild_id}/{icon_hash}.{ext}?size={size}",
+            path=f"icons/{guild_id}/{icon_hash}",
             key=icon_hash,
-            animated=animated,
-            extension=ext,
-            size=size,
+            size=1024,
         )
 
     @classmethod
     def _from_user_banner(
         cls, http: OAuth2HTTPClient, user_id: int, banner_hash: str
     ) -> Self:
-        animated = banner_hash.startswith("a_")
-        ext = "gif" if animated else "png"
-        size = 512
         return cls(
             http,
-            url=f"{cls.BASE}/banners/{user_id}/{banner_hash}.{ext}?size={size}",
+            path=f"banners/{user_id}/{banner_hash}",
             key=banner_hash,
-            animated=animated,
-            extension=ext,
-            size=size,
+            size=512,
         )
 
     @classmethod
     def _from_guild_member_banner(
         cls, http: OAuth2HTTPClient, guild_id: int, member_id: int, banner_hash: str
     ) -> Self:
-        animated = banner_hash.startswith("a_")
-        ext = "gif" if animated else "png"
-        size = 1024
         return cls(
             http,
-            url=f"{cls.BASE}/guilds/{guild_id}/users/{member_id}/banners/{banner_hash}.{ext}?size={size}",
+            path=f"guilds/{guild_id}/users/{member_id}/banners/{banner_hash}",
             key=banner_hash,
-            animated=animated,
-            extension=ext,
-            size=size,
+            size=1024,
         )
 
     @classmethod
     def _from_primary_guild(
         cls, http: OAuth2HTTPClient, guild_id: int, icon_hash: str
     ) -> Self:
-        ext = "png"
-        size = 64
         return cls(
             http,
-            url=f"{cls.BASE}/guild-tag-badges/{guild_id}/{icon_hash}.{ext}?size={size}",
+            path=f"guild-tag-badges/{guild_id}/{icon_hash}",
             key=icon_hash,
             animated=False,
-            extension=ext,
-            size=size,
+            size=64,
         )
 
     @classmethod
@@ -263,15 +213,15 @@ class Asset:
         cls, http: OAuth2HTTPClient, asset: str, animated: bool = False
     ) -> Self:
         ext = "webm" if animated else "png"
-        size = 1024
-        name = f"static.{ext}" if not animated else f"asset.{ext}"
+        name = "asset" if animated else "static"
         return cls(
             http,
-            url=f"{cls.BASE}/assets/collectibles/{asset}{name}",
+            path=f"assets/collectibles/{asset}{name}",
             key=asset,
             animated=animated,
             extension=ext,
-            size=size,
+            size=1024,
+            sized=False,
         )
 
     def __str__(self) -> str:
