@@ -375,7 +375,7 @@ class VoiceChannel(GuildChannel["_VoiceChannelResponse"]):
             data, "hd_streaming_buyer_id", always_available=False
         )
         self.linked_lobby: LinkedLobby | None = self._initialize_other(
-            LinkedLobby, data, possible_keys="linked_lobby"
+            LinkedLobby, data, possible_keys="linked_lobby", optional=True
         )
 
 
