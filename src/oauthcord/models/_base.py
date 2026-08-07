@@ -120,14 +120,16 @@ class BaseModel[D: Any, R: Any = None]:
 
         for key in possible_keys:
             value = data.get(key, NotSet)
-            if value is NotSet:
-                if optional:
-                    return None
-                raise ValueError(
-                    f"Data for {cls.__name__} under key {key!r} is required but got {value!r}"
-                )
+            if value is NotSet or (value is None and optional):
+                continue
 
             return _construct_model(cls, data=value, **extra_kwargs)
+
+        if optional:
+            return None
+        raise ValueError(
+            f"Data for {cls.__name__} under any of {possible_keys!r} is required but none were found"
+        )
 
     @overload
     def _initialize_other(
