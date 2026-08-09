@@ -317,10 +317,10 @@ class Client:
         """
         scopes_ = Scope.from_list(scopes) if scopes else []
         if append_scopes:
-            scopes_ = list(set(self._scopes + scopes_))
+            scopes_ = list(dict.fromkeys(self._scopes + scopes_))
 
         if not scopes_:
-            scopes = list(self._scopes)
+            scopes_ = list(self._scopes)
 
         redirect_uri_ = (
             redirect_uri if redirect_uri is not utils.NotSet else self._redirect_uri
@@ -331,7 +331,7 @@ class Client:
             "client_id": str(self.http.client_id),
             "response_type": "code",
             "redirect_uri": redirect_uri_,
-            "scope": "+".join(str(scope) for scope in scopes_),
+            "scope": " ".join(str(scope) for scope in scopes_),
         }
         if state_:
             params["state"] = state_
