@@ -359,6 +359,10 @@ class DisplayNameFont(IntEnum):
     ribes = 9
     sinistre = 10
     zilla_slab = 12
+    playpen_sans = 13
+    orbitron = 14
+    new_rocker = 15
+    kalam = 16
 
 
 class DisplayNameEffect(IntEnum):
@@ -370,6 +374,12 @@ class DisplayNameEffect(IntEnum):
     toon = 4
     pop = 5
     glow = 6
+    prism = 7
+    gummy = 8
+    test_1 = 1001
+    test_2 = 1002
+    test_3 = 1003
+    test_4 = 1004
 
 
 class CollectibleNameplatePalette(StrEnum):
