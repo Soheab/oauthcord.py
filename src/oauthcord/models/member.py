@@ -8,10 +8,10 @@ from ._base import BaseModelWithSession
 from .asset import Asset
 from .flags import MemberFlags, Permissions
 from .user import (
-    DisplayNameStyle,
-    GuildMemberWithUser,
     AvatarDecorationData,
     Collectible,
+    DisplayNameStyle,
+    PartialUser,
 )
 
 if TYPE_CHECKING:
@@ -65,8 +65,8 @@ class GuildMember(BaseModelWithSession["GuildMemberResponse"]):
 
     @override
     def _initialize(self, data: GuildMemberResponse) -> None:
-        self.user: GuildMemberWithUser = self._initialize_other(
-            GuildMemberWithUser, data, possible_keys="user"
+        self.user: PartialUser = self._initialize_other(
+            PartialUser, data, possible_keys="user"
         )
 
         avatar_hash = data.get("avatar")
@@ -80,7 +80,12 @@ class GuildMember(BaseModelWithSession["GuildMemberResponse"]):
 
         banner_hash = data.get("banner")
         self.banner: Asset | None = (
-            self.get_asset(Asset._from_guild_member_banner, self.guild_id, self.user.id, banner_hash)
+            self.get_asset(
+                Asset._from_guild_member_banner,
+                self.guild_id,
+                self.user.id,
+                banner_hash,
+            )
             if banner_hash and self.guild_id is not None
             else None
         )

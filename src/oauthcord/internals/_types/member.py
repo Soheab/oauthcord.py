@@ -2,16 +2,12 @@ from typing import NotRequired, TypedDict
 
 from .base import Snowflake
 from .user import (
-    AvatarDecorationDataResponse,
-    CollectablesResponse,
     DisplayNameStyleResponse,
-    GuildMemberWithUserResponse,
+    PartialUserResponse,
 )
 
 
-class GuildMemberResponse(TypedDict):
-    avatar: NotRequired[str | None]
-    banner: NotRequired[str | None]
+class GuildMemberResponse(PartialUserResponse):
     communication_disabled_until: NotRequired[str | None]  # iso
     flags: int
     joined_at: str  # iso
@@ -21,13 +17,11 @@ class GuildMemberResponse(TypedDict):
     roles: list[Snowflake]
     unusual_dm_activity_until: NotRequired[str | None]
     display_name_styles: NotRequired[DisplayNameStyleResponse | None]
-    user: GuildMemberWithUserResponse
+    user: PartialUserResponse
     mute: NotRequired[bool]
     deaf: NotRequired[bool]
     bio: NotRequired[str | None]
     permissions: NotRequired[str]
-    avatar_decoration_data: AvatarDecorationDataResponse | None
-    collectibles: CollectablesResponse | None
 
 
 class AddGuildMemberRequest(TypedDict):

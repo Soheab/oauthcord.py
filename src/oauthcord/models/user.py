@@ -144,12 +144,20 @@ class PartialUser[D = PartialUserResponse](BaseModelWithSession[D]):
 
     __slots__ = (
         *BaseModelWithSession.__slots__,
-        "avatar",
+        "id",
+        "username",
         "discriminator",
         "global_name",
-        "id",
+        "avatar",
+        "avatar_decoration_data",
+        "collectibles",
+        "display_name_styles",
+        "primary_guild",
+        "bot",
+        "system",
+        "banner",
+        "accent_color",
         "public_flags",
-        "username",
     )
 
     @override
@@ -158,6 +166,9 @@ class PartialUser[D = PartialUserResponse](BaseModelWithSession[D]):
 
         self.id: int = convert_snowflake(data, "id")
         self.username: str = data_["username"]
+        self.discriminator: str = data_["discriminator"]
+        self.global_name: str | None = data_.get("global_name")
+
         avatar: str | None = data_["avatar"]
         if avatar:
             self.avatar = self.get_asset(Asset._from_avatar, self.id, avatar)
@@ -165,43 +176,6 @@ class PartialUser[D = PartialUserResponse](BaseModelWithSession[D]):
             self.avatar = self.get_asset(
                 Asset._from_default_avatar, (self.id >> 22) % 6
             )
-
-        self.discriminator: str = data_["discriminator"]
-        self.public_flags: int = data_["public_flags"]
-        self.global_name: str | None = data_["global_name"]
-
-    async def dm_channel(self) -> DMChannel:
-        """Get a DM channel with this user."""
-        return await self._session.get_dm_channel(user_id=self.id)
-
-
-class GuildMemberWithUser[D = GuildMemberWithUserResponse](PartialUser[D]):
-    __slots__ = (
-        *PartialUser.__slots__,
-        "accent_color",
-        "avatar_decoration_data",
-        "banner",
-        "banner_color",
-        "collectibles",
-        "display_name_styles",
-        "flags",
-        "primary_guild",
-    )
-
-    @override
-    def _initialize(self, data: D) -> None:  # type: ignore
-        super()._initialize(data)
-
-        data_: GuildMemberWithUserResponse = data  # pyright: ignore[reportAssignmentType]
-
-        self.flags: UserFlags = UserFlags(data_["flags"])
-        self.banner: Asset | None = (
-            self.get_asset(Asset._from_user_banner, self.id, data_["banner"])
-            if data_["banner"]
-            else None
-        )
-        self.accent_color: int | None = data_["accent_color"]
-        self.banner_color: str | None = data_["banner_color"]
 
         self.avatar_decoration_data: AvatarDecorationData | None = (
             self._initialize_other(
@@ -211,7 +185,6 @@ class GuildMemberWithUser[D = GuildMemberWithUserResponse](PartialUser[D]):
                 optional=True,
             )
         )
-
         self.collectibles: Collectible | None = self._initialize_other(
             Collectible, data_, possible_keys="collectibles", optional=True
         )
@@ -221,13 +194,27 @@ class GuildMemberWithUser[D = GuildMemberWithUserResponse](PartialUser[D]):
         self.primary_guild: PrimaryGuild | None = self._initialize_other(
             PrimaryGuild, data_, possible_keys="primary_guild", optional=True
         )
+        self.bot: bool = data_.get("bot", False)
+        self.system: bool = data_.get("system", False)
+        self.banner: Asset | None = (
+            self.get_asset(Asset._from_user_banner, self.id, banner)
+            if (banner := data_.get("banner"))
+            else None
+        )
+        self.accent_color: int | None = data_.get("accent_color")
+
+        self.public_flags: UserFlags = UserFlags(data_.get("public_flags", 0))
+
+    async def dm_channel(self) -> DMChannel:
+        """Get a DM channel with this user."""
+        return await self._session.get_dm_channel(user_id=self.id)
 
 
-class CurrentUser(GuildMemberWithUser["CurrentUserResponse"]):
+class CurrentUser(PartialUser["CurrentUserResponse"]):
     """Represents the currently authorized Discord user."""
 
     __slots__ = (
-        *GuildMemberWithUser.__slots__,
+        *PartialUser.__slots__,
         "_email",
         "locale",
         "mfa_enabled",
