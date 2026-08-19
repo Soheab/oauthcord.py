@@ -345,41 +345,122 @@ class PremiumType(IntEnum):
 
 
 class DisplayNameFont(IntEnum):
-    """Enumeration of Discord API values used by this wrapper."""
+    DEFAULT = 11
+    BANGERS = 1  # deprecated
+    BIO_RHYME = 2  # deprecated
+    CHERRY_BOMB = 3
+    CHICLE = 4
+    COMPAGNON = 5  # deprecated
+    MUSEO_MODERNO = 6
+    NEO_CASTEL = 7
+    PIXELIFY = 8
+    RIBES = 9  # deprecated
+    SINISTRE = 10
+    ZILLA_SLAB = 12
+    PLAYPEN_SANS = 13
+    ORBITRON = 14
+    NEW_ROCKER = 15
+    KALAM = 16
 
-    default = 11
-    bangers = 1
-    bio_rhyme = 2
-    cherry_bomb = 3
-    chicle = 4
-    compagnon = 5
-    museo_moderno = 6
-    neo_castel = 7
-    pixelify = 8
-    ribes = 9
-    sinistre = 10
-    zilla_slab = 12
-    playpen_sans = 13
-    orbitron = 14
-    new_rocker = 15
-    kalam = 16
+    @property
+    def display_name(self) -> str:
+        """:class:`str`: Return the display name of the font.
+
+        If none is available, returns a title-cased version of the enum name
+        with underscores replaced by spaces.
+        """
+        font_to_display_name = {
+            DisplayNameFont.DEFAULT: "gg Sans",
+            DisplayNameFont.BANGERS: "Bangers",  # N/A
+            DisplayNameFont.BIO_RHYME: "BioRhyme",  # N/A
+            DisplayNameFont.CHERRY_BOMB: "Sakura",
+            DisplayNameFont.CHICLE: "Jellybean",
+            DisplayNameFont.COMPAGNON: "Compagnon",  # N/A
+            DisplayNameFont.MUSEO_MODERNO: "Modern",
+            DisplayNameFont.NEO_CASTEL: "Medieval",
+            DisplayNameFont.PIXELIFY: "8Bit",
+            DisplayNameFont.RIBES: "Ribes",  # N/A
+            DisplayNameFont.SINISTRE: "Vampyre",
+            DisplayNameFont.ZILLA_SLAB: "Tempo",
+            DisplayNameFont.PLAYPEN_SANS: "Monkey Bars",
+            DisplayNameFont.ORBITRON: "Mainframe",
+            DisplayNameFont.NEW_ROCKER: "Headbang",
+            DisplayNameFont.KALAM: "Journal",
+        }
+        return font_to_display_name.get(
+            self, self.name.lower().replace("_", " ").title()
+        )
+
+    @property
+    def url(self) -> str | None:
+        """:class:`str` | None: Return the URL to the font's source, if available. Otherwise, returns :data:`None`."""
+        font_to_url = {
+            DisplayNameFont.BANGERS: "https://fonts.google.com/specimen/Bangers",
+            DisplayNameFont.BIO_RHYME: "https://fonts.google.com/specimen/BioRhyme",
+            DisplayNameFont.CHERRY_BOMB: "https://fonts.google.com/specimen/Cherry+Bomb+One",
+            DisplayNameFont.CHICLE: "https://fonts.google.com/specimen/Chicle",
+            DisplayNameFont.COMPAGNON: "https://velvetyne.fr/fonts/compagnon/",
+            DisplayNameFont.MUSEO_MODERNO: "https://fonts.google.com/specimen/MuseoModerno",
+            DisplayNameFont.NEO_CASTEL: "https://maxlilllo.gumroad.com/l/neo-castel",
+            DisplayNameFont.PIXELIFY: "https://fonts.google.com/specimen/Pixelify+Sans",
+            DisplayNameFont.RIBES: "https://www.collletttivo.it/typefaces/ribes",
+            DisplayNameFont.SINISTRE: "https://www.collletttivo.it/typefaces/sinistre",
+            DisplayNameFont.ZILLA_SLAB: "https://fonts.google.com/specimen/Zilla+Slab",
+            DisplayNameFont.PLAYPEN_SANS: "https://fonts.google.com/specimen/Playpen+Sans",
+            DisplayNameFont.ORBITRON: "https://fonts.google.com/specimen/Orbitron",
+            DisplayNameFont.NEW_ROCKER: "https://fonts.google.com/specimen/New+Rocker",
+            DisplayNameFont.KALAM: "https://fonts.google.com/specimen/Kalam?preview.script=Latn",
+        }
+        return font_to_url.get(self)
 
 
 class DisplayNameEffect(IntEnum):
     """Enumeration of Discord API values used by this wrapper."""
 
-    solid = 1
-    gradient = 2
-    neon = 3
-    toon = 4
-    pop = 5
-    glow = 6
-    prism = 7
-    gummy = 8
-    test_1 = 1001
-    test_2 = 1002
-    test_3 = 1003
-    test_4 = 1004
+    SOLID = 1
+    """Displays the first color provided"""
+    GRADIENT = 2
+    """Two color gradient"""
+    NEON = 3
+    """Glow around the name"""
+    TOON = 4
+    """Subtle vertical gradient and stroke"""
+    POP = 5
+    """Colored dropshadow"""
+    GLOW = 6
+    """Falls back to gradient"""
+    PRISM = 7
+    """Scrolling five color gradient"""
+    GUMMY = 8
+    """Four color pattern, letters squash and stretch"""
+    TEST_1 = 1001
+    """Falls back to solid"""
+    TEST_2 = 1002
+    """Falls back to solid"""
+    TEST_3 = 1003
+    """Falls back to solid"""
+    TEST_4 = 1004
+    """Falls back to solid"""
+
+    @property
+    def min_colors(self) -> int:
+        """:class:`int`: The minimum number of colors this effect requires."""
+        return 1
+
+    @property
+    def max_colors(self) -> int:
+        """:class:`int`: The maximum number of colors this effect supports."""
+        single_color_effects = {
+            DisplayNameEffect.SOLID,
+            DisplayNameEffect.NEON,
+            DisplayNameEffect.TOON,
+            DisplayNameEffect.POP,
+            DisplayNameEffect.TEST_1,
+            DisplayNameEffect.TEST_2,
+            DisplayNameEffect.TEST_3,
+            DisplayNameEffect.TEST_4,
+        }
+        return 1 if self in single_color_effects else 5
 
 
 class CollectibleNameplatePalette(StrEnum):
