@@ -691,7 +691,7 @@ class AuthorisedSession(
         :class:`AccessToken`
             The updated access token data after refresh.
         """
-        refreshed = self.token.is_expired() if check_expired else True
+        refreshed = self.token.is_expired if check_expired else True
 
         await self.token.refresh(check_expired=check_expired)
 

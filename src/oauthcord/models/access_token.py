@@ -177,7 +177,7 @@ class AccessToken(
         if not self.refresh_token:
             raise ValueError("Cannot refresh token without a refresh token.")
 
-        if check_expired and not self.is_expired():
+        if check_expired and not self.is_expired:
             return self
 
         res = await self._http.refresh_token(self)
