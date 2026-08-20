@@ -161,7 +161,7 @@ def get_message_create_payload(
     return get_multipart_payload(files=files, data=data)  # pyright: ignore[reportArgumentType]
 
 
-class OAuth2HTTPClient(
+class HTTPClient(
     HTTPRateLimiterMixin,
     ApplicationHTTPClientMixin,
     ChannelHTTPClientMixin,
