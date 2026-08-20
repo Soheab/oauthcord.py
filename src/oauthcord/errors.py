@@ -12,6 +12,8 @@ __all__ = (
     "DiscordServerError",
     "Forbidden",
     "HTTPException",
+    "MissingSession",
+    "MissingState",
     "NotFound",
     "OauthCordException",
     "RateLimited",
@@ -22,6 +24,18 @@ __all__ = (
 
 class OauthCordException(Exception):
     pass
+
+
+class MissingState(OauthCordException):
+    """Raised when a model needs to call back into the library but is not bound to a client.
+
+    This happens when a model was constructed directly rather than being
+    created from a Discord API response.
+    """
+
+
+class MissingSession(MissingState):
+    """Raised when a model needs an authorised session but was not created from one."""
 
 
 class HTTPException(OauthCordException):
