@@ -6,60 +6,29 @@ from typing import (
     Any,
     Concatenate,
     Literal,
-    Protocol,
     Self,
-    TypeVar,
     overload,
 )
 
+from ..errors import MissingState
 from ..utils import NotSet, _construct_model
 
 if TYPE_CHECKING:
     from ..client._client import AuthorisedSession
-    from ..internals.http import OAuth2HTTPClient
+    from ..internals.http import HTTPClient
+    from ..internals.state import State
 
 
-__all__ = (
-    "BaseModel",
-    "BaseModelWithHTTP",
-    "BaseModelWithSession",
-)
+__all__ = ("BaseModel",)
 
 type _PossibleKeys = str | tuple[str, ...] | None
 
-_BaseModelT_co = TypeVar("_BaseModelT_co", bound="BaseModel[Any, Any]", covariant=True)
-_HTTPBaseModelT_co = TypeVar(
-    "_HTTPBaseModelT_co", bound="BaseModelWithHTTP[Any, Any]", covariant=True
-)
-_SessionBaseModelT_co = TypeVar(
-    "_SessionBaseModelT_co", bound="BaseModelWithSession[Any, Any]", covariant=True
-)
-
-
-class _BaseModelType(Protocol[_BaseModelT_co]):
-    __name__: str
-
-    def __call__(self, *, data: Any) -> _BaseModelT_co: ...
-
-
-class _BaseModelWithHTTPType(Protocol[_HTTPBaseModelT_co]):
-    __name__: str
-
-    def __call__(self, *, data: Any, http: OAuth2HTTPClient) -> _HTTPBaseModelT_co: ...
-
-
-class _BaseModelWithSessionType(Protocol[_SessionBaseModelT_co]):
-    __name__: str
-
-    def __call__(
-        self, *, data: Any, session: AuthorisedSession
-    ) -> _SessionBaseModelT_co: ...
-
 
 class BaseModel[D: Any, R: Any = None]:
-    __slots__ = ("data",)
+    __slots__ = ("__state", "data")
 
-    def __init__(self, *, data: D) -> None:
+    def __init__(self, *, data: D, state: State | None = None) -> None:
+        self.__state: State | None = state
         self.data: D = data
         self._initialize(data)
 
@@ -69,9 +38,53 @@ class BaseModel[D: Any, R: Any = None]:
     def to_dict(self) -> R:
         return self.data  # pyright: ignore[reportReturnType]
 
+    # Subclasses commonly override this with a narrower, hand-written signature
+    # (extra keyword arguments, or a positional `client`), so the base signature
+    # is deliberately permissive rather than a contract they must satisfy.
     @classmethod
-    def from_dict(cls, data: D) -> Self:
-        return cls(data=data)
+    def from_dict(cls, data: D, *args: Any, **kwargs: Any) -> Self:
+        """Construct this model from a payload."""
+        return cls(*args, data=data, **kwargs)
+
+    @property
+    def _state(self) -> State:
+        """The state this model was created with.
+
+        Raises
+        ------
+        MissingState
+            This model was constructed directly rather than from an API
+            response, so it has no way to call back into the library.
+        """
+        if self.__state is None:
+            raise MissingState(
+                f"{type(self).__name__} was constructed directly and is not bound "
+                "to a client, so it cannot perform API actions."
+            )
+
+        return self.__state
+
+    @property
+    def _http(self) -> HTTPClient:
+        """:class:`HTTPClient`: The shared HTTP client.
+
+        Raises
+        ------
+        MissingState
+            This model is not bound to a client.
+        """
+        return self._state.http
+
+    @property
+    def _session(self) -> AuthorisedSession:
+        """:class:`AuthorisedSession`: The authorised session this model came from.
+
+        Raises
+        ------
+        MissingSession
+            This model was not created from an authorised session.
+        """
+        return self._state.session
 
     def __repr__(self) -> str:
         attributes = getattr(self, "__slots__") or [
@@ -91,16 +104,40 @@ class BaseModel[D: Any, R: Any = None]:
         except AttributeError:
             return self.data[key]
 
-    def _construct_other(
+    @overload
+    def _initialize_other[C: BaseModel[Any, Any]](
         self,
-        cls: type[BaseModel[Any, Any]],
+        cls: type[C],
+        /,
+        data: Any,
+        *,
+        optional: Literal[False] = ...,
+        possible_keys: _PossibleKeys = ...,
+        **extra_kwargs: Any,
+    ) -> C: ...
+
+    @overload
+    def _initialize_other[C: BaseModel[Any, Any]](
+        self,
+        cls: type[C],
+        /,
+        data: Any | None,
+        *,
+        optional: Literal[True],
+        possible_keys: _PossibleKeys = ...,
+        **extra_kwargs: Any,
+    ) -> C | None: ...
+
+    def _initialize_other[C: BaseModel[Any, Any]](
+        self,
+        cls: type[C],
         /,
         data: Any | None,
         *,
         optional: bool = False,
         possible_keys: _PossibleKeys = None,
-        extra_kwargs: dict[str, Any] | None = None,
-    ) -> BaseModel[Any, Any] | None:
+        **extra_kwargs: Any,
+    ) -> C | None:
         if not data:
             if not optional:
                 raise ValueError(
@@ -109,11 +146,8 @@ class BaseModel[D: Any, R: Any = None]:
 
             return None
 
-        if extra_kwargs is None:
-            extra_kwargs = {}
-
         if not possible_keys:
-            return _construct_model(cls, data=data, **extra_kwargs)
+            return _construct_model(cls, data=data, state=self.__state, **extra_kwargs)
 
         if isinstance(possible_keys, str):
             possible_keys = (possible_keys,)
@@ -123,258 +157,24 @@ class BaseModel[D: Any, R: Any = None]:
             if value is NotSet or (value is None and optional):
                 continue
 
-            return _construct_model(cls, data=value, **extra_kwargs)
+            return _construct_model(cls, data=value, state=self.__state, **extra_kwargs)
 
         if optional:
             return None
+
         raise ValueError(
             f"Data for {cls.__name__} under any of {possible_keys!r} is required but none were found"
         )
 
-    @overload
-    def _initialize_other(
-        self: BaseModel[Any, Any],
-        cls: _BaseModelType[_BaseModelT_co],
-        /,
-        data: Any,
-        *,
-        optional: Literal[False] = ...,
-        possible_keys: _PossibleKeys = ...,
-        **extra_kwargs: Any,
-    ) -> _BaseModelT_co: ...
-
-    @overload
-    def _initialize_other(
-        self: BaseModel[Any, Any],
-        cls: _BaseModelType[_BaseModelT_co],
-        /,
-        data: Any | None,
-        *,
-        optional: Literal[True],
-        possible_keys: _PossibleKeys = ...,
-        **extra_kwargs: Any,
-    ) -> _BaseModelT_co | None: ...
-
-    def _initialize_other(
-        self: BaseModel[Any, Any],
-        cls: _BaseModelType[BaseModel[Any, Any]],
-        /,
-        data: Any | None,
-        *,
-        optional: bool = False,
-        possible_keys: _PossibleKeys = None,
-        **extra_kwargs: Any,
-    ) -> BaseModel[Any, Any] | None:
-        return self._construct_other(
-            cls,  # pyright: ignore[reportArgumentType]
-            data,
-            optional=optional,
-            possible_keys=possible_keys,
-            extra_kwargs=extra_kwargs,
-        )
-
-
-class BaseModelWithHTTP[D: Any, R: Any = None](BaseModel[D, R]):
-    __slots__ = (*BaseModel.__slots__, "_http")
-
-    def __init__(self, *, data: D, http: OAuth2HTTPClient) -> None:
-        self._http = http
-        super().__init__(data=data)
-
-    @overload
-    def _initialize_other(
-        self: BaseModelWithHTTP[Any, Any],
-        cls: _BaseModelType[_BaseModelT_co],
-        /,
-        data: Any,
-        *,
-        optional: Literal[False] = ...,
-        possible_keys: _PossibleKeys = ...,
-        **extra_kwargs: Any,
-    ) -> _BaseModelT_co: ...
-
-    @overload
-    def _initialize_other(
-        self: BaseModelWithHTTP[Any, Any],
-        cls: _BaseModelType[_BaseModelT_co],
-        /,
-        data: Any | None,
-        *,
-        optional: Literal[True],
-        possible_keys: _PossibleKeys = ...,
-        **extra_kwargs: Any,
-    ) -> _BaseModelT_co | None: ...
-
-    @overload
-    def _initialize_other(
-        self: BaseModelWithHTTP[Any, Any],
-        cls: _BaseModelWithHTTPType[_HTTPBaseModelT_co],
-        /,
-        data: Any,
-        *,
-        optional: Literal[False] = ...,
-        possible_keys: _PossibleKeys = ...,
-        **extra_kwargs: Any,
-    ) -> _HTTPBaseModelT_co: ...
-
-    @overload
-    def _initialize_other(
-        self: BaseModelWithHTTP[Any, Any],
-        cls: _BaseModelWithHTTPType[_HTTPBaseModelT_co],
-        /,
-        data: Any | None,
-        *,
-        optional: Literal[True],
-        possible_keys: _PossibleKeys = ...,
-        **extra_kwargs: Any,
-    ) -> _HTTPBaseModelT_co | None: ...
-
-    def _initialize_other(
-        self: BaseModelWithHTTP[Any, Any],
-        cls: (
-            _BaseModelType[BaseModel[Any, Any]]
-            | _BaseModelWithHTTPType[BaseModelWithHTTP[Any, Any]]
-        ),
-        /,
-        data: Any | None,
-        *,
-        optional: bool = False,
-        possible_keys: _PossibleKeys = None,
-        **extra_kwargs: Any,
-    ) -> BaseModel[Any, Any] | None:
-        if issubclass(cls, BaseModelWithHTTP):  # pyright: ignore[reportArgumentType]
-            extra_kwargs["http"] = self._http
-
-        return self._construct_other(
-            cls,  # pyright: ignore[reportArgumentType]
-            data,
-            optional=optional,
-            possible_keys=possible_keys,
-            extra_kwargs=extra_kwargs,
-        )
-
     def get_asset[**P, AR](
         self,
-        method: Callable[Concatenate[OAuth2HTTPClient, P], AR],
+        method: Callable[Concatenate["State | None", P], AR],
         *args: P.args,
         **kwargs: P.kwargs,
     ) -> AR:
-        return method(self._http, *args, **kwargs)
+        """Build an :class:`Asset` bound to this model's state.
 
-
-class BaseModelWithSession[D: Any, R: Any = None](BaseModel[D, R]):
-    __slots__ = (
-        *BaseModel.__slots__,
-        "_session",
-    )
-
-    def __init__(self, *, data: D, session: AuthorisedSession) -> None:
-        self._session = session
-        super().__init__(data=data)
-
-    @overload
-    def _initialize_other(
-        self: BaseModelWithSession[Any, Any],
-        cls: _BaseModelType[_BaseModelT_co],
-        /,
-        data: Any,
-        *,
-        optional: Literal[False] = ...,
-        possible_keys: _PossibleKeys = ...,
-        **extra_kwargs: Any,
-    ) -> _BaseModelT_co: ...
-
-    @overload
-    def _initialize_other(
-        self: BaseModelWithSession[Any, Any],
-        cls: _BaseModelType[_BaseModelT_co],
-        /,
-        data: Any | None,
-        *,
-        optional: Literal[True],
-        possible_keys: _PossibleKeys = ...,
-        **extra_kwargs: Any,
-    ) -> _BaseModelT_co | None: ...
-
-    @overload
-    def _initialize_other(
-        self: BaseModelWithSession[Any, Any],
-        cls: _BaseModelWithHTTPType[_HTTPBaseModelT_co],
-        /,
-        data: Any,
-        *,
-        optional: Literal[False] = ...,
-        possible_keys: _PossibleKeys = ...,
-        **extra_kwargs: Any,
-    ) -> _HTTPBaseModelT_co: ...
-
-    @overload
-    def _initialize_other(
-        self: BaseModelWithSession[Any, Any],
-        cls: _BaseModelWithHTTPType[_HTTPBaseModelT_co],
-        /,
-        data: Any | None,
-        *,
-        optional: Literal[True],
-        possible_keys: _PossibleKeys = ...,
-        **extra_kwargs: Any,
-    ) -> _HTTPBaseModelT_co | None: ...
-
-    @overload
-    def _initialize_other(
-        self: BaseModelWithSession[Any, Any],
-        cls: _BaseModelWithSessionType[_SessionBaseModelT_co],
-        /,
-        data: Any,
-        *,
-        optional: Literal[False] = ...,
-        possible_keys: _PossibleKeys = ...,
-        **extra_kwargs: Any,
-    ) -> _SessionBaseModelT_co: ...
-
-    @overload
-    def _initialize_other(
-        self: BaseModelWithSession[Any, Any],
-        cls: _BaseModelWithSessionType[_SessionBaseModelT_co],
-        /,
-        data: Any | None,
-        *,
-        optional: Literal[True],
-        possible_keys: _PossibleKeys = ...,
-        **extra_kwargs: Any,
-    ) -> _SessionBaseModelT_co | None: ...
-
-    def _initialize_other(
-        self: BaseModelWithSession[Any, Any],
-        cls: (
-            _BaseModelType[BaseModel[Any, Any]]
-            | _BaseModelWithHTTPType[BaseModelWithHTTP[Any, Any]]
-            | _BaseModelWithSessionType[BaseModelWithSession[Any, Any]]
-        ),
-        /,
-        data: Any | None,
-        *,
-        optional: bool = False,
-        possible_keys: _PossibleKeys = None,
-        **extra_kwargs: Any,
-    ) -> BaseModel[Any, Any] | None:
-        if issubclass(cls, BaseModelWithHTTP):  # pyright: ignore[reportArgumentType]
-            extra_kwargs["http"] = self._session.client.http
-        elif issubclass(cls, BaseModelWithSession):  # pyright: ignore[reportArgumentType]
-            extra_kwargs["session"] = self._session
-
-        return self._construct_other(
-            cls,  # pyright: ignore[reportArgumentType]
-            data,
-            optional=optional,
-            possible_keys=possible_keys,
-            extra_kwargs=extra_kwargs,
-        )
-
-    def get_asset[**P, AR](
-        self,
-        method: Callable[Concatenate[OAuth2HTTPClient, P], AR],
-        *args: P.args,
-        **kwargs: P.kwargs,
-    ) -> AR:
-        return method(self._session.client.http, *args, **kwargs)
+        Passes the state through unresolved, so constructing an asset never
+        requires a client; only fetching one does.
+        """
+        return method(self.__state, *args, **kwargs)

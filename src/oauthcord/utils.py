@@ -2,14 +2,12 @@ from __future__ import annotations
 
 import datetime
 import re
-from typing import TYPE_CHECKING, Any, Literal, Protocol, overload
+from typing import TYPE_CHECKING, Any, Literal, overload
 
 if TYPE_CHECKING:
-    from .client import AuthorisedSession
-    from .client._proto import _AuthorisedSessionProto
     from .enums import Locale
-    from .internals.http import OAuth2HTTPClient
-    from .models._base import BaseModel, BaseModelWithHTTP, BaseModelWithSession
+    from .internals.state import State
+    from .models._base import BaseModel
 
 __all__ = (
     "NotSet",
@@ -36,69 +34,15 @@ class _NotSet:
 NotSet: Any = _NotSet()
 
 
-class _BaseModelType[T: BaseModel[Any, Any]](Protocol):
-    def __call__(self, *, data: Any) -> T: ...
-
-
-class _BaseModelWithHTTPType[T: BaseModelWithHTTP[Any, Any]](Protocol):
-    def __call__(self, *, data: Any, http: OAuth2HTTPClient) -> T: ...
-
-
-class _BaseModelWithSessionType[T: BaseModelWithSession[Any, Any]](Protocol):
-    def __call__(self, *, data: Any, session: AuthorisedSession) -> T: ...
-
-
-@overload
 def _construct_model[T: BaseModel[Any, Any]](  # pyright: ignore[reportUnusedFunction]
-    kls: _BaseModelType[T],
+    kls: type[T],
     /,
     *,
     data: Any,
+    state: State | None = None,
     **extra_kwargs: Any,
-) -> T: ...
-
-
-@overload
-def _construct_model[T: BaseModelWithHTTP[Any, Any]](  # pyright: ignore[reportUnusedFunction]
-    kls: _BaseModelWithHTTPType[T],
-    /,
-    *,
-    data: Any,
-    http: OAuth2HTTPClient,
-    **extra_kwargs: Any,
-) -> T: ...
-
-
-@overload
-def _construct_model[T: BaseModelWithSession[Any, Any]](  # pyright: ignore[reportUnusedFunction]
-    kls: _BaseModelWithSessionType[T],
-    /,
-    *,
-    data: Any,
-    session: AuthorisedSession | _AuthorisedSessionProto,
-    **extra_kwargs: Any,
-) -> T: ...
-
-
-def _construct_model(  # pyright: ignore[reportUnusedFunction]
-    kls: (
-        _BaseModelType[BaseModel[Any, Any]]
-        | _BaseModelWithHTTPType[BaseModelWithHTTP[Any, Any]]
-        | _BaseModelWithSessionType[BaseModelWithSession[Any, Any]]
-    ),
-    /,
-    *,
-    data: Any,
-    session: AuthorisedSession | _AuthorisedSessionProto | None = None,
-    http: OAuth2HTTPClient | None = None,
-    **extra_kwargs: Any,
-) -> BaseModel[Any, Any]:
-    if session is not None:
-        extra_kwargs["session"] = session
-    if http is not None:
-        extra_kwargs["http"] = http
-
-    return kls(data=data, **extra_kwargs)
+) -> T:
+    return kls(data=data, state=state, **extra_kwargs)
 
 
 def maybe_available[T: Any, D: Any = None](
