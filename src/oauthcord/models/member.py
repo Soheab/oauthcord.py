@@ -4,7 +4,7 @@ import datetime
 from typing import TYPE_CHECKING, override
 
 from ..utils import convert_snowflake, iso_to_datetime
-from ._base import BaseModelWithSession
+from ._base import BaseModel
 from .asset import Asset
 from .flags import MemberFlags, Permissions
 from .user import (
@@ -15,9 +15,9 @@ from .user import (
 )
 
 if TYPE_CHECKING:
-    from ..client._client import AuthorisedSession
     from ..internals._types.channels import ThreadMemberResponse
     from ..internals._types.member import GuildMemberResponse
+    from ..internals.state import State
 
 
 __all__ = (
@@ -26,14 +26,15 @@ __all__ = (
 )
 
 
-class GuildMember(BaseModelWithSession["GuildMemberResponse"]):
+class GuildMember(BaseModel["GuildMemberResponse"]):
     """Represents a guild member payload for the authorized user."""
 
     __slots__ = (
-        *BaseModelWithSession.__slots__,
         "avatar",
+        "avatar_decoration_data",
         "banner",
         "bio",
+        "collectibles",
         "communication_disabled_until",
         "deaf",
         "display_name_styles",
@@ -48,20 +49,18 @@ class GuildMember(BaseModelWithSession["GuildMemberResponse"]):
         "role_ids",
         "unusual_dm_activity_until",
         "user",
-        "avatar_decoration_data",
-        "collectibles",
     )
 
     @override
     def __init__(
         self,
         *,
-        session: AuthorisedSession,
+        state: State | None = None,
         data: GuildMemberResponse,
         guild_id: int | None = None,
     ) -> None:
         self.guild_id: int | None = guild_id
-        super().__init__(session=session, data=data)
+        super().__init__(state=state, data=data)
 
     @override
     def _initialize(self, data: GuildMemberResponse) -> None:
@@ -133,32 +132,31 @@ class GuildMember(BaseModelWithSession["GuildMemberResponse"]):
         )
 
 
-class ThreadMember(BaseModelWithSession["ThreadMemberResponse"]):
+class ThreadMember(BaseModel["ThreadMemberResponse"]):
     """Represents a thread member payload."""
 
     __slots__ = (
-        *BaseModelWithSession.__slots__,
+        "flags",
         "guild_id",
         "id",
-        "user_id",
         "join_timestamp",
-        "flags",
-        "muted",
-        "mute_config",
         "member",
+        "mute_config",
+        "muted",
+        "user_id",
     )
 
     @override
     def __init__(
         self,
         *,
-        session: AuthorisedSession,
+        state: State | None = None,
         data: ThreadMemberResponse,
         guild_id: int | None = None,
     ) -> None:
         """Initialize this object from explicit constructor arguments."""
         self.guild_id: int | None = guild_id
-        super().__init__(session=session, data=data)
+        super().__init__(state=state, data=data)
 
     @override
     def _initialize(self, data: ThreadMemberResponse) -> None:
@@ -172,7 +170,7 @@ class ThreadMember(BaseModelWithSession["ThreadMemberResponse"]):
         self.mute_config: dict[str, object] | None = data.get("mute_config")
         member_data = data.get("member")
         self.member: GuildMember | None = (
-            GuildMember(session=self._session, data=member_data, guild_id=self.guild_id)
+            GuildMember(state=self._state, data=member_data, guild_id=self.guild_id)
             if member_data
             else None
         )

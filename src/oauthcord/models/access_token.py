@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Self, override
 
 from .. import utils
 from ..enums import Scope
-from ._base import BaseModelWithHTTP
+from ._base import BaseModel
 
 if TYPE_CHECKING:
     from ..client import AuthorisedSession, Client
@@ -22,7 +22,7 @@ __all__ = ("AccessToken",)
 
 
 class AccessToken(
-    BaseModelWithHTTP[
+    BaseModel[
         "AccessTokenResponsePayload | RefreshTokenResponsePayload",
         "AccessTokenResponsePayload | RefreshTokenResponsePayload",
     ]
@@ -40,13 +40,12 @@ class AccessToken(
     """
 
     __slots__ = (
-        *BaseModelWithHTTP.__slots__,
-        "token_type",
+        "_created_at",
+        "_expires_in",
+        "_scope",
         "access_token",
         "refresh_token",
-        "_scope",
-        "_expires_in",
-        "_created_at",
+        "token_type",
     )
 
     @override
@@ -89,7 +88,10 @@ class AccessToken(
         :class:`AccessToken`
             The initialized AccessToken instance.
         """
-        instance = utils._construct_model(cls, data=data, http=client.http)
+        instance = utils._construct_model(cls, data=data, state=client._model_state)
+        if created_at is not None:
+            instance._created_at = created_at
+
         return instance
 
     @override

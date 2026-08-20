@@ -11,10 +11,9 @@ class Emoji(BaseModel[None, dict[str, Any]]):
     """Represents an emoji payload used in Discord request and response models."""
 
     __slots__ = (
-        *BaseModel.__slots__,
-        "name",
-        "id",
         "animated",
+        "id",
+        "name",
     )
 
     def __init__(

@@ -12,7 +12,7 @@ from ..enums import (
     to_enum,
 )
 from ..utils import convert_snowflake, iso_to_datetime, maybe_available
-from ._base import BaseModel, BaseModelWithHTTP, BaseModelWithSession
+from ._base import BaseModel
 from .asset import Asset
 from .flags import UserFlags
 
@@ -22,7 +22,6 @@ if TYPE_CHECKING:
         CollectablesResponse,
         CurrentUserResponse,
         DisplayNameStyleResponse,
-        GuildMemberWithUserResponse,
         HarvestMetadataResponse,
         HarvestResponse,
         PartialUserResponse,
@@ -44,7 +43,6 @@ __all__ = (
     "CollectibleNameplate",
     "CurrentUser",
     "DisplayNameStyle",
-    "GuildMemberWithUser",
     "Harvest",
     "HarvestMetadata",
     "PartialUser",
@@ -52,8 +50,8 @@ __all__ = (
 )
 
 
-class BaseCollectable[D: Any = BaseCollectibleResponse](BaseModelWithHTTP[D]):
-    __slots__ = (*BaseModelWithHTTP.__slots__, "asset", "label", "sku_id")
+class BaseCollectable[D: Any = BaseCollectibleResponse](BaseModel[D]):
+    __slots__ = ("asset", "label", "sku_id")
 
     @override
     def _initialize(self, data: D) -> None:
@@ -63,7 +61,7 @@ class BaseCollectable[D: Any = BaseCollectibleResponse](BaseModelWithHTTP[D]):
 
 
 class CollectibleNameplate(BaseCollectable["CollectibleNameplateResponse"]):
-    __slots__ = (*BaseCollectable.__slots__, "palette")
+    __slots__ = "palette"
 
     @override
     def _initialize(self, data: CollectibleNameplateResponse) -> None:
@@ -73,10 +71,10 @@ class CollectibleNameplate(BaseCollectable["CollectibleNameplateResponse"]):
         )
 
 
-class Collectible(BaseModelWithHTTP["CollectablesResponse"]):
+class Collectible(BaseModel["CollectablesResponse"]):
     """Represents Discord API data for `Collectible`."""
 
-    __slots__ = (*BaseModelWithHTTP.__slots__, "nameplate")
+    __slots__ = "nameplate"
 
     @override
     def _initialize(self, data: CollectablesResponse) -> None:
@@ -87,11 +85,10 @@ class Collectible(BaseModelWithHTTP["CollectablesResponse"]):
         )
 
 
-class PrimaryGuild(BaseModelWithHTTP["PrimaryGuildResponse"]):
+class PrimaryGuild(BaseModel["PrimaryGuildResponse"]):
     """Represents Discord API data for `PrimaryGuild`."""
 
     __slots__ = (
-        *BaseModelWithHTTP.__slots__,
         "badge",
         "identity_enabled",
         "identity_guild_id",
@@ -116,10 +113,10 @@ class PrimaryGuild(BaseModelWithHTTP["PrimaryGuildResponse"]):
             self.badge = None
 
 
-class AvatarDecorationData(BaseModelWithHTTP["AvatarDecorationDataResponse"]):
+class AvatarDecorationData(BaseModel["AvatarDecorationDataResponse"]):
     """Represents Discord API data for `AvatarDecorationData`."""
 
-    __slots__ = (*BaseModelWithHTTP.__slots__, "asset", "sku_id")
+    __slots__ = ("asset", "sku_id")
 
     @override
     def _initialize(self, data: AvatarDecorationDataResponse) -> None:
@@ -130,7 +127,7 @@ class AvatarDecorationData(BaseModelWithHTTP["AvatarDecorationDataResponse"]):
 class DisplayNameStyle(BaseModel["DisplayNameStyleResponse"]):
     """Represents Discord API data for `DisplayNameStyle`."""
 
-    __slots__ = (*BaseModel.__slots__, "colors", "effect", "font")
+    __slots__ = ("colors", "effect", "font")
 
     @override
     def _initialize(self, data: DisplayNameStyleResponse) -> None:
@@ -139,29 +136,28 @@ class DisplayNameStyle(BaseModel["DisplayNameStyleResponse"]):
         self.colors: list[int] = data["colors"]
 
 
-class PartialUser[D = PartialUserResponse](BaseModelWithSession[D]):
+class PartialUser[D = PartialUserResponse](BaseModel[D]):
     """Represents a partial Discord user payload."""
 
     __slots__ = (
-        *BaseModelWithSession.__slots__,
-        "id",
-        "username",
-        "discriminator",
-        "global_name",
+        "accent_color",
         "avatar",
         "avatar_decoration_data",
-        "collectibles",
-        "display_name_styles",
-        "primary_guild",
-        "bot",
-        "system",
         "banner",
-        "accent_color",
+        "bot",
+        "collectibles",
+        "discriminator",
+        "display_name_styles",
+        "global_name",
+        "id",
+        "primary_guild",
         "public_flags",
+        "system",
+        "username",
     )
 
     @override
-    def _initialize(self, data: D) -> None:  # type: ignore
+    def _initialize(self, data: D) -> None:
         data_: PartialUserResponse = data  # pyright: ignore[reportAssignmentType]
 
         self.id: int = convert_snowflake(data, "id")
@@ -214,11 +210,10 @@ class CurrentUser(PartialUser["CurrentUserResponse"]):
     """Represents the currently authorized Discord user."""
 
     __slots__ = (
-        *PartialUser.__slots__,
         "_email",
+        "_premium_type",
         "locale",
         "mfa_enabled",
-        "_premium_type",
     )
 
     @override
@@ -260,7 +255,6 @@ class HarvestMetadata(BaseModel["HarvestMetadataResponse"]):
     """Represents Discord API data for `HarvestMetadata`."""
 
     __slots__ = (
-        *BaseModel.__slots__,
         "backend_attempts",
         "bypass_cooldown",
         "is_provisional",
@@ -281,19 +275,18 @@ class Harvest(BaseModel["HarvestResponse"]):
     """Represents Discord API data for `Harvest`."""
 
     __slots__ = (
-        *BaseModel.__slots__,
-        "harvest_id",
-        "user_id",
+        "backends",
+        "completed_at",
+        "created_at",
         "email",
+        "harvest_id",
+        "harvest_metadata",
+        "polled_at",
+        "shadow_run",
         "state",
         "status",
-        "created_at",
-        "completed_at",
-        "polled_at",
-        "backends",
         "updated_at",
-        "shadow_run",
-        "harvest_metadata",
+        "user_id",
     )
 
     @override

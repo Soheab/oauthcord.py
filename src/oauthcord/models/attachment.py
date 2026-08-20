@@ -32,7 +32,6 @@ class ContentScanMetadata(BaseModel["ContentScanMetadataResponse"]):
     """
 
     __slots__ = (
-        *BaseModel.__slots__,
         "flags",
         "version",
     )
@@ -85,24 +84,23 @@ class Attachment(BaseModel["AttachmentPayload", "PartialAttachmentRequest"]):
     """
 
     __slots__ = (
-        *BaseModel.__slots__,
-        "id",
-        "filename",
-        "size",
-        "url",
-        "proxy_url",
-        "title",
-        "description",
-        "content_type",
-        "height",
-        "width",
         "content_scan_version",
-        "placeholder_version",
-        "placeholder",
-        "ephemeral",
+        "content_type",
+        "description",
         "duration_secs",
-        "waveform",
+        "ephemeral",
+        "filename",
         "flags",
+        "height",
+        "id",
+        "placeholder",
+        "placeholder_version",
+        "proxy_url",
+        "size",
+        "title",
+        "url",
+        "waveform",
+        "width",
     )
 
     @override

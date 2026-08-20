@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, override
 
 from ..enums import RelationshipType
 from ..utils import convert_snowflake
-from ._base import BaseModelWithSession
+from ._base import BaseModel
 from .user import PartialUser, to_enum
 
 if TYPE_CHECKING:
@@ -25,8 +25,8 @@ __all__ = (
 )
 
 
-class _RelationshipBase[D: _RelationshipBasePayload](BaseModelWithSession[D]):
-    __slots__ = (*BaseModelWithSession.__slots__, "id", "since", "type", "user")
+class _RelationshipBase[D: _RelationshipBasePayload](BaseModel[D]):
+    __slots__ = ("id", "since", "type", "user")
 
     @override
     def _initialize(self, data: D) -> None:
@@ -42,7 +42,6 @@ class Relationship(_RelationshipBase["RelationshipPayload"]):
     """Represents Discord API data for `Relationship`."""
 
     __slots__ = (
-        *_RelationshipBase.__slots__,
         "has_played_game",
         "is_spam_request",
         "nickname",
@@ -68,7 +67,6 @@ class GameRelationship(_RelationshipBase["GameRelationshipPayload"]):
     """Represents Discord API data for `GameRelationship`."""
 
     __slots__ = (
-        *_RelationshipBase.__slots__,
         "application_id",
         "dm_access_type",
         "user_id",

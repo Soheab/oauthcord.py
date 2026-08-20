@@ -4,7 +4,7 @@ import datetime
 from typing import TYPE_CHECKING, override
 
 from ..utils import convert_snowflake, iso_to_datetime
-from ._base import BaseModelWithSession
+from ._base import BaseModel
 from .attachment import Attachment
 from .channel import BaseChannel, PartialChannel, _from_data
 from .components import BaseComponent, componentfrom_dict
@@ -29,11 +29,10 @@ __all__ = (
 )
 
 
-class PartialMessage(BaseModelWithSession["PartialMessagePayload"]):
+class PartialMessage(BaseModel["PartialMessagePayload"]):
     """Represents a partial Discord message payload."""
 
     __slots__ = (
-        *BaseModelWithSession.__slots__,
         "application_id",
         "author",
         "channel",
@@ -69,40 +68,39 @@ class PartialMessage(BaseModelWithSession["PartialMessagePayload"]):
 
         channel_data = data.get("channel")
         self.channel: BaseChannel | PartialChannel | None = (
-            _from_data(self._session, channel_data) if channel_data else None
+            _from_data(self._state, channel_data) if channel_data else None
         )
         self.recipient_id: int | None = convert_snowflake(
             data, "recipient_id", always_available=False
         )
 
 
-class Message(BaseModelWithSession["MessagePayload"]):
+class Message(BaseModel["MessagePayload"]):
     """Represents a full Discord message."""
 
     __slots__ = (
-        *BaseModelWithSession.__slots__,
-        "id",
-        "channel_id",
-        "lobby_id",
-        "author",
-        "content",
-        "timestamp",
-        "edited_timestamp",
-        "tts",
-        "mention_everyone",
-        "mentions",
-        "mention_roles",
-        "mention_channels",
         "attachments",
+        "author",
+        "channel_id",
+        "components",
+        "content",
+        "edited_timestamp",
         "embeds",
-        "reactions",
+        "flags",
+        "id",
+        "lobby_id",
+        "mention_channels",
+        "mention_everyone",
+        "mention_roles",
+        "mentions",
         "nonce",
         "pinned",
-        "webhook_id",
-        "type",
-        "flags",
-        "components",
+        "reactions",
         "thread",
+        "timestamp",
+        "tts",
+        "type",
+        "webhook_id",
     )
 
     @override
@@ -154,5 +152,5 @@ class Message(BaseModelWithSession["MessagePayload"]):
 
         thread_data = data.get("thread")
         self.thread: BaseChannel | PartialChannel | None = (
-            _from_data(self._session, thread_data) if thread_data else None
+            _from_data(self._state, thread_data) if thread_data else None
         )

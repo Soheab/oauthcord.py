@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from ..utils import convert_snowflake
-from ._base import BaseModelWithSession
+from ._base import BaseModel
 from .asset import Asset
 from .flags import Permissions
 
@@ -15,18 +15,17 @@ if TYPE_CHECKING:
 __all__ = ("Guild",)
 
 
-class Guild(BaseModelWithSession["GuildPayload"]):
+class Guild(BaseModel["GuildPayload"]):
     """Represents a Discord guild available to the authorized user."""
 
     __slots__ = (
-        *BaseModelWithSession.__slots__,
+        "banner",
+        "features",
+        "icon",
         "id",
         "name",
-        "icon",
-        "banner",
         "owner",
         "permissions",
-        "features",
     )
 
     @override

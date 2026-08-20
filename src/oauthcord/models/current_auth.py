@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any, override
 
 from ..enums import Scope
 from ..utils import convert_snowflake
-from ._base import BaseModelWithSession
+from ._base import BaseModel
 from .application import PartialApplication
 from .user import PartialUser
 
@@ -26,12 +26,11 @@ __all__ = (
 
 
 class CurrentApplication(
-    BaseModelWithSession["CurrentAuthorizationInformationApplicationResponsePayload"]
+    BaseModel["CurrentAuthorizationInformationApplicationResponsePayload"]
 ):
     """Represents Discord API data for `CurrentApplication`."""
 
     __slots__ = (
-        *BaseModelWithSession.__slots__,
         "bot_public",
         "bot_require_code_grant",
         "description",
@@ -109,16 +108,13 @@ class CurrentApplication(
         return await self._session.get_partial_application(application_id=self.id)
 
 
-class CurrentInformation(
-    BaseModelWithSession["CurrentAuthorizationInformationResponsePayload"]
-):
+class CurrentInformation(BaseModel["CurrentAuthorizationInformationResponsePayload"]):
     """Represents Discord API data for `CurrentInformation`."""
 
     __slots__ = (
-        *BaseModelWithSession.__slots__,
         "_expires",
-        "scopes",
         "application",
+        "scopes",
         "user",
     )
 

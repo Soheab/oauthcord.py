@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, override
 
 from ..enums import InviteTargetType, InviteType, to_enum
 from ..utils import convert_snowflake, iso_to_datetime
-from ._base import BaseModelWithSession
+from ._base import BaseModel
 from .application import PartialApplication
 from .asset import Asset
 from .channel import PartialChannel
@@ -24,11 +24,10 @@ __all__ = (
 )
 
 
-class InviteGuild(BaseModelWithSession["InviteGuildResponse"]):
+class InviteGuild(BaseModel["InviteGuildResponse"]):
     """Represents Discord API data for `InviteGuild`."""
 
     __slots__ = (
-        *BaseModelWithSession.__slots__,
         "banner",
         "description",
         "features",
@@ -67,31 +66,30 @@ class InviteGuild(BaseModelWithSession["InviteGuildResponse"]):
         self.nsfw_level: int = data["nsfw_level"]
 
 
-class Invite(BaseModelWithSession["InviteResponse"]):
+class Invite(BaseModel["InviteResponse"]):
     """Represents a Discord invite."""
 
     __slots__ = (
-        *BaseModelWithSession.__slots__,
-        "code",
-        "type",
-        "guild_id",
-        "guild",
-        "channel",
-        "profile",
-        "inviter",
-        "target_type",
-        "target_user",
-        "target_application",
-        "roles",
-        "approximate_presence_count",
         "approximate_member_count",
+        "approximate_presence_count",
+        "channel",
+        "code",
         "expires_at",
         "flags",
+        "guild",
+        "guild_id",
+        "guild_join_request",
+        "guild_scheduled_event",
+        "inviter",
         "new_member",
+        "profile",
+        "roles",
         "show_verification_form",
         "stage_instance",
-        "guild_scheduled_event",
-        "guild_join_request",
+        "target_application",
+        "target_type",
+        "target_user",
+        "type",
     )
 
     @override

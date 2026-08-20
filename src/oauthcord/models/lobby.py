@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from ..utils import convert_snowflake
-from ._base import BaseModel, BaseModelWithSession
+from ._base import BaseModel
 from .channel import GuildChannel, _from_data
 from .flags import LobbyFlags, LobbyMemberFlags
 
@@ -23,7 +23,7 @@ __all__ = (
 class LobbyMember(BaseModel["LobbyMemberResponse"]):
     """Represents a Discord lobby member payload."""
 
-    __slots__ = (*BaseModel.__slots__, "flags", "id", "metadata")
+    __slots__ = ("flags", "id", "metadata")
 
     @override
     def _initialize(self, data: LobbyMemberResponse) -> None:
@@ -36,17 +36,16 @@ class LobbyMember(BaseModel["LobbyMemberResponse"]):
         )
 
 
-class Lobby(BaseModelWithSession["LobbyResponse"]):
+class Lobby(BaseModel["LobbyResponse"]):
     """Represents a Discord lobby payload."""
 
     __slots__ = (
-        *BaseModelWithSession.__slots__,
-        "id",
         "application_id",
-        "metadata",
-        "members",
         "flags",
+        "id",
         "linked_channel",
+        "members",
+        "metadata",
     )
 
     @override
@@ -66,7 +65,7 @@ class Lobby(BaseModelWithSession["LobbyResponse"]):
 
         linked_channel_data = data.get("linked_channel")
         parsed = (
-            _from_data(self._session, linked_channel_data)
+            _from_data(self._state, linked_channel_data)
             if linked_channel_data
             else None
         )

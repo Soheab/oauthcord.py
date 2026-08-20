@@ -13,7 +13,7 @@ from ..enums import (
     to_enum,
 )
 from ..utils import convert_snowflake, iso_to_datetime
-from ._base import BaseModel, BaseModelWithSession
+from ._base import BaseModel
 from .asset import Asset
 from .emoji import Emoji
 from .flags import ChannelFlags, Permissions, RecipientFlags
@@ -21,12 +21,12 @@ from .member import GuildMember, ThreadMember
 from .user import PartialUser
 
 if TYPE_CHECKING:
-    from ..client import AuthorisedSession
     from ..internals._types.channels import (
         CallEligibilityResponse,
         ChannelNickResponse,
         DefaultReactionResponse,
         DMChannelResponse,
+        EphemeralDMChannelResponse,  # noqa: F401
         FollowedChannelResponse,
         ForumTagResponse,
         GetChannelLinkedAccountsResponse,
@@ -46,6 +46,7 @@ if TYPE_CHECKING:
         _ThreadChannelResponse,
         _VoiceChannelResponse,
     )
+    from ..internals.state import State
 
     type EmojiPayload = DefaultReactionResponse | IconEmojiResponse
 else:
@@ -80,7 +81,7 @@ __all__ = (
 class PermissionOverwrite(BaseModel["PermissionOverwriteResponse"]):
     """Represents Discord API data for `PermissionOverwrite`."""
 
-    __slots__ = (*BaseModel.__slots__, "allow", "deny", "id", "type")
+    __slots__ = ("allow", "deny", "id", "type")
 
     @override
     def _initialize(self, data: PermissionOverwriteResponse) -> None:
@@ -110,7 +111,6 @@ class ThreadMetadata(BaseModel["ThreadMetadataResponse"]):
     """Represents Discord API data for `ThreadMetadata`."""
 
     __slots__ = (
-        *BaseModel.__slots__,
         "archive_timestamp",
         "archived",
         "auto_archive_duration",
@@ -136,7 +136,7 @@ class ThreadMetadata(BaseModel["ThreadMetadataResponse"]):
 class ForumTag(BaseModel["ForumTagResponse"]):
     """Represents Discord API data for `ForumTag`."""
 
-    __slots__ = (*BaseModel.__slots__, "emoji", "id", "moderated", "name")
+    __slots__ = ("emoji", "id", "moderated", "name")
 
     @override
     def _initialize(self, data: ForumTagResponse) -> None:
@@ -153,7 +153,6 @@ class LinkedLobby(BaseModel["LinkedLobbyResponse"]):
     """Represents Discord API data for `LinkedLobby`."""
 
     __slots__ = (
-        *BaseModel.__slots__,
         "application_id",
         "linked_at",
         "linked_by",
@@ -175,7 +174,7 @@ class LinkedLobby(BaseModel["LinkedLobbyResponse"]):
 class FollowedChannel(BaseModel["FollowedChannelResponse"]):
     """Represents Discord API data for `FollowedChannel`."""
 
-    __slots__ = (*BaseModel.__slots__, "channel_id", "webhook_id")
+    __slots__ = ("channel_id", "webhook_id")
 
     @override
     def _initialize(self, data: FollowedChannelResponse) -> None:
@@ -186,7 +185,7 @@ class FollowedChannel(BaseModel["FollowedChannelResponse"]):
 class LinkedAccount(BaseModel["LinkedAccountResponse"]):
     """Represents Discord API data for `LinkedAccount`."""
 
-    __slots__ = (*BaseModel.__slots__, "id", "name")
+    __slots__ = ("id", "name")
 
     @override
     def _initialize(self, data: LinkedAccountResponse) -> None:
@@ -197,7 +196,7 @@ class LinkedAccount(BaseModel["LinkedAccountResponse"]):
 class ChannelLinkedAccounts(BaseModel["GetChannelLinkedAccountsResponse"]):
     """Represents Discord API data for `ChannelLinkedAccounts`."""
 
-    __slots__ = (*BaseModel.__slots__, "linked_accounts")
+    __slots__ = "linked_accounts"
 
     @override
     def _initialize(self, data: GetChannelLinkedAccountsResponse) -> None:
@@ -213,7 +212,7 @@ class ChannelLinkedAccounts(BaseModel["GetChannelLinkedAccountsResponse"]):
 class ChannelNick(BaseModel["ChannelNickResponse"]):
     """Represents Discord API data for `ChannelNick`."""
 
-    __slots__ = (*BaseModel.__slots__, "id", "nick")
+    __slots__ = ("id", "nick")
 
     @override
     def _initialize(self, data: ChannelNickResponse) -> None:
@@ -224,7 +223,7 @@ class ChannelNick(BaseModel["ChannelNickResponse"]):
 class SafetyWarning(BaseModel["SafetyWarningResponse"]):
     """Represents Discord API data for `SafetyWarning`."""
 
-    __slots__ = (*BaseModel.__slots__, "dismiss_timestamp", "expiry", "id", "type")
+    __slots__ = ("dismiss_timestamp", "expiry", "id", "type")
 
     @override
     def _initialize(self, data: SafetyWarningResponse) -> None:
@@ -236,11 +235,10 @@ class SafetyWarning(BaseModel["SafetyWarningResponse"]):
         )
 
 
-class BaseChannel[D: Any = "_BaseChannelResponse"](BaseModelWithSession[D]):
+class BaseChannel[D: Any = "_BaseChannelResponse"](BaseModel[D]):
     """Represents Discord API data for `BaseChannel`."""
 
     __slots__ = (
-        *BaseModelWithSession.__slots__,
         "flags",
         "id",
         "last_message_id",
@@ -263,7 +261,6 @@ class GuildChannel[D: Any = _GuildChannelResponse](BaseChannel[D]):
     """Represents Discord API data for `GuildChannel`."""
 
     __slots__ = (
-        *BaseChannel.__slots__,
         "guild_id",
         "icon_emoji",
         "name",
@@ -304,7 +301,6 @@ class TextChannel(GuildChannel["_TextChannelResponse"]):
     """Represents Discord API data for `TextChannel`."""
 
     __slots__ = (
-        *GuildChannel.__slots__,
         "default_auto_archive_duration",
         "default_thread_rate_limit_per_user",
         "last_pin_timestamp",
@@ -334,7 +330,6 @@ class VoiceChannel(GuildChannel["_VoiceChannelResponse"]):
     """Represents Discord API data for `VoiceChannel`."""
 
     __slots__ = (
-        *GuildChannel.__slots__,
         "bitrate",
         "hd_streaming_buyer_id",
         "hd_streaming_until",
@@ -383,7 +378,6 @@ class ForumChannel(GuildChannel["_ForumChannelResponse"]):
     """Represents Discord API data for `ForumChannel`."""
 
     __slots__ = (
-        *GuildChannel.__slots__,
         "available_tags",
         "default_auto_archive_duration",
         "default_forum_layout",
@@ -440,9 +434,14 @@ class ThreadChannel(BaseChannel["_ThreadChannelResponse"]):
     """Represents Discord API data for `ThreadChannel`."""
 
     __slots__ = (
-        *BaseChannel.__slots__,
         "applied_tags",
+        "archive_timestamp",
+        "archived",
+        "auto_archive_duration",
+        "created_at",
         "guild_id",
+        "invitable",
+        "locked",
         "member",
         "member_count",
         "member_ids_preview",
@@ -454,13 +453,6 @@ class ThreadChannel(BaseChannel["_ThreadChannelResponse"]):
         "permissions",
         "rate_limit_per_user",
         "total_message_sent",
-        # METADATA
-        "archive_timestamp",
-        "archived",
-        "auto_archive_duration",
-        "created_at",
-        "invitable",
-        "locked",
     )
 
     @override
@@ -476,7 +468,7 @@ class ThreadChannel(BaseChannel["_ThreadChannelResponse"]):
         )
         owner_data = data.get("owner")
         self.owner: GuildMember | None = (
-            GuildMember(session=self._session, data=owner_data, guild_id=self.guild_id)
+            GuildMember(state=self._state, data=owner_data, guild_id=self.guild_id)
             if owner_data
             else None
         )
@@ -486,7 +478,7 @@ class ThreadChannel(BaseChannel["_ThreadChannelResponse"]):
         self.total_message_sent: int | None = data.get("total_message_sent")
 
         self.member: ThreadMember | None = (
-            ThreadMember(session=self._session, data=md, guild_id=self.guild_id)
+            ThreadMember(state=self._state, data=md, guild_id=self.guild_id)
             if (md := data.get("member"))
             else None
         )
@@ -518,7 +510,7 @@ class ThreadChannel(BaseChannel["_ThreadChannelResponse"]):
 
 
 class PrivateChannel[D = PrivateChannelResponse](BaseChannel[D]):
-    __slots__ = (*BaseChannel.__slots__, "recipients")
+    __slots__ = "recipients"
 
     @override
     def _initialize(self, data: D) -> None:
@@ -546,7 +538,6 @@ class DMChannel(PrivateChannel["DMChannelResponse"]):
     """Represents Discord API data for `DMChannel`."""
 
     __slots__ = (
-        *PrivateChannel.__slots__,
         "is_message_request",
         "is_message_request_timestamp",
         "is_spam",
@@ -579,7 +570,6 @@ class GroupDMChannel(PrivateChannel["GroupDMChannelResponse"]):
     """Represents Discord API data for `GroupDMChannel`."""
 
     __slots__ = (
-        *PrivateChannel.__slots__,
         "application_id",
         "blocked_user_warning_dismissed",
         "icon",
@@ -645,11 +635,10 @@ class EphemeralDMChannel(PrivateChannel["EphemeralDMChannelResponse"]):
     """Represents Discord API data for `EphemeralDMChannel`."""
 
 
-class PartialChannel(BaseModelWithSession["PartialChannelResponse"]):
+class PartialChannel(BaseModel["PartialChannelResponse"]):
     """Represents Discord API data for `PartialChannel`."""
 
     __slots__ = (
-        *BaseModelWithSession.__slots__,
         "guild_id",
         "icon",
         "id",
@@ -682,10 +671,7 @@ class PartialChannel(BaseModelWithSession["PartialChannelResponse"]):
 class CallEligibility(BaseModel["CallEligibilityResponse"]):
     """Represents Discord API data for `CallEligibility`."""
 
-    __slots__ = (
-        *BaseModel.__slots__,
-        "ringable",
-    )
+    __slots__ = ("ringable",)
 
     @override
     def _initialize(self, data: CallEligibilityResponse) -> None:
@@ -693,15 +679,15 @@ class CallEligibility(BaseModel["CallEligibilityResponse"]):
 
 
 def _from_data(  # type: ignore
-    session: AuthorisedSession, data: _BaseChannelResponse | PartialChannelResponse
+    state: State, data: _BaseChannelResponse | PartialChannelResponse
 ) -> BaseChannel | PartialChannel:
     match to_enum(ChannelType, data["type"]):
         case ChannelType.DM:
-            return DMChannel(session=session, data=data)  # type: ignore
+            return DMChannel(state=state, data=data)  # type: ignore
         case ChannelType.GROUP_DM | ChannelType.LFG_GROUP_DM:
-            return GroupDMChannel(session=session, data=data)  # type: ignore
+            return GroupDMChannel(state=state, data=data)  # type: ignore
         case ChannelType.EPHEMERAL_DM:
-            return EphemeralDMChannel(session=session, data=data)  # type: ignore
+            return EphemeralDMChannel(state=state, data=data)  # type: ignore
         case (
             ChannelType.GUILD_TEXT
             | ChannelType.GUILD_ANNOUNCEMENT
@@ -709,19 +695,19 @@ def _from_data(  # type: ignore
             | ChannelType.GUILD_LFG
             | ChannelType.GUILD_DIRECTORY
         ):
-            return TextChannel(session=session, data=data)  # type: ignore
+            return TextChannel(state=state, data=data)  # type: ignore
         case ChannelType.GUILD_CATEGORY | ChannelType.LOBBY:
-            return GuildChannel(session=session, data=data)  # type: ignore
+            return GuildChannel(state=state, data=data)  # type: ignore
         case ChannelType.GUILD_VOICE | ChannelType.GUILD_STAGE_VOICE:
-            return VoiceChannel(session=session, data=data)  # type: ignore
+            return VoiceChannel(state=state, data=data)  # type: ignore
         case ChannelType.GUILD_FORUM | ChannelType.GUILD_MEDIA:
-            return ForumChannel(session=session, data=data)  # type: ignore
+            return ForumChannel(state=state, data=data)  # type: ignore
         case (
             ChannelType.ANNOUNCEMENT_THREAD
             | ChannelType.PUBLIC_THREAD
             | ChannelType.PRIVATE_THREAD
             | ChannelType.THREAD_ALPHA
         ):
-            return ThreadChannel(session=session, data=data)  # type: ignore
+            return ThreadChannel(state=state, data=data)  # type: ignore
         case _:
-            return PartialChannel(session=session, data=data)  # type: ignore
+            return PartialChannel(state=state, data=data)  # type: ignore

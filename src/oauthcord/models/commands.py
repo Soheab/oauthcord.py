@@ -15,12 +15,12 @@ from ..enums import (
     to_enum,
 )
 from ..utils import _serialize_localizations, convert_snowflake
-from ._base import BaseModel, BaseModelWithHTTP
+from ._base import BaseModel
 from .flags import Permissions
 
 if TYPE_CHECKING:
     from ..internals._types import commands
-    from ..internals.http import OAuth2HTTPClient
+    from ..internals.state import State
 
 __all__ = (
     "ApplicationCommandPermission",
@@ -39,7 +39,7 @@ class OptionChoice(
         "commands._StringApplicationCommandOptionChoiceResponse | commands.ApplicationCommandOptionChoiceRequest",
     ]
 ):
-    __slots__ = (*BaseModel.__slots__, "name", "name_localizations", "value")
+    __slots__ = ("name", "name_localizations", "value")
 
     @override
     def _initialize(
@@ -74,7 +74,6 @@ class Option(
     ]
 ):
     __slots__ = (
-        *BaseModel.__slots__,
         "autocomplete",
         "channel_types",
         "choices",
@@ -187,7 +186,6 @@ class Option(
 
 class RequestCommand(BaseModel["commands.ApplicationCommandRequest"]):
     __slots__ = (
-        *BaseModel.__slots__,
         "contexts",
         "default_member_permissions",
         "description",
@@ -286,9 +284,8 @@ class RequestCommand(BaseModel["commands.ApplicationCommandRequest"]):
 
 class Command[
     D = commands.ApplicationCommandResponse | commands.GuildApplicationCommandResponse
-](BaseModelWithHTTP[D]):
+](BaseModel[D]):
     __slots__ = (
-        *BaseModelWithHTTP.__slots__,
         "application_id",
         "contexts",
         "default_member_permissions",
@@ -353,9 +350,8 @@ class Command[
         ]
 
 
-class Subcommand[D = commands._SubCommandCommandOptionResponse](BaseModelWithHTTP[D]):
+class Subcommand[D = commands._SubCommandCommandOptionResponse](BaseModel[D]):
     __slots__ = (
-        *BaseModelWithHTTP.__slots__,
         "description",
         "description_localizations",
         "name",
@@ -368,11 +364,11 @@ class Subcommand[D = commands._SubCommandCommandOptionResponse](BaseModelWithHTT
     def __init__(
         self,
         *,
-        http: OAuth2HTTPClient,
+        state: State,
         parent: Group,
         data: D,
     ) -> None:
-        super().__init__(http=http, data=data)
+        super().__init__(state=state, data=data)
         self.parent: Group = parent
 
     @override
@@ -405,27 +401,27 @@ class Group(
         "commands.ApplicationCommandResponse | commands.GuildApplicationCommandResponse"
     ],
 ):
-    __slots__ = (*Command.__slots__, "commands")
+    __slots__ = "commands"
 
     def __init__(
         self,
         *,
-        http: OAuth2HTTPClient,
+        state: State,
         command: commands.ApplicationCommandResponse
         | commands.GuildApplicationCommandResponse,
         data: commands._SubCommandGroupCommandOptionResponse,
     ) -> None:
-        super().__init__(http=http, data=command)
+        super().__init__(state=state, data=command)
         self.commands: list[Subcommand] = [
-            Subcommand(http=self._http, parent=self, data=option_data)
+            Subcommand(state=self._state, parent=self, data=option_data)
             for option_data in data.get("options", [])
         ]
 
 
 class ApplicationCommandPermission(
-    BaseModelWithHTTP["commands.ApplicationCommandPermissionsResponse"]
+    BaseModel["commands.ApplicationCommandPermissionsResponse"]
 ):
-    __slots__ = (*BaseModelWithHTTP.__slots__, "id", "permission", "type")
+    __slots__ = ("id", "permission", "type")
 
     @override
     def _initialize(self, data: commands.ApplicationCommandPermissionsResponse) -> None:
@@ -437,13 +433,12 @@ class ApplicationCommandPermission(
 
 
 class GuildApplicationCommandPermissions(
-    BaseModelWithHTTP["commands.GuildApplicationCommandPermissionsResponse"]
+    BaseModel["commands.GuildApplicationCommandPermissionsResponse"]
 ):
     __slots__ = (
-        *BaseModelWithHTTP.__slots__,
-        "id",
         "application_id",
         "guild_id",
+        "id",
         "permissions",
     )
 
@@ -461,7 +456,7 @@ class GuildApplicationCommandPermissions(
 
 
 def _data_to_obj(  # pyright: ignore[reportUnusedFunction]
-    http: OAuth2HTTPClient,
+    state: State,
     data: list[commands.ApplicationCommandResponse],
 ) -> list[Command | Group]:
     res: list[Command | Group] = []
@@ -470,16 +465,16 @@ def _data_to_obj(  # pyright: ignore[reportUnusedFunction]
             "options", []
         )
         if not options or d.get("type", 1) != 1:
-            res.append(Command(http=http, data=d))
+            res.append(Command(state=state, data=d))
             continue
 
         created_group = False
         for option in options:
             if option["type"] == 2:
-                res.append(Group(http=http, command=d, data=option))
+                res.append(Group(state=state, command=d, data=option))
                 created_group = True
 
         if not created_group:
-            res.append(Command(http=http, data=d))
+            res.append(Command(state=state, data=d))
 
     return res

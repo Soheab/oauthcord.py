@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, override
 
 from ..enums import IntegrationType, Service, Visibility
 from ..utils import convert_snowflake
-from ._base import BaseModel, BaseModelWithHTTP
+from ._base import BaseModel
 from .asset import Asset
 from .user import to_enum
 
@@ -31,11 +31,10 @@ __all__ = (
 )
 
 
-class Connection(BaseModelWithHTTP["ConnectionPayload"]):
+class Connection(BaseModel["ConnectionPayload"]):
     """Represents a Discord user connection."""
 
     __slots__ = (
-        *BaseModelWithHTTP.__slots__,
         "friend_sync",
         "id",
         "integrations",
@@ -68,8 +67,8 @@ class Connection(BaseModelWithHTTP["ConnectionPayload"]):
         self.visibility: Visibility = to_enum(Visibility, data["visibility"])
 
 
-class Integration(BaseModelWithHTTP["IntegrationResponsePayload"]):
-    __slots__ = (*BaseModelWithHTTP.__slots__, "account", "guild", "id", "type")
+class Integration(BaseModel["IntegrationResponsePayload"]):
+    __slots__ = ("account", "guild", "id", "type")
 
     @override
     def _initialize(self, data: IntegrationResponsePayload) -> None:
@@ -84,7 +83,7 @@ class Integration(BaseModelWithHTTP["IntegrationResponsePayload"]):
 
 
 class IntegrationAccount(BaseModel["IntegrationAccountResponsePayload"]):
-    __slots__ = (*BaseModel.__slots__, "id", "name")
+    __slots__ = ("id", "name")
 
     @override
     def _initialize(self, data: IntegrationAccountResponsePayload) -> None:
@@ -92,12 +91,11 @@ class IntegrationAccount(BaseModel["IntegrationAccountResponsePayload"]):
         self.name: str = data["name"]
 
 
-class IntegrationGuild(BaseModelWithHTTP["IntegrationGuildResponsePayload"]):
+class IntegrationGuild(BaseModel["IntegrationGuildResponsePayload"]):
     __slots__ = (
-        *BaseModelWithHTTP.__slots__,
+        "icon",
         "id",
         "name",
-        "icon",
     )
 
     @override

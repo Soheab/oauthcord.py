@@ -12,7 +12,7 @@ from ..enums import (
     to_enum,
 )
 from ..utils import convert_snowflake, iso_to_datetime
-from ._base import BaseModel, BaseModelWithSession
+from ._base import BaseModel
 from .store import SKU, SubscriptionPlan
 from .user import PartialUser
 
@@ -37,7 +37,6 @@ class QuestRewardCode(BaseModel["QuestRewardCodeResponse"]):
     """Quest reward code metadata returned with entitlement tenant data."""
 
     __slots__ = (
-        *BaseModel.__slots__,
         "claimed_at",
         "code",
         "platform",
@@ -59,7 +58,7 @@ class QuestRewardCode(BaseModel["QuestRewardCodeResponse"]):
 class QuestRewardsMetadata(BaseModel["QuestRewardsMetadataResponse"]):
     """Represents Discord API data for `QuestRewardsMetadata`."""
 
-    __slots__ = (*BaseModel.__slots__, "reward_code", "tag")
+    __slots__ = ("reward_code", "tag")
 
     @override
     def _initialize(self, data: QuestRewardsMetadataResponse) -> None:
@@ -72,7 +71,7 @@ class QuestRewardsMetadata(BaseModel["QuestRewardsMetadataResponse"]):
 class TenantMetadata(BaseModel["TenantMetadataResponse"]):
     """Represents Discord API data for `TenantMetadata`."""
 
-    __slots__ = (*BaseModel.__slots__, "quest_rewards")
+    __slots__ = "quest_rewards"
 
     @override
     def _initialize(self, data: TenantMetadataResponse) -> None:
@@ -81,36 +80,35 @@ class TenantMetadata(BaseModel["TenantMetadataResponse"]):
         )
 
 
-class Entitlement(BaseModelWithSession["EntitlementResponse"]):
+class Entitlement(BaseModel["EntitlementResponse"]):
     """Represents a Discord application entitlement."""
 
     __slots__ = (
-        *BaseModelWithSession.__slots__,
-        "id",
-        "type",
-        "sku_id",
         "application_id",
-        "user_id",
-        "user",
-        "guild_id",
-        "parent_id",
-        "deleted",
-        "consumed",
         "branches",
-        "starts_at",
+        "consumed",
+        "deleted",
         "ends_at",
-        "promotion_id",
-        "subscription_id",
-        "gift_code_flags",
-        "gift_code_batch_id",
-        "gifter_user_id",
-        "gift_style",
-        "fulfillment_status",
         "fulfilled_at",
-        "source_type",
-        "tenant_metadata",
+        "fulfillment_status",
+        "gift_code_batch_id",
+        "gift_code_flags",
+        "gift_style",
+        "gifter_user_id",
+        "guild_id",
+        "id",
+        "parent_id",
+        "promotion_id",
         "sku",
+        "sku_id",
+        "source_type",
+        "starts_at",
+        "subscription_id",
         "subscription_plan",
+        "tenant_metadata",
+        "type",
+        "user",
+        "user_id",
     )
 
     @override
