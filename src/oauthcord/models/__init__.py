@@ -121,7 +121,6 @@ __all__ = (
     "GuildApplicationCommandPermissions",
     "GuildChannel",
     "GuildMember",
-    "GuildMemberWithUser",
     "Harvest",
     "HarvestMetadata",
     "Integration",
