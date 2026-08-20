@@ -42,4 +42,4 @@ class InviteClientMixin:
         res = await self.client.http.accept_invite(
             self.token, code=code, session_id=session_id
         )
-        return utils._construct_model(Invite, data=res, session=self)
+        return utils._construct_model(Invite, data=res, state=self._state)

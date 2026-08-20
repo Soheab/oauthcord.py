@@ -60,7 +60,7 @@ class StoreClientMixin:
             localize=localize,
             with_bundled_skus=with_bundled_skus,
         )
-        return [utils._construct_model(SKU, data=sku, session=self) for sku in res]
+        return [utils._construct_model(SKU, data=sku, state=self._state) for sku in res]
 
     async def create_sku(
         self: _AuthorisedSessionProto,
@@ -175,7 +175,7 @@ class StoreClientMixin:
             if isinstance(release_date, datetime.date)
             else release_date,
         )
-        return utils._construct_model(SKU, data=res, session=self)
+        return utils._construct_model(SKU, data=res, state=self._state)
 
     async def get_sku(
         self: _AuthorisedSessionProto,
@@ -207,7 +207,7 @@ class StoreClientMixin:
             country_code=country_code,
             localize=localize,
         )
-        return utils._construct_model(SKU, data=res, session=self)
+        return utils._construct_model(SKU, data=res, state=self._state)
 
     async def modify_sku(
         self: _AuthorisedSessionProto,
@@ -314,7 +314,7 @@ class StoreClientMixin:
             if isinstance(release_date, datetime.date)
             else release_date,
         )
-        return utils._construct_model(SKU, data=res, session=self)
+        return utils._construct_model(SKU, data=res, state=self._state)
 
     async def get_sku_store_listings(
         self: _AuthorisedSessionProto,
@@ -347,7 +347,7 @@ class StoreClientMixin:
             localize=localize,
         )
         return [
-            utils._construct_model(StoreListing, data=listing, session=self)
+            utils._construct_model(StoreListing, data=listing, state=self._state)
             for listing in res
         ]
 
@@ -438,7 +438,7 @@ class StoreClientMixin:
             hero_background_asset_id=hero_background_asset_id,
             hero_video_asset_id=hero_video_asset_id,
         )
-        return utils._construct_model(StoreListing, data=res, session=self)
+        return utils._construct_model(StoreListing, data=res, state=self._state)
 
     async def get_store_listing(
         self: _AuthorisedSessionProto,
@@ -470,7 +470,7 @@ class StoreClientMixin:
             country_code=country_code,
             localize=localize,
         )
-        return utils._construct_model(StoreListing, data=res, session=self)
+        return utils._construct_model(StoreListing, data=res, state=self._state)
 
     async def modify_store_listing(
         self: _AuthorisedSessionProto,
@@ -555,7 +555,7 @@ class StoreClientMixin:
             hero_background_asset_id=hero_background_asset_id,
             hero_video_asset_id=hero_video_asset_id,
         )
-        return utils._construct_model(StoreListing, data=res, session=self)
+        return utils._construct_model(StoreListing, data=res, state=self._state)
 
     async def delete_store_listing(
         self: _AuthorisedSessionProto,
@@ -594,7 +594,10 @@ class StoreClientMixin:
         """
 
         res = await self.client.http.get_subscription_plans(self.token, sku_id=sku_id)
-        return [utils._construct_model(SubscriptionPlan, data=plan) for plan in res]
+        return [
+            utils._construct_model(SubscriptionPlan, data=plan, state=self._state)
+            for plan in res
+        ]
 
     async def get_application_store_assets(
         self: _AuthorisedSessionProto,
@@ -618,7 +621,10 @@ class StoreClientMixin:
             self.token,
             application_id=application_id,
         )
-        return [utils._construct_model(StoreAsset, data=asset) for asset in res]
+        return [
+            utils._construct_model(StoreAsset, data=asset, state=self._state)
+            for asset in res
+        ]
 
     async def create_application_store_asset(
         self: _AuthorisedSessionProto,
@@ -646,7 +652,7 @@ class StoreClientMixin:
             application_id=application_id,
             file=file,
         )
-        return utils._construct_model(StoreAsset, data=res)
+        return utils._construct_model(StoreAsset, data=res, state=self._state)
 
     async def delete_application_store_asset(
         self: _AuthorisedSessionProto,

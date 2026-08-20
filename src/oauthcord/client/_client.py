@@ -10,7 +10,8 @@ import aiohttp
 
 from .. import utils
 from ..enums import Scope
-from ..internals.http import OAuth2HTTPClient
+from ..internals.http import HTTPClient
+from ..internals.state import State
 from ..models.access_token import AccessToken
 from ..models.current_auth import CurrentInformation
 from ._application import ApplicationClientMixin
@@ -109,6 +110,7 @@ class Client:
     """
 
     __slots__ = (
+        "_model_state",
         "_redirect_uri",
         "_revoke_tokens_on_session_close",
         "_scopes",
@@ -130,12 +132,16 @@ class Client:
         store_session: bool = False,
         revoke_tokens_on_session_close: bool = False,
     ) -> None:
-        self.http: OAuth2HTTPClient = OAuth2HTTPClient(
+        self.http: HTTPClient = HTTPClient(
             self,
             client_id=int(client_id),
             client_secret=client_secret,
             session=session,
         )
+
+        # Session-less model state, for models created outside any authorisation.
+        # Named `_model_state` because `_state` is the OAuth2 state string.
+        self._model_state: State = State(self.http)
 
         self._scopes: list[Scope | UnknownScope] = []
         self.scopes = scopes
@@ -455,9 +461,15 @@ class AuthorisedSession(
         self.client: Client = client
         self.token: AccessToken = token
 
+        self._state: State = State(client.http, self)
+
         self._current_authorization_information: CurrentInformation | None = None
 
         self.extras: dict[str, Any] = dict(extras) if extras else {}
+
+    @property
+    def _model_state(self) -> State:
+        return self._state
 
     def __enter__(self) -> Self:
         return self
@@ -490,7 +502,7 @@ class AuthorisedSession(
         return self
 
     @property
-    def http(self) -> OAuth2HTTPClient:
+    def http(self) -> HTTPClient:
         """Parent client's internal HTTP client.
 
         Returns

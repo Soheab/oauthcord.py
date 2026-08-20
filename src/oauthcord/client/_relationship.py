@@ -25,7 +25,7 @@ class RelationshipClientMixin:
         """
         res = await self.client.http.get_relationships(self.token)
         return [
-            utils._construct_model(Relationship, data=relationship, session=self)
+            utils._construct_model(Relationship, data=relationship, state=self._state)
             for relationship in res
         ]
 
@@ -106,7 +106,9 @@ class RelationshipClientMixin:
         """
         res = await self.client.http.get_game_relationships(self.token)
         return [
-            utils._construct_model(GameRelationship, data=relationship, session=self)
+            utils._construct_model(
+                GameRelationship, data=relationship, state=self._state
+            )
             for relationship in res
         ]
 

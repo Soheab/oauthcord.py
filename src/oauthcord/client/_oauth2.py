@@ -23,6 +23,6 @@ class Oauth2ClientMixin:
             An object containing the information.
         """
         res = await self.client.http.get_current_authorization_information(self.token)
-        info = utils._construct_model(CurrentInformation, data=res, session=self)
+        info = utils._construct_model(CurrentInformation, data=res, state=self._state)
         self.current_authorization_information = info
         return info

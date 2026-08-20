@@ -37,7 +37,7 @@ class ChannelClientMixin:
             self.token,
             user_id=user_id,
         )
-        return utils._construct_model(DMChannel, data=res, session=self)
+        return utils._construct_model(DMChannel, data=res, state=self._state)
 
     async def create_private_channel(
         self: _AuthorisedSessionProto,
@@ -70,7 +70,7 @@ class ChannelClientMixin:
             recipients=recipients,
             nicks=nicks,
         )
-        return utils._construct_model(DMChannel, data=res, session=self)
+        return utils._construct_model(DMChannel, data=res, state=self._state)
 
     async def get_guild_channels(
         self: _AuthorisedSessionProto,
@@ -104,7 +104,7 @@ class ChannelClientMixin:
             permissions=permissions,
             with_can_link_lobby=with_can_link_lobby,
         )
-        return [_from_data(session=self, data=channel) for channel in res]  # type: ignore
+        return [_from_data(state=self._state, data=channel) for channel in res]  # type: ignore
 
     async def get_call_eligibility(
         self: _AuthorisedSessionProto, *, channel_id: int | str
@@ -125,7 +125,7 @@ class ChannelClientMixin:
             self.token,
             channel_id=channel_id,
         )
-        return utils._construct_model(CallEligibility, data=res)
+        return utils._construct_model(CallEligibility, data=res, state=self._state)
 
     async def ring_channel_recipients(
         self: _AuthorisedSessionProto,
@@ -199,7 +199,7 @@ class ChannelClientMixin:
         )
         return {
             int(user_id): [
-                utils._construct_model(LinkedAccount, data=account)
+                utils._construct_model(LinkedAccount, data=account, state=self._state)
                 for account in accounts
             ]
             for user_id, accounts in res["linked_accounts"].items()

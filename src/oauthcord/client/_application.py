@@ -42,7 +42,9 @@ class ApplicationClientMixin:
             application_id=application_id,
             file=file,
         )
-        return utils._construct_model(Attachment, data=res["attachment"])
+        return utils._construct_model(
+            Attachment, data=res["attachment"], state=self._state
+        )
 
     async def get_partial_application(
         self: _AuthorisedSessionProto,
@@ -66,7 +68,7 @@ class ApplicationClientMixin:
             self.token,
             application_id=application_id,
         )
-        return utils._construct_model(PartialApplication, data=res, session=self)
+        return utils._construct_model(PartialApplication, data=res, state=self._state)
 
     async def get_user_application_role_connection(
         self: _AuthorisedSessionProto,
@@ -91,7 +93,9 @@ class ApplicationClientMixin:
             self.token,
             application_id=application_id,
         )
-        return utils._construct_model(ApplicationRoleConnection, data=res, session=self)
+        return utils._construct_model(
+            ApplicationRoleConnection, data=res, state=self._state
+        )
 
     async def edit_user_application_role_connection(
         self: _AuthorisedSessionProto,
@@ -137,7 +141,9 @@ class ApplicationClientMixin:
             platform_username=platform_username,
             metadata=metadata,
         )
-        return utils._construct_model(ApplicationRoleConnection, data=res, session=self)
+        return utils._construct_model(
+            ApplicationRoleConnection, data=res, state=self._state
+        )
 
     async def create_application_quick_link(
         self: _AuthorisedSessionProto,
@@ -182,7 +188,7 @@ class ApplicationClientMixin:
             image=image,
             custom_id=custom_id,
         )
-        return utils._construct_model(ActivityLink, data=res)
+        return utils._construct_model(ActivityLink, data=res, state=self._state)
 
     async def get_bulk_application_identities(
         self: _AuthorisedSessionProto,
@@ -210,6 +216,7 @@ class ApplicationClientMixin:
             utils._construct_model(
                 PartialApplicationIdentity,
                 data=app_data,
+                state=self._state,
             )
             for app_data in res
         ]
@@ -270,7 +277,7 @@ class ApplicationClientMixin:
             limit=limit,
         )
         return [
-            utils._construct_model(Entitlement, data=entitlement, session=self)
+            utils._construct_model(Entitlement, data=entitlement, state=self._state)
             for entitlement in res
         ]
 
@@ -299,7 +306,7 @@ class ApplicationClientMixin:
             application_id=application_id,
             entitlement_id=entitlement_id,
         )
-        return utils._construct_model(Entitlement, data=res, session=self)
+        return utils._construct_model(Entitlement, data=res, state=self._state)
 
     async def consume_application_entitlement(
         self: _AuthorisedSessionProto,

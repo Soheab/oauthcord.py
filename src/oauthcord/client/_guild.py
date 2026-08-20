@@ -25,7 +25,8 @@ class GuildClientMixin:
         """
         res = await self.client.http.get_current_user_guilds(self.token)
         return [
-            utils._construct_model(Guild, data=guild, session=self) for guild in res
+            utils._construct_model(Guild, data=guild, state=self._state)
+            for guild in res
         ]
 
     async def get_current_guild_member(
@@ -48,7 +49,9 @@ class GuildClientMixin:
         res = await self.client.http.get_current_guild_member(
             self.token, guild_id=guild_id
         )
-        return utils._construct_model(GuildMember, data=res, session=self, guild_id=guild_id)
+        return utils._construct_model(
+            GuildMember, data=res, state=self._state, guild_id=guild_id
+        )
 
     async def add_current_user_to_guild(
         self: _AuthorisedSessionProto,
@@ -134,4 +137,6 @@ class GuildClientMixin:
             bypass_verification=bypass_verification,
         )
         if res:
-            return utils._construct_model(GuildMember, data=res, session=self, guild_id=guild_id)
+            return utils._construct_model(
+                GuildMember, data=res, state=self._state, guild_id=guild_id
+            )

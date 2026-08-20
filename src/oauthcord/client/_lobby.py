@@ -71,7 +71,7 @@ class LobbyClientMixin:
             idle_timeout_seconds=idle_timeout_seconds,
             flags=flags_value,
         )
-        return utils._construct_model(Lobby, data=res, session=self)
+        return utils._construct_model(Lobby, data=res, state=self._state)
 
     async def leave_lobby(
         self: _AuthorisedSessionProto,
@@ -150,7 +150,7 @@ class LobbyClientMixin:
             lobby_id=lobby_id,
             channel_id=channel_id,
         )
-        return utils._construct_model(Lobby, data=res, session=self)
+        return utils._construct_model(Lobby, data=res, state=self._state)
 
     async def get_lobby_messages(
         self: _AuthorisedSessionProto, lobby_id: int | str, limit: int = 50
@@ -179,7 +179,7 @@ class LobbyClientMixin:
             limit=limit,
         )
         return [
-            utils._construct_model(PartialMessage, data=message, session=self)
+            utils._construct_model(PartialMessage, data=message, state=self._state)
             for message in res
         ]
 
@@ -288,4 +288,4 @@ class LobbyClientMixin:
             metadata=metadata,
             files=files,
         )
-        return utils._construct_model(PartialMessage, data=res, session=self)
+        return utils._construct_model(PartialMessage, data=res, state=self._state)

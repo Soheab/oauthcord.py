@@ -22,7 +22,7 @@ class ConnectionClientMixin:
         """
         res = await self.client.http.get_current_user_connections(self.token)
         return [
-            utils._construct_model(Connection, data=conn, http=self.client.http)
+            utils._construct_model(Connection, data=conn, state=self._state)
             for conn in res
         ]
 
@@ -41,6 +41,6 @@ class ConnectionClientMixin:
         """
         res = await self.client.http.get_user_linked_connections(self.token)
         return [
-            utils._construct_model(Connection, data=conn, http=self.client.http)
+            utils._construct_model(Connection, data=conn, state=self._state)
             for conn in res
         ]

@@ -21,7 +21,7 @@ class UserClientMixin:
             The current user.
         """
         data = await self.client.http.get_current_user(self.token)
-        return utils._construct_model(CurrentUser, data=data, session=self)
+        return utils._construct_model(CurrentUser, data=data, state=self._state)
 
     async def edit_current_user_account(
         self: _AuthorisedSessionProto,
@@ -46,4 +46,4 @@ class UserClientMixin:
             self.token,
             global_name=global_name,
         )
-        return utils._construct_model(PartialUser, data=data, session=self)
+        return utils._construct_model(PartialUser, data=data, state=self._state)

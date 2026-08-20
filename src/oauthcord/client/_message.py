@@ -48,7 +48,7 @@ class MessageClientMixin:
             limit=limit,
         )
         return [
-            utils._construct_model(PartialMessage, data=message, session=self)
+            utils._construct_model(PartialMessage, data=message, state=self._state)
             for message in res
         ]
 
@@ -163,7 +163,7 @@ class MessageClientMixin:
             metadata=metadata,
             files=files,
         )
-        return utils._construct_model(Message, data=res, session=self)
+        return utils._construct_model(Message, data=res, state=self._state)
 
     async def edit_dm_message(
         self: _AuthorisedSessionProto,
@@ -191,7 +191,7 @@ class MessageClientMixin:
             message_id=message_id,
             content=content,
         )
-        return utils._construct_model(Message, data=res, session=self)
+        return utils._construct_model(Message, data=res, state=self._state)
 
     async def delete_dm_message(
         self: _AuthorisedSessionProto,
