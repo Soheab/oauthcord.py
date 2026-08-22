@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from enum import Enum, IntEnum, StrEnum
-from typing import Literal, overload
+from typing import ClassVar, Literal, Self, overload
+from weakref import WeakValueDictionary
 
 __all__ = (
     "ActivityLinkType",
@@ -59,6 +60,7 @@ __all__ = (
     "StoreListingIconType",
     "SubscriptionInterval",
     "SubscriptionPlanPurchaseType",
+    "UnknownEnum",
     "UnknownScope",
     "VideoQualityMode",
     "Visibility",
@@ -107,6 +109,95 @@ class UnknownScope:
 
     def __hash__(self) -> int:
         return hash(self.value)
+
+
+class UnknownEnum:
+    """A stand-in for an enum member that this library does not recognise.
+
+    Discord may add new values to any of its enumerations at any time. Rather
+    than raising an error, such a value is wrapped in this class so that
+    parsing never fails. Instances mimic an :class:`enum.Enum` member closely:
+    they expose :attr:`name` and :attr:`value`, compare equal to their raw
+    value, and are hashable.
+
+    Instances are cached per value, so wrapping the same value twice returns
+    the same object for as long as one of them is still referenced. The cache
+    holds only weak references, so members that are no longer used elsewhere
+    are garbage collected rather than accumulating forever.
+
+    Attributes
+    ----------
+    name: :class:`str`
+        The raw value as a string. Mirrors :attr:`enum.Enum.name`.
+    value: :class:`str` | :class:`int`
+        The raw value as returned by Discord, with its original type
+        preserved so it round-trips back to the API unchanged.
+    """
+
+    __members__: ClassVar[WeakValueDictionary[str | int, Self]] = WeakValueDictionary()
+
+    __slots__ = ("__value__", "__weakref__")
+
+    __value__: str | int
+
+    def __init_subclass__(cls, **kwargs: object) -> None:
+        super().__init_subclass__(**kwargs)
+        # Each subclass gets its own cache so members of different
+        # enumerations with the same raw value do not collide.
+        cls.__members__ = WeakValueDictionary()
+
+    def __new__(cls, value: str | int, /) -> Self:
+        try:
+            return cls.__members__[value]
+        except KeyError:
+            pass
+
+        self = super().__new__(cls)
+        object.__setattr__(self, "__value__", value)
+        cls.__members__[value] = self
+        return self
+
+    @classmethod
+    def _missing_(cls, value: object, /) -> Self:
+        return cls(value if isinstance(value, int) else str(value))
+
+    @property
+    def name(self) -> str:
+        """:class:`str`: The raw value as a string. Mirrors :attr:`enum.Enum.name`."""
+        return str(self.__value__)
+
+    @property
+    def value(self) -> str | int:
+        """:class:`str` | :class:`int`: The raw value as returned by Discord."""
+        return self.__value__
+
+    def __setattr__(self, name: str, value: object, /) -> None:
+        raise AttributeError(f"cannot reassign member attribute {name!r}")
+
+    def __delattr__(self, name: str, /) -> None:
+        raise AttributeError(f"cannot delete member attribute {name!r}")
+
+    def __str__(self) -> str:
+        return str(self.__value__)
+
+    def __repr__(self) -> str:
+        return f"<{self.__class__.__name__}.{self.__value__}: {self.__value__!r}>"
+
+    def __format__(self, format_spec: str, /) -> str:
+        return format(self.__value__, format_spec)
+
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, self.__class__):
+            return self.__value__ == other.__value__
+        elif isinstance(other, str | int):
+            return self.__value__ == other
+        return NotImplemented
+
+    def __hash__(self) -> int:
+        return hash(self.__value__)
+
+    def __reduce__(self) -> tuple[type[Self], tuple[str | int]]:
+        return (self.__class__, (self.__value__,))
 
 
 # SOURCE: https://docs.discord.food/topics/oauth2#oauth2-scopes
@@ -1090,14 +1181,47 @@ class GuildPowerupCategoryType(StrEnum):
 
 
 @overload
-def to_enum[E: Enum](enum: type[E], value: Literal[None], /) -> None: ...
+def to_enum[E: Enum](
+    enum: type[E], value: Literal[None], /, *, unknown_ok: bool = ...
+) -> None: ...
 
 
 @overload
-def to_enum[E: Enum](enum: type[E], value: str | int, /) -> E: ...
+def to_enum[E: Enum](
+    enum: type[E], value: str | int, /, *, unknown_ok: bool = ...
+) -> E: ...
 
 
-def to_enum[E: Enum](enum: type[E], value: str | int | None, /) -> E | None:
+def to_enum[E: Enum](
+    enum: type[E], value: str | int | None, /, *, unknown_ok: bool = True
+) -> E | None:
+    """Convert a raw value to a member of ``enum``.
+
+    Parameters
+    ----------
+    enum: type[:class:`enum.Enum`]
+        The enumeration to convert to.
+    value: :class:`str` | :class:`int` | :data:`None`
+        The raw value as returned by Discord. :data:`None` is passed through.
+    unknown_ok: :class:`bool`
+        Whether to wrap a value that is not a member of ``enum`` in an
+        :class:`UnknownEnum` instead of raising. Defaults to ``True``,
+        so that new values added by Discord never break parsing.
+
+    Returns
+    -------
+    :class:`enum.Enum` | :data:`None`
+        The matching member. If the value is unrecognised and ``unknown_ok``
+        is ``True``, an :class:`UnknownEnum` standing in for that member is
+        returned instead. It is typed as ``E`` so that model annotations stay
+        readable; check with ``isinstance(value, UnknownEnum)`` if you need
+        to handle values Discord added after this library was released.
+
+    Raises
+    ------
+    ValueError
+        The value is not a member of ``enum`` and ``unknown_ok`` is ``False``.
+    """
     if value is None:
         return None
 
@@ -1107,4 +1231,8 @@ def to_enum[E: Enum](enum: type[E], value: str | int | None, /) -> E | None:
         try:
             return enum[value]  # type: ignore
         except KeyError:
-            raise ValueError(f"{value} is not a valid {enum.__name__}")
+            if unknown_ok:
+                # Typed as E so callers are not forced to union every
+                # annotation with UnknownEnum; see the docstring.
+                return UnknownEnum(value)  # pyright: ignore[reportReturnType]
+            raise ValueError(f"{value} is not a valid {enum.__name__}") from None
