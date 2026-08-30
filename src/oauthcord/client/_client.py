@@ -70,18 +70,23 @@ class Client:
         Discord application client ID.
     client_secret: :class:`str`
         Discord application client secret.
-    redirect_uri: :class:`str`
+    redirect_uri: :class:`str` | :data:`None`
         Redirect URI configured for the Discord application.
 
         You may also set this per authorization URL with :meth:`get_authorization_url` in case
         of different redirect URIs for different URLs.
         This value will be used as default.
+
+        This defaults to :data:`None`, which means that the redirect URI must be provided per authorization URL.
     scopes: :class:`list`[:class:`Scope` | :class:`str`]
         OAuth2 scopes to request during authorization.
 
         You may also set this per authorization URL with :meth:`get_authorization_url` in case of
         different scopes for different URLs or users.
         This value will be used as default.
+
+        This defaults to an empty list, which means that the authorization URL will not request
+        any scopes unless provided per URL.
     state: :class:`str` | :data:`None`
         Optional state value to include in the authorization URL.
 
@@ -125,8 +130,8 @@ class Client:
         *,
         client_id: int | str,
         client_secret: str,
-        redirect_uri: str,
-        scopes: Sequence[Scope | UnknownEnum | str],
+        redirect_uri: str | None = None,
+        scopes: Sequence[Scope | UnknownEnum | str] | None = None,
         state: str | None = None,
         session: aiohttp.ClientSession = utils.NotSet,
         store_session: bool = False,
@@ -146,7 +151,7 @@ class Client:
         self._scopes: list[Scope | UnknownEnum] = []
         self.scopes = scopes
 
-        self._redirect_uri: str = redirect_uri
+        self._redirect_uri: str | None = redirect_uri
         self._state: str | None = state
 
         self._store_session: bool = store_session
@@ -158,7 +163,11 @@ class Client:
         return self._scopes
 
     @scopes.setter
-    def scopes(self, value: Sequence[Scope | UnknownEnum | str]) -> None:
+    def scopes(self, value: Sequence[Scope | UnknownEnum | str] | None) -> None:
+        if not value:
+            self._scopes = []
+            return
+
         if not isinstance(value, (list, tuple)):
             raise TypeError("scopes must be a list or tuple")
 
@@ -337,9 +346,12 @@ class Client:
         if not scopes_:
             scopes_ = list(self._scopes)
 
-        redirect_uri_ = (
-            redirect_uri if redirect_uri is not utils.NotSet else self._redirect_uri
-        )
+        redirect_uri_ = redirect_uri or self._redirect_uri
+        if not redirect_uri_:
+            raise ValueError(
+                "redirect_uri must be provided either in the client or as a parameter"
+            )
+
         state_ = state if state is not utils.NotSet else self._state
 
         params = {
