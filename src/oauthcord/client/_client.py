@@ -168,6 +168,7 @@ class Client:
         self,
         code: str,
         *,
+        redirect_uri: str | None = utils.NotSet,
         session_identifier: str | None = utils.NotSet,
         extras: dict[str, Any] = utils.NotSet,
     ) -> AuthorisedSession:
@@ -180,6 +181,8 @@ class Client:
         ----------
         code: :class:`str`
             Authorization code returned by Discord.
+        redirect_uri: :class:`str` | :data:`None`
+            Optional redirect URI to use for the token exchange. Defaults to the client's configured redirect URI.
         session_identifier: :class:`str` | :data:`None`
             The session's registry identifier. If :data:`None`, the session is not stored even
             if ``store_session`` is enabled.
@@ -196,7 +199,13 @@ class Client:
         :class:`AuthorisedSession`
             Session initialized with the exchanged access token.
         """
-        res = await self.http.exchange_token(code, redirect_uri=self._redirect_uri)
+        redirect_uri = redirect_uri or self._redirect_uri
+        if not redirect_uri:
+            raise ValueError(
+                "redirect_uri must be provided either in the client or as a parameter"
+            )
+
+        res = await self.http.exchange_token(code, redirect_uri=redirect_uri)
         session = await AuthorisedSession._initialise(
             client=self, data=res, identifier=session_identifier, extras=extras
         )
