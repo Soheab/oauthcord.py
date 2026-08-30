@@ -9,7 +9,7 @@ from ._base import BaseModel
 
 if TYPE_CHECKING:
     from ..client import AuthorisedSession, Client
-    from ..enums import UnknownScope
+    from ..enums import UnknownEnum
     from ..internals._types.token import (
         AccessTokenResponse as AccessTokenResponsePayload,
     )
@@ -142,8 +142,8 @@ class AccessToken(
         return self.expires_at <= datetime.datetime.now(datetime.UTC)
 
     @property
-    def scopes(self) -> list[Scope | UnknownScope]:
-        """:class:`list[Scope | UnknownScope]`: The list of scopes associated with this token, parsed
+    def scopes(self) -> list[Scope | UnknownEnum]:
+        """:class:`list[:class:`Scope` | :class:`UnknownEnum`]`: The list of scopes associated with this token, parsed
         from the :attr:`scope` string.
         """
         return Scope.from_list(self._scope.split())

@@ -27,7 +27,7 @@ from ._store import StoreClientMixin
 from ._user import UserClientMixin
 
 if TYPE_CHECKING:
-    from ..enums import UnknownScope
+    from ..enums import UnknownEnum
     from ..internals._types.token import (
         AccessTokenResponse as AccessTokenResponsePayload,
     )
@@ -126,7 +126,7 @@ class Client:
         client_id: int | str,
         client_secret: str,
         redirect_uri: str,
-        scopes: Sequence[Scope | UnknownScope | str],
+        scopes: Sequence[Scope | UnknownEnum | str],
         state: str | None = None,
         session: aiohttp.ClientSession = utils.NotSet,
         store_session: bool = False,
@@ -143,7 +143,7 @@ class Client:
         # Named `_model_state` because `_state` is the OAuth2 state string.
         self._model_state: State = State(self.http)
 
-        self._scopes: list[Scope | UnknownScope] = []
+        self._scopes: list[Scope | UnknownEnum] = []
         self.scopes = scopes
 
         self._redirect_uri: str = redirect_uri
@@ -154,11 +154,11 @@ class Client:
         self._revoke_tokens_on_session_close: bool = revoke_tokens_on_session_close
 
     @property
-    def scopes(self) -> list[Scope | UnknownScope]:
+    def scopes(self) -> list[Scope | UnknownEnum]:
         return self._scopes
 
     @scopes.setter
-    def scopes(self, value: Sequence[Scope | UnknownScope | str]) -> None:
+    def scopes(self, value: Sequence[Scope | UnknownEnum | str]) -> None:
         if not isinstance(value, (list, tuple)):
             raise TypeError("scopes must be a list or tuple")
 
@@ -286,7 +286,7 @@ class Client:
         self,
         *,
         redirect_uri: str = utils.NotSet,
-        scopes: Sequence[Scope | UnknownScope | str] = utils.NotSet,
+        scopes: Sequence[Scope | UnknownEnum | str] = utils.NotSet,
         append_scopes: bool = False,
         state: str = utils.NotSet,
     ) -> str:
@@ -299,7 +299,7 @@ class Client:
         redirect_uri: :class:`str`
             Optional redirect URI to use in the URL. Defaults to the client's
             configured redirect URI.
-        scopes: :class:`Sequence`[:class:`Scope` | :class:`UnknownScope` | :class:`str`]
+        scopes: :class:`Sequence`[:class:`Scope` | :class:`UnknownEnum` | :class:`str`]
             Optional list or tuple of scopes to request. Defaults to the client's
             configured scopes.
 

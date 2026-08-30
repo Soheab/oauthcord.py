@@ -105,7 +105,6 @@ __all__ = (
     "GuildApplicationCommandPermissions",
     "GuildChannel",
     "GuildMember",
-    "GuildMemberWithUser",
     "HTTPException",
     "Harvest",
     "HarvestMetadata",

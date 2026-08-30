@@ -61,54 +61,9 @@ __all__ = (
     "SubscriptionInterval",
     "SubscriptionPlanPurchaseType",
     "UnknownEnum",
-    "UnknownScope",
     "VideoQualityMode",
     "Visibility",
 )
-
-
-class UnknownScope:
-    """An OAuth2 scope that is not recognised by this library.
-
-    Discord may add new scopes at any time. Rather than raising an error,
-    :meth:`Scope.from_list` wraps any unrecognised value in this class so that
-    parsing never fails. Instances compare equal to their string value, so
-    ``"some.scope" in access_token.scopes`` works the same as it does for
-    :class:`Scope`.
-
-    If you encounter this for a scope that Discord (or userdoccers_) documents,
-    please open an issue at https://github.com/Soheab/oauthcord.py/issues so it
-    can be added to :class:`Scope`.
-
-    .. _userdoccers: https://docs.discord.food/topics/oauth2#oauth2-scopes
-
-    Attributes
-    ----------
-    name: :class:`str`
-        The raw scope value. Identical to :attr:`value`.
-    value: :class:`str`
-        The raw scope value as returned by Discord.
-    """
-
-    def __init__(self, value: str, /) -> None:
-        self.name = value
-        self.value = value
-
-    def __str__(self) -> str:
-        return self.value
-
-    def __repr__(self) -> str:
-        return f"UnknownScope.{self.name}"
-
-    def __eq__(self, other: object) -> bool:
-        if isinstance(other, UnknownScope):
-            return self.value == other.value
-        elif isinstance(other, str):
-            return self.value == other
-        return NotImplemented
-
-    def __hash__(self) -> int:
-        return hash(self.value)
 
 
 class UnknownEnum:
@@ -124,6 +79,12 @@ class UnknownEnum:
     the same object for as long as one of them is still referenced. The cache
     holds only weak references, so members that are no longer used elsewhere
     are garbage collected rather than accumulating forever.
+
+    If you encounter this for a scope that Discord (or userdoccers_) documents,
+    please open an issue at https://github.com/Soheab/oauthcord.py/issues so it
+    can be added to :class:`Scope`.
+
+    .. _userdoccers: https://docs.discord.food/topics/oauth2#oauth2-scopes
 
     Attributes
     ----------
@@ -180,6 +141,11 @@ class UnknownEnum:
     def __str__(self) -> str:
         return str(self.__value__)
 
+    def __int__(self) -> int:
+        if isinstance(self.__value__, int):
+            return self.__value__
+        raise TypeError(f"Cannot convert {self.__class__.__name__} to int")
+
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__}.{self.__value__}: {self.__value__!r}>"
 
@@ -204,7 +170,7 @@ class UnknownEnum:
 class Scope(StrEnum):
     """Enumeration of the OAuth2 scopes that Discord supports.
 
-    Any scope not listed here is returned as an :class:`UnknownScope` rather
+    Any scope not listed here is returned as an :class:`UnknownEnum` rather
     than raising an error.
     """
 
@@ -322,29 +288,29 @@ class Scope(StrEnum):
 
     @classmethod
     def from_list(
-        cls, scopes: Sequence[str | Scope | UnknownScope], /
-    ) -> list[Scope | UnknownScope]:
+        cls, scopes: Sequence[str | Scope | UnknownEnum], /
+    ) -> list[Scope | UnknownEnum]:
         """Create this object from a serialized payload."""
-        final: list[Scope | UnknownScope] = []
+        final: list[Scope | UnknownEnum] = []
         for scope in scopes:
-            if isinstance(scope, (Scope, UnknownScope)):
+            if isinstance(scope, (Scope, UnknownEnum)):
                 final.append(scope)
                 continue
 
             try:
                 final.append(cls(scope))
             except ValueError:
-                final.append(UnknownScope(scope))
+                final.append(UnknownEnum(scope))
 
         return final
 
     @classmethod
-    def from_str(cls, scope: str, /) -> list[Scope | UnknownScope]:
+    def from_str(cls, scope: str, /) -> list[Scope | UnknownEnum]:
         """Create this object from a serialized payload."""
         return cls.from_list(list(scope.split(" ")))
 
     @classmethod
-    def to_str(cls, scopes: Sequence[Scope | UnknownScope], /) -> str:
+    def to_str(cls, scopes: Sequence[Scope | UnknownEnum], /) -> str:
         return "+".join(str(scope) for scope in scopes)
 
     def __str__(self) -> str:
