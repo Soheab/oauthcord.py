@@ -6,13 +6,13 @@ from .base import BaseHTTPClient, Route
 
 if TYPE_CHECKING:
     from .._types import current_auth_info as current_auth_types
-    from .base import ValidToken
+    from .base import ValidAccessToken
 
 
 class CurrentAuthHTTPClientMixin(BaseHTTPClient):
     async def get_current_authorization_information(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
     ) -> current_auth_types.CurrentAuthResponse:
         return await self.request(
             Route("GET", "/oauth2/@me"),

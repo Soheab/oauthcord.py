@@ -9,9 +9,8 @@ from ..enums import (
     DisplayNameFont,
     Locale,
     PremiumType,
-    to_enum,
 )
-from ..utils import convert_snowflake, iso_to_datetime, maybe_available
+from ..utils import convert_snowflake, iso_to_datetime, maybe_available, to_enum
 from ._base import BaseModel
 from .asset import Asset
 from .flags import UserFlags
@@ -61,7 +60,7 @@ class BaseCollectable[D: Any = BaseCollectibleResponse](BaseModel[D]):
 
 
 class CollectibleNameplate(BaseCollectable["CollectibleNameplateResponse"]):
-    __slots__ = "palette"
+    __slots__ = ("palette",)
 
     @override
     def _initialize(self, data: CollectibleNameplateResponse) -> None:
@@ -74,7 +73,7 @@ class CollectibleNameplate(BaseCollectable["CollectibleNameplateResponse"]):
 class Collectible(BaseModel["CollectablesResponse"]):
     """Represents Discord API data for `Collectible`."""
 
-    __slots__ = "nameplate"
+    __slots__ = ("nameplate",)
 
     @override
     def _initialize(self, data: CollectablesResponse) -> None:
@@ -121,6 +120,9 @@ class AvatarDecorationData(BaseModel["AvatarDecorationDataResponse"]):
     @override
     def _initialize(self, data: AvatarDecorationDataResponse) -> None:
         self.asset: Asset = self.get_asset(Asset._from_avatar_decoration, data["asset"])
+        # The REST API sends `sku_id`, but RPC sends the same field as `skuId`.
+        if "sku_id" not in data and "skuId" in data:
+            data["sku_id"] = data.pop("skuId")
         self.sku_id: int = convert_snowflake(data, "sku_id")
 
 

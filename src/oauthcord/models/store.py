@@ -22,9 +22,13 @@ from ..enums import (
     StoreListingIconType,
     SubscriptionInterval,
     SubscriptionPlanPurchaseType,
+)
+from ..utils import (
+    _serialize_localizations,
+    convert_snowflake,
+    iso_to_datetime,
     to_enum,
 )
-from ..utils import _serialize_localizations, convert_snowflake, iso_to_datetime
 from ._base import BaseModel
 from .application import PartialApplication
 from .flags import SKUFlags
@@ -64,6 +68,7 @@ __all__ = (
     "StoreListingBenefit",
     "StoreListingIcon",
     "StoreNote",
+    "StoreTenantMetadata",
     "Storefront",
     "StorefrontCollection",
     "StorefrontLeaderboard",
@@ -74,7 +79,6 @@ __all__ = (
     "SubscriptionPrices",
     "SystemRequirement",
     "SystemRequirements",
-    "TenantMetadata",
     "UnitPrice",
 )
 
@@ -293,7 +297,7 @@ class StoreCarouselItem(
         )
 
     @override
-    def to_dict(self) -> store_types.StoreCarouselItemResponse:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def to_dict(self) -> store_types.StoreCarouselItemResponse:
         payload: store_types.StoreCarouselItemResponse = {}
         if self.youtube_video_id is not None:
             payload["youtube_video_id"] = self.youtube_video_id
@@ -590,7 +594,7 @@ class SocialLayerMetadata(BaseModel["store_types.SocialLayerMetadata"]):
         self.price_tier: int | None = data.get("price_tier")
 
 
-class TenantMetadata(BaseModel["store_types.TenantMetadata"]):
+class StoreTenantMetadata(BaseModel["store_types.TenantMetadata"]):
     """Tenant metadata attached to a store SKU.
 
     Attributes
@@ -808,7 +812,7 @@ class SystemRequirement(
         )
 
     @override
-    def to_dict(self) -> store_types.SystemRequirementResponse:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def to_dict(self) -> store_types.SystemRequirementResponse:
         payload: store_types.SystemRequirementResponse = {}
         if self.ram is not None:
             payload["ram"] = self.ram
@@ -861,7 +865,7 @@ class SystemRequirements(
         )
 
     @override
-    def to_dict(self) -> store_types.SystemRequirementsResponse:  # pyright: ignore[reportIncompatibleMethodOverride]
+    def to_dict(self) -> store_types.SystemRequirementsResponse:
         payload: store_types.SystemRequirementsResponse = {}
         if self.minimum is not None:
             payload["minimum"] = self.minimum.to_dict()
@@ -1051,7 +1055,7 @@ class SKU(BaseModel["store_types.SKU"]):
         Whether the SKU is exclusive to Discord, if included.
     deleted: :class:`bool`
         Whether the SKU has been soft deleted, if included.
-    tenant_metadata: :class:`TenantMetadata`
+    tenant_metadata: :class:`StoreTenantMetadata`
         Tenant metadata attached to the SKU, if included.
     powerup_metadata: :class:`GuildPowerupMetadata`
         Guild powerup metadata attached to the SKU, if included.
@@ -1269,8 +1273,8 @@ class SKU(BaseModel["store_types.SKU"]):
         self.restricted: bool | None = data.get("restricted")
         self.exclusive: bool | None = data.get("exclusive")
         self.deleted: bool | None = data.get("deleted")
-        self.tenant_metadata: TenantMetadata | None = self._initialize_other(
-            TenantMetadata, data, possible_keys="tenant_metadata", optional=True
+        self.tenant_metadata: StoreTenantMetadata | None = self._initialize_other(
+            StoreTenantMetadata, data, possible_keys="tenant_metadata", optional=True
         )
         self.powerup_metadata: GuildPowerupMetadata | None = self._initialize_other(
             GuildPowerupMetadata,
@@ -1756,7 +1760,7 @@ class GameServerInstructions(BaseModel["store_types.GameServerInstructionsRespon
         Instructions shown to PC players.
     """
 
-    __slots__ = "pc"
+    __slots__ = ("pc",)
 
     @override
     def _initialize(self, data: store_types.GameServerInstructionsResponse) -> None:
@@ -1824,7 +1828,7 @@ class GuildMonetizationProductMetadata(
         Game server product metadata, if included.
     """
 
-    __slots__ = "game_server"
+    __slots__ = ("game_server",)
 
     @override
     def _initialize(
@@ -1849,7 +1853,7 @@ class ProductTenantMetadata(BaseModel["store_types.ProductTenantMetadataResponse
         Guild monetization metadata, if included.
     """
 
-    __slots__ = "guild_monetization"
+    __slots__ = ("guild_monetization",)
 
     @override
     def _initialize(self, data: store_types.ProductTenantMetadataResponse) -> None:

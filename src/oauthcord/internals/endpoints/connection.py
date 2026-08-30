@@ -6,13 +6,13 @@ from .base import BaseHTTPClient, Route
 
 if TYPE_CHECKING:
     from .._types import connections as connection_types
-    from .base import ValidToken
+    from .base import ValidAccessToken
 
 
 class ConnectionHTTPClientMixin(BaseHTTPClient):
     async def get_current_user_connections(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
     ) -> list[connection_types.ConnectionResponse]:
         return await self.request(
             Route("GET", "/users/@me/connections"),
@@ -22,7 +22,7 @@ class ConnectionHTTPClientMixin(BaseHTTPClient):
     # connections scope
     async def get_user_linked_connections(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
     ) -> list[connection_types.ConnectionResponse]:
         return await self.request(
             Route("GET", "/users/@me/linked-connections"),

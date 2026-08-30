@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from enum import Enum, IntEnum, StrEnum
-from typing import ClassVar, Literal, Self, overload
+from enum import IntEnum, StrEnum
+from typing import ClassVar, Self
 from weakref import WeakValueDictionary
 
 __all__ = (
@@ -254,25 +254,6 @@ class Scope(StrEnum):
     ROLE_CONNECTIONS_WRITE = "role_connections.write"
     # When using RPC, allows controlling the local Discord client.
     # This also encompasses most RPC scopes below. (Public: No)
-    # RPC = "rpc"
-    # When using RPC, allows updating a user's activity (Public: Yes)
-    RPC_ACTIVITIES_WRITE = "rpc.activities.write"
-    # Allows accessing the REST API on behalf of the user (Public: No)
-    # RPC_API = "rpc.api"
-    # When using RPC, allows you to receive notifications pushed out to the user (Public: Yes)
-    RPC_NOTIFICATIONS_READ = "rpc.notifications.read"
-    # When using RPC, allows reading a user's screenshare status (Public: Yes)
-    RPC_SCREENSHARE_READ = "rpc.screenshare.read"
-    # When using RPC, allows updating a user's screenshare settings (Public: Yes)
-    RPC_SCREENSHARE_WRITE = "rpc.screenshare.write"
-    # When using RPC, allows reading a user's video status (Public: Yes)
-    RPC_VIDEO_READ = "rpc.video.read"
-    # When using RPC, allows updating a user's video settings (Public: Yes)
-    RPC_VIDEO_WRITE = "rpc.video.write"
-    # When using RPC, allows reading a user's voice settings and listening for voice events (Public: Yes)
-    RPC_VOICE_READ = "rpc.voice.read"
-    # When using RPC, allows updating a user's voice settings (Public: Yes)
-    RPC_VOICE_WRITE = "rpc.voice.write"
     # Allows connecting to voice on the user's behalf and seeing all voice members in a guild (Public: No)
     # VOICE = "voice"
     # Creates an application-owned webhook in a user-selected channel and returns it in the token exchange (Public: Yes)
@@ -285,6 +266,13 @@ class Scope(StrEnum):
     # dm_channels.read, dm_channels.messages.read, dm_channels.messages.write,
     # guilds, guilds.channels.read, and lobbies.write. (Public: No)
     SDK_SOCIAL_LAYER = "sdk.social_layer"
+
+    RPC = "rpc"
+    RPC_AUTHENTICATED = "rpc.authenticated"
+    RPC_LOCAL_STORAGE = "rpc.local"
+    RPC_PRIVATE = "rpc.private"
+    RPC_PRIVATE_LIMITED = "rpc.private.limited"
+    RPC_EMBEDDED_APP = "rpc.embedded_app"
 
     @classmethod
     def from_list(
@@ -1144,61 +1132,3 @@ class GuildPowerupCategoryType(StrEnum):
     level = "level"
     perk = "perk"
     game_server = "game_server"
-
-
-@overload
-def to_enum[E: Enum](
-    enum: type[E], value: Literal[None], /, *, unknown_ok: bool = ...
-) -> None: ...
-
-
-@overload
-def to_enum[E: Enum](
-    enum: type[E], value: str | int, /, *, unknown_ok: bool = ...
-) -> E: ...
-
-
-def to_enum[E: Enum](
-    enum: type[E], value: str | int | None, /, *, unknown_ok: bool = True
-) -> E | None:
-    """Convert a raw value to a member of ``enum``.
-
-    Parameters
-    ----------
-    enum: type[:class:`enum.Enum`]
-        The enumeration to convert to.
-    value: :class:`str` | :class:`int` | :data:`None`
-        The raw value as returned by Discord. :data:`None` is passed through.
-    unknown_ok: :class:`bool`
-        Whether to wrap a value that is not a member of ``enum`` in an
-        :class:`UnknownEnum` instead of raising. Defaults to ``True``,
-        so that new values added by Discord never break parsing.
-
-    Returns
-    -------
-    :class:`enum.Enum` | :data:`None`
-        The matching member. If the value is unrecognised and ``unknown_ok``
-        is ``True``, an :class:`UnknownEnum` standing in for that member is
-        returned instead. It is typed as ``E`` so that model annotations stay
-        readable; check with ``isinstance(value, UnknownEnum)`` if you need
-        to handle values Discord added after this library was released.
-
-    Raises
-    ------
-    ValueError
-        The value is not a member of ``enum`` and ``unknown_ok`` is ``False``.
-    """
-    if value is None:
-        return None
-
-    try:
-        return enum(value)
-    except ValueError:
-        try:
-            return enum[value]  # type: ignore
-        except KeyError:
-            if unknown_ok:
-                # Typed as E so callers are not forced to union every
-                # annotation with UnknownEnum; see the docstring.
-                return UnknownEnum(value)  # pyright: ignore[reportReturnType]
-            raise ValueError(f"{value} is not a valid {enum.__name__}") from None

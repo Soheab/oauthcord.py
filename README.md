@@ -13,9 +13,9 @@ You can also open an issue for anything, whether it's a question, a bug, or a fe
 
 # oauthcord.py
 
-`oauthcord.py` is an async Python wrapper for the Discord OAuth2 API.
+`oauthcord.py` is a Python library for interacting with the Discord API using OAuth2 authentication, with support for RPC.
 
-It is designed for applications that need to send users through Discord OAuth, exchange authorization codes for tokens, and call Discord endpoints with typed models instead of raw JSON payloads.
+It is designed for applications that need to send users through Discord OAuth, exchange authorization codes for tokens, and call Discord endpoints with typed models instead of raw JSON payloads. It also supports Discord's [RPC protocol](https://docs.discord.com/developers/topics/rpc) for talking to a local Discord desktop client over IPC.
 
 This is not a gateway or bot framework. If you need bot events, shards, or gateway state, use a bot SDK such as [`discord.py`](https://github.com/Rapptz/discord.py).
 
@@ -24,6 +24,7 @@ This is not a gateway or bot framework. If you need bot events, shards, or gatew
 - Async client built on `aiohttp`
 - Typed models for OAuth2 and related Discord REST resources
 - Coverage for user, guild, connection, DM, relationship, lobby, application, entitlement, and store routes
+- RPC support for local IPC communication with the Discord desktop client
 - Strict typing with Pyright
 
 ## Installation
@@ -156,6 +157,28 @@ asyncio.run(main())
 ## Web callback examples
 
 Minimal end-to-end callback examples are included in [`examples/app_aiohttp.py`](./examples/app_aiohttp.py) and [`examples/app_litestar.py`](./examples/app_litestar.py).
+
+## RPC (over IPC)
+
+`oauthcord.py` also supports Discord's [RPC protocol](https://docs.discord.com/developers/topics/rpc), which talks directly to a local Discord desktop client over its IPC socket instead of the OAuth2 REST API. It requires Discord to be running on the same machine.
+
+```python
+from oauthcord import Client, Scope
+from oauthcord.rpc import Activity, ActivityType, RPCClient
+
+client = Client(client_id=123456789012345678, client_secret="your-client-secret")
+
+async with RPCClient(client) as rpc:
+    print(f"Connected as: {rpc.user}")
+
+    await rpc.set_activity(Activity("My Game", type=ActivityType.PLAYING))
+
+  	# optional for auth requests
+    session = await rpc.login(scopes=[Scope.RPC, Scope.IDENTIFY, Scope.GUILDS])
+    guilds = await rpc.get_guilds()
+```
+
+See [`examples/rpc_smoke_test.py`](./examples/rpc_smoke_test.py) and [`examples/rpc_events_handler.py`](./examples/rpc_events_handler.py) for full runnable examples, including handling events.
 
 ## Model data access
 

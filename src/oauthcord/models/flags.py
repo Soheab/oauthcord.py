@@ -196,8 +196,21 @@ if TYPE_CHECKING:
     class _LobbyMemberFlagsKwargs(TypedDict, total=False):
         can_link_lobby: bool
 
+    class _ActivityFlagsKwargs(TypedDict, total=False):
+        instance: bool
+        join: bool
+        spectate: bool
+        join_request: bool
+        sync: bool
+        play: bool
+        party_privacy_friends: bool
+        party_privacy_voice_channel: bool
+        embedded: bool
+        contextless: bool
+
 
 __all__ = (
+    "ActivityFlags",
     "ApplicationFlags",
     "AttachmentFlags",
     "BaseFlags",
@@ -621,3 +634,22 @@ class LobbyMemberFlags(BaseFlags):
         ) -> None: ...
 
     can_link_lobby = Flag(1 << 0)
+
+
+class ActivityFlags(BaseFlags):
+    if TYPE_CHECKING:
+
+        def __init__(
+            self, value: int | None = None, /, **flags: Unpack[_ActivityFlagsKwargs]
+        ) -> None: ...
+
+    instance = Flag(1 << 0)
+    join = Flag(1 << 1)
+    spectate = Flag(1 << 2)
+    join_request = Flag(1 << 3)
+    sync = Flag(1 << 4)
+    play = Flag(1 << 5)
+    party_privacy_friends = Flag(1 << 6)
+    party_privacy_voice_channel = Flag(1 << 7)
+    embedded = Flag(1 << 8)
+    contextless = Flag(1 << 9)

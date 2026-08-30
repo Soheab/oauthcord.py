@@ -3,11 +3,14 @@ import subprocess
 UV_RUN_RUFF_BASE = ["uv", "run", "ruff"]
 
 COMMANDS = {
+    # `--extend-select`, not `--select`: `--select` replaces the configured rule
+    # set, which drops F401 and makes RUF100 strip `# noqa: F401` comments as
+    # unused. The next command then deletes the now-bare import.
     "Ruff sort and fix import and __all__": [
         *UV_RUN_RUFF_BASE,
         "check",
         ".",
-        "--select",
+        "--extend-select",
         "RUF",
         "--fix",
         "--unsafe-fixes",

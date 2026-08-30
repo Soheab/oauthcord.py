@@ -12,9 +12,8 @@ from ...enums import (
     IntegrationInstallType,
     InteractionContextType,
     Locale,
-    to_enum,
 )
-from ...utils import _serialize_localizations
+from ...utils import _serialize_localizations, to_enum
 from .. import commands as command_models
 from ..flags import Permissions
 

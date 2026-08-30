@@ -6,13 +6,13 @@ from .base import BaseHTTPClient, Route
 
 if TYPE_CHECKING:
     from .._types import invite as invite_types
-    from .base import ValidToken
+    from .base import ValidAccessToken
 
 
 class InviteHTTPClientMixin(BaseHTTPClient):
     async def accept_invite(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         code: str,
         session_id: str | None = None,

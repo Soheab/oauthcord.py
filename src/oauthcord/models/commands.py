@@ -12,9 +12,8 @@ from ..enums import (
     IntegrationInstallType,
     InteractionContextType,
     Locale,
-    to_enum,
 )
-from ..utils import _serialize_localizations, convert_snowflake
+from ..utils import _serialize_localizations, convert_snowflake, to_enum
 from ._base import BaseModel
 from .flags import Permissions
 
@@ -401,7 +400,7 @@ class Group(
         "commands.ApplicationCommandResponse | commands.GuildApplicationCommandResponse"
     ],
 ):
-    __slots__ = "commands"
+    __slots__ = ("commands",)
 
     def __init__(
         self,

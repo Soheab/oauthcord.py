@@ -15,7 +15,7 @@ RefreshTokenResponse = AccessTokenResponse
 class AccessTokenRequest(TypedDict):
     grant_type: Literal["authorization_code"]
     code: str
-    redirect_uri: str
+    redirect_uri: NotRequired[str]
 
 
 class RefreshTokenRequest(TypedDict):

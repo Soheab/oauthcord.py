@@ -9,9 +9,8 @@ from ..enums import (
     EntitlementType,
     GiftStyle,
     QuestPlatformType,
-    to_enum,
 )
-from ..utils import convert_snowflake, iso_to_datetime
+from ..utils import convert_snowflake, iso_to_datetime, to_enum
 from ._base import BaseModel
 from .store import SKU, SubscriptionPlan
 from .user import PartialUser
@@ -71,7 +70,7 @@ class QuestRewardsMetadata(BaseModel["QuestRewardsMetadataResponse"]):
 class TenantMetadata(BaseModel["TenantMetadataResponse"]):
     """Represents Discord API data for `TenantMetadata`."""
 
-    __slots__ = "quest_rewards"
+    __slots__ = ("quest_rewards",)
 
     @override
     def _initialize(self, data: TenantMetadataResponse) -> None:

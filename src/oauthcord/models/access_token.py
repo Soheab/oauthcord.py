@@ -10,6 +10,9 @@ from ._base import BaseModel
 if TYPE_CHECKING:
     from ..client import AuthorisedSession, Client
     from ..enums import UnknownEnum
+    from ..internals._types.rpc.auth import (
+        AuthenticateResponse as RPCAuthenticateResponsePayload,
+    )
     from ..internals._types.token import (
         AccessTokenResponse as AccessTokenResponsePayload,
     )
@@ -23,8 +26,8 @@ __all__ = ("AccessToken",)
 
 class AccessToken(
     BaseModel[
-        "AccessTokenResponsePayload | RefreshTokenResponsePayload",
-        "AccessTokenResponsePayload | RefreshTokenResponsePayload",
+        "AccessTokenResponsePayload | RefreshTokenResponsePayload | RPCAuthenticateResponsePayload",
+        "AccessTokenResponsePayload | RefreshTokenResponsePayload | RPCAuthenticateResponsePayload",
     ]
 ):
     """Represents an OAuth2 access token from Discord.
@@ -51,22 +54,34 @@ class AccessToken(
     @override
     def _initialize(
         self,
-        data: AccessTokenResponsePayload | RefreshTokenResponsePayload,
+        data: AccessTokenResponsePayload
+        | RefreshTokenResponsePayload
+        | RPCAuthenticateResponsePayload,
     ) -> None:
-        self.token_type: str = data["token_type"]
+        self.token_type: str = data.get("token_type", "Bearer")
         self.access_token: str = data["access_token"]
-        self.refresh_token: str = data["refresh_token"]
-        self._scope: str = data["scope"]
-        self._expires_in: int = data["expires_in"]
+        self.refresh_token: str = data.get("refresh_token", "")
+        scope = data.get(
+            "scope",
+        )
+        if not scope:
+            scopes = data.get("scopes", [])
+            self._scope: str = " ".join(scopes)
+        else:
+            self._scope: str = scope
+
+        self._expires_in: int = int(data.get("expires_in", data.get("expires", 0)))
 
         self._created_at: datetime.datetime = datetime.datetime.now(datetime.UTC)
 
     @classmethod
     @override
-    def from_dict(  # type: ignore
+    def from_dict(
         cls,
         client: Client | AuthorisedSession,
-        data: AccessTokenResponsePayload | RefreshTokenResponsePayload,
+        data: AccessTokenResponsePayload
+        | RefreshTokenResponsePayload
+        | RPCAuthenticateResponsePayload,
         *,
         created_at: datetime.datetime | None = None,
     ) -> AccessToken:
@@ -95,7 +110,7 @@ class AccessToken(
         return instance
 
     @override
-    def to_dict(self) -> AccessTokenResponsePayload | RefreshTokenResponsePayload:
+    def to_dict(self) -> AccessTokenResponsePayload:
         return {
             "token_type": self.token_type,
             "access_token": self.access_token,

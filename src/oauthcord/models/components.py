@@ -407,7 +407,7 @@ class UserSelect(_AutoPopulatedSelect):
 
     def to_dict(self) -> component_types.UserSelectRequest:
         """Serialize this object into a Discord API request payload."""
-        payload: component_types.UserSelectRequest = {  # pyright: ignore[reportAssignmentType]
+        payload: component_types.UserSelectRequest = {
             "type": 5,
             "custom_id": self.custom_id,
         }
@@ -452,7 +452,7 @@ class RoleSelect(_AutoPopulatedSelect):
 
     def to_dict(self) -> component_types.RoleSelectRequest:
         """Serialize this object into a Discord API request payload."""
-        payload: component_types.RoleSelectRequest = {  # pyright: ignore[reportAssignmentType]
+        payload: component_types.RoleSelectRequest = {
             "type": 6,
             "custom_id": self.custom_id,
         }
@@ -497,7 +497,7 @@ class MentionableSelect(_AutoPopulatedSelect):
 
     def to_dict(self) -> component_types.MentionableSelectRequest:
         """Serialize this object into a Discord API request payload."""
-        payload: component_types.MentionableSelectRequest = {  # pyright: ignore[reportAssignmentType]
+        payload: component_types.MentionableSelectRequest = {
             "type": 7,
             "custom_id": self.custom_id,
         }
@@ -568,7 +568,7 @@ class ChannelSelect(_AutoPopulatedSelect):
 
     def to_dict(self) -> component_types.ChannelSelectRequest:
         """Serialize this object into a Discord API request payload."""
-        payload: component_types.ChannelSelectRequest = {  # pyright: ignore[reportAssignmentType]
+        payload: component_types.ChannelSelectRequest = {
             "type": 8,
             "custom_id": self.custom_id,
         }
@@ -839,7 +839,7 @@ class Section(BaseComponent):
         payload: component_types.SectionRequest = {
             "type": 9,
             "components": [component.to_dict() for component in self.components],
-            "accessory": self.accessory.to_dict(),  # pyright: ignore[reportAssignmentType]
+            "accessory": self.accessory.to_dict(),
         }
         if self.id is not None:
             payload["id"] = self.id

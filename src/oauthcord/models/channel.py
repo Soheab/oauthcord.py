@@ -10,9 +10,8 @@ from ..enums import (
     SafetyWarningType,
     SortOrderType,
     VideoQualityMode,
-    to_enum,
 )
-from ..utils import convert_snowflake, iso_to_datetime
+from ..utils import convert_snowflake, iso_to_datetime, to_enum
 from ._base import BaseModel
 from .asset import Asset
 from .emoji import Emoji
@@ -196,7 +195,7 @@ class LinkedAccount(BaseModel["LinkedAccountResponse"]):
 class ChannelLinkedAccounts(BaseModel["GetChannelLinkedAccountsResponse"]):
     """Represents Discord API data for `ChannelLinkedAccounts`."""
 
-    __slots__ = "linked_accounts"
+    __slots__ = ("linked_accounts",)
 
     @override
     def _initialize(self, data: GetChannelLinkedAccountsResponse) -> None:
@@ -246,8 +245,8 @@ class BaseChannel[D: Any = "_BaseChannelResponse"](BaseModel[D]):
     )
 
     @override
-    def _initialize(self, data: D) -> None:  # type: ignore
-        data_: _BaseChannelResponse = data  # pyright: ignore[reportAssignmentType]
+    def _initialize(self, data: D) -> None:
+        data_: _BaseChannelResponse = data
 
         self.id: int = convert_snowflake(data_, "id")
         self.type: ChannelType = to_enum(ChannelType, data_["type"])
@@ -274,7 +273,7 @@ class GuildChannel[D: Any = _GuildChannelResponse](BaseChannel[D]):
     @override
     def _initialize(self, data: D) -> None:
         super()._initialize(data)
-        data_: _GuildChannelResponse = data  # type: ignore
+        data_: _GuildChannelResponse = data
         self.guild_id: int | None = convert_snowflake(
             data_, "guild_id", always_available=False
         )
@@ -510,7 +509,7 @@ class ThreadChannel(BaseChannel["_ThreadChannelResponse"]):
 
 
 class PrivateChannel[D = PrivateChannelResponse](BaseChannel[D]):
-    __slots__ = "recipients"
+    __slots__ = ("recipients",)
 
     @override
     def _initialize(self, data: D) -> None:

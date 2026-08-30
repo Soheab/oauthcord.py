@@ -13,9 +13,8 @@ from ..enums import (
     EmbeddedActivityReleasePhase,
     EmbeddedActivitySurface,
     IntegrationInstallType,
-    to_enum,
 )
-from ..utils import convert_snowflake, iso_to_datetime
+from ..utils import convert_snowflake, iso_to_datetime, to_enum
 from ._base import *
 from .user import PartialUser
 
@@ -166,7 +165,7 @@ class ApplicationIntegrationTypeConfiguration(
         The OAuth2 install parameters for this integration type, if present.
     """
 
-    __slots__ = "oauth2_install_params"
+    __slots__ = ("oauth2_install_params",)
 
     @override
     def _initialize(

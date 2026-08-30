@@ -3,10 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from ..enums import IntegrationType, Service, Visibility
-from ..utils import convert_snowflake
+from ..utils import convert_snowflake, to_enum
 from ._base import BaseModel
 from .asset import Asset
-from .user import to_enum
 
 if TYPE_CHECKING:
     from ..internals._types.connections import (

@@ -159,6 +159,11 @@ class Client:
         self._revoke_tokens_on_session_close: bool = revoke_tokens_on_session_close
 
     @property
+    def id(self) -> int:
+        """:class:`int`: Returns the provided client ID."""
+        return self.http.client_id
+
+    @property
     def scopes(self) -> list[Scope | UnknownEnum]:
         return self._scopes
 
@@ -191,7 +196,11 @@ class Client:
         code: :class:`str`
             Authorization code returned by Discord.
         redirect_uri: :class:`str` | :data:`None`
-            Optional redirect URI to use for the token exchange. Defaults to the client's configured redirect URI.
+            Redirect URI to send with the exchange. Defaults to the client's configured
+            redirect URI.
+
+            Set explicitly to :data:`None` for codes that were not obtained through a
+            redirect, such as one returned by :meth:`~oauthcord.client.rpc.RPCClient.authorize`.
         session_identifier: :class:`str` | :data:`None`
             The session's registry identifier. If :data:`None`, the session is not stored even
             if ``store_session`` is enabled.
@@ -208,13 +217,10 @@ class Client:
         :class:`AuthorisedSession`
             Session initialized with the exchanged access token.
         """
-        redirect_uri = redirect_uri or self._redirect_uri
-        if not redirect_uri:
-            raise ValueError(
-                "redirect_uri must be provided either in the client or as a parameter"
-            )
-
-        res = await self.http.exchange_token(code, redirect_uri=redirect_uri)
+        redirect_uri_ = (
+            redirect_uri if redirect_uri is not utils.NotSet else self._redirect_uri
+        )
+        res = await self.http.exchange_token(code, redirect_uri=redirect_uri_)
         session = await AuthorisedSession._initialise(
             client=self, data=res, identifier=session_identifier, extras=extras
         )
@@ -456,6 +462,9 @@ class AuthorisedSession(
 
     A session stores one OAuth2 token and uses its parent :class:`Client` for
     HTTP requests.
+
+    You can create a session by exchanging an authorization code with :meth:`Client.exchange_token`
+    or by creating one from an existing token with :meth:`AuthorisedSession.from_token`.
 
     Attributes
     ----------

@@ -6,13 +6,13 @@ from .base import BaseHTTPClient, Route
 
 if TYPE_CHECKING:
     from .._types import guild as guild_types
-    from .base import ValidToken
+    from .base import ValidAccessToken
 
 
 class GuildHTTPClientMixin(BaseHTTPClient):
     async def get_current_user_guilds(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         limit: int | None = None,
         with_counts: bool = False,

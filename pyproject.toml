@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "oauthcord.py"
 version = "0.1.0"
-description = "A Python library for interacting with the Discord API using OAuth2 authentication."
+description = "A Python library for interacting with the Discord API using OAuth2 authentication, with support for RPC."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -33,13 +33,29 @@ docs = [
 extraPaths = [
     "src",
 ]
+exclude = [
+    "**/.*",
+    "**/__pycache__",
+    "**/node_modules",
+    ".venv",
+    "build",
+    "src/app",
+]
 ignore = [
-    "*/app",
+    "build",
+    "src/app",
 ]
 pythonVersion = "3.13"
 typeCheckingMode = "strict"
 reportPrivateUsage = false
 reportUnnecessaryIsInstance = false
+reportUnnecessaryTypeIgnoreComment = "error"
+
+[tool.ruff]
+extend-exclude = [
+    "build",
+    "src/app",
+]
 
 [tool.ruff.lint]
 select = [

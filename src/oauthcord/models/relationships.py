@@ -3,9 +3,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, override
 
 from ..enums import RelationshipType
-from ..utils import convert_snowflake
+from ..utils import convert_snowflake, to_enum
 from ._base import BaseModel
-from .user import PartialUser, to_enum
+from .user import PartialUser
 
 if TYPE_CHECKING:
     from ..internals._types.relationship import (

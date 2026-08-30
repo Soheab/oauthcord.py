@@ -3,8 +3,8 @@ from __future__ import annotations
 import datetime
 from typing import TYPE_CHECKING, override
 
-from ..enums import InviteTargetType, InviteType, to_enum
-from ..utils import convert_snowflake, iso_to_datetime
+from ..enums import InviteTargetType, InviteType
+from ..utils import convert_snowflake, iso_to_datetime, to_enum
 from ._base import BaseModel
 from .application import PartialApplication
 from .asset import Asset

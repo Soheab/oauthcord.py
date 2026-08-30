@@ -2,18 +2,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from ... import utils
 from ...models.flags import MemberFlags
 from .base import BaseHTTPClient, Route
 
 if TYPE_CHECKING:
     from .._types import member as member_types
-    from .base import ValidToken
 
 
 class MemberHTTPClientMixin(BaseHTTPClient):
     async def get_current_guild_member(
         self,
-        token: ValidToken,
+        token: utils.ValidAccessToken,
         *,
         guild_id: str | int,
     ) -> member_types.GuildMemberResponse:
@@ -24,7 +24,7 @@ class MemberHTTPClientMixin(BaseHTTPClient):
 
     async def add_user_to_guild(
         self,
-        token: ValidToken,
+        token: utils.ValidAccessToken,
         *,
         bot_token: str,
         guild_id: int,
@@ -36,7 +36,7 @@ class MemberHTTPClientMixin(BaseHTTPClient):
         bypass_verification: bool | None = None,
     ) -> member_types.AddGuildMemberResponse:
         data: member_types.AddGuildMemberRequest = {
-            "access_token": self._parse_token(token),
+            "access_token": utils._get_access_token(token),
         }
         if nick is not None:
             data["nick"] = nick

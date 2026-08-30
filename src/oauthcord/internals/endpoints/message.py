@@ -8,13 +8,13 @@ if TYPE_CHECKING:
     from ...models.file import File
     from .._types import components as component_types
     from .._types import message as message_types
-    from .base import ValidToken
+    from .base import ValidAccessToken
 
 
 class MessageHTTPClientMixin(BaseHTTPClient):
     async def edit_dm_message(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         user_id: int | str,
         message_id: int | str,
@@ -32,7 +32,7 @@ class MessageHTTPClientMixin(BaseHTTPClient):
 
     async def delete_dm_message(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         user_id: int | str,
         message_id: int | str,
@@ -44,7 +44,7 @@ class MessageHTTPClientMixin(BaseHTTPClient):
 
     async def get_dm_messages(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         user_id: int | str,
         limit: int | None = None,
@@ -72,7 +72,7 @@ class MessageHTTPClientMixin(BaseHTTPClient):
 
     async def create_dm_message(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         user_id: int | str,
         content: str | None = None,

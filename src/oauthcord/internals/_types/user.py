@@ -23,7 +23,9 @@ PremiumType = Literal[0, 1, 2, 3]
 
 class AvatarDecorationDataResponse(TypedDict):
     asset: str
-    sku_id: Snowflake
+    sku_id: NotRequired[Snowflake]
+    # RPC sends the same field camelCased.
+    skuId: NotRequired[Snowflake]
 
 
 class _CollectibleResponse(TypedDict):

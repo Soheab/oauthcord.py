@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, ClassVar, Literal
 import aiohttp
 
 from ..errors import HTTPException, create_http_exception
-from ..utils import NotSet
+from ..utils import NotSet, _get_access_token
 from ._ratelimiter import HTTPRateLimiterMixin
 from .endpoints.application import ApplicationHTTPClientMixin
 from .endpoints.base import (
@@ -31,6 +31,7 @@ from .endpoints.user import UserHTTPClientMixin
 if TYPE_CHECKING:
     from ..client import Client
     from ..models.file import File
+    from ..utils import ValidAccessToken
     from ._types import (
         components as component_types,
     )
@@ -38,10 +39,7 @@ if TYPE_CHECKING:
         message as message_types,
     )
     from .endpoints.base import (
-        RefreshTokenAttr,
-        RefreshTokenDict,
         ResponsePayload,
-        ValidToken,
     )
 
 
@@ -247,22 +245,6 @@ class HTTPClient(
     def _get_retry_delay(attempt: int) -> int:
         return 1 + attempt * 2
 
-    def _parse_token(
-        self,
-        token: ValidToken | RefreshTokenAttr | RefreshTokenDict,
-        *,
-        refresh: bool = False,
-    ) -> str:
-        key = "access_token" if not refresh else "refresh_token"
-        if isinstance(token, str):
-            return token
-        elif isinstance(token, dict) and key in token:
-            return token[key]  # pyright: ignore[reportTypedDictNotRequiredAccess]
-        elif hasattr(token, key):
-            return getattr(token, key)  # type: ignore
-        else:
-            raise ValueError("Invalid token type")
-
     async def __get_session(self) -> aiohttp.ClientSession:
         if not self.__session or self.__session.closed:
             self.__session = aiohttp.ClientSession()
@@ -270,9 +252,9 @@ class HTTPClient(
 
     def __get_token_header(
         self,
-        token: ValidToken | RefreshTokenAttr | RefreshTokenDict,
+        token: ValidAccessToken,
     ) -> dict[Literal["Authorization"], str]:
-        return {"Authorization": f"Bearer {self._parse_token(token)}"}
+        return {"Authorization": f"Bearer {_get_access_token(token)}"}
 
     async def get_from_cdn(
         self,
@@ -290,7 +272,7 @@ class HTTPClient(
         self,
         route: Route,
         *,
-        token: ValidToken | None = None,
+        token: ValidAccessToken | None = None,
         headers: dict[str, str] | None = None,
         **kwargs: Any,
     ) -> Any:

@@ -17,13 +17,13 @@ if TYPE_CHECKING:
         SystemRequirements,
     )
     from .._types import store as store_types
-    from .base import ValidToken
+    from .base import ValidAccessToken
 
 
 class StoreHTTPClientMixin(BaseHTTPClient):
     async def get_application_skus(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         application_id: int | str,
         country_code: str = utils.NotSet,
@@ -46,7 +46,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
 
     async def create_sku(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         type: store_types.SKUType | int,
         application_id: int | str,
@@ -138,7 +138,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
 
     async def get_sku(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         sku_id: int | str,
         country_code: str | None = None,
@@ -158,7 +158,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
 
     async def modify_sku(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         sku_id: int | str,
         name: store_types.LocalizedString | LocalizedString | None = None,
@@ -247,7 +247,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
 
     async def get_sku_store_listings(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         sku_id: int | str,
         country_code: str | None = None,
@@ -267,7 +267,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
 
     async def create_store_listing(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         application_id: int | str,
         sku_id: int | str,
@@ -340,7 +340,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
 
     async def get_store_listing(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         listing_id: int | str,
         country_code: str | None = None,
@@ -360,7 +360,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
 
     async def modify_store_listing(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         listing_id: int | str,
         child_sku_ids: list[int | str] | None = None,
@@ -433,7 +433,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
 
     async def delete_store_listing(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         listing_id: int | str,
     ) -> None:
@@ -444,7 +444,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
 
     async def get_subscription_plans(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         sku_id: int | str,
     ) -> list[store_types.SubscriptionPlanResponse]:
@@ -455,7 +455,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
 
     async def get_application_store_assets(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         application_id: int | str,
     ) -> list[store_types.StoreAssetResponse]:
@@ -466,7 +466,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
 
     async def create_application_store_asset(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         application_id: int | str,
         file: File,
@@ -487,7 +487,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
 
     async def delete_application_store_asset(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         application_id: int | str,
         asset_id: int | str,

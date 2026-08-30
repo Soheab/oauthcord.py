@@ -6,13 +6,13 @@ from .base import BaseHTTPClient, Route
 
 if TYPE_CHECKING:
     from .._types import channels
-    from .base import ValidToken
+    from .base import ValidAccessToken
 
 
 class ChannelHTTPClientMixin(BaseHTTPClient):
     async def get_dm_channel(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         user_id: int | str,
     ) -> channels.DMChannelResponse:
@@ -23,7 +23,7 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
 
     async def create_private_channel(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         recipients: list[int | str] | None = None,
         nicks: dict[str | int, str] | None = None,
@@ -42,7 +42,7 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
 
     async def get_guild_channels(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         guild_id: str | int,
         permissions: bool = False,
@@ -58,7 +58,7 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
         )
 
     async def get_call_eligibility(
-        self, token: ValidToken, *, channel_id: int | str
+        self, token: ValidAccessToken, *, channel_id: int | str
     ) -> channels.CallEligibilityResponse:
         return await self.request(
             Route("GET", f"/channels/{channel_id}/call"),
@@ -67,7 +67,7 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
 
     async def ring_channel_recipients(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         channel_id: int | str,
         recipients: list[int | str] | None = None,
@@ -84,7 +84,7 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
 
     async def stop_ringing_channel_recipients(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         channel_id: int | str,
         recipients: list[int | str] | None = None,
@@ -101,7 +101,7 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
 
     async def get_channel_linked_accounts(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         channel_id: int | str,
         user_ids: list[int | str] | None = None,

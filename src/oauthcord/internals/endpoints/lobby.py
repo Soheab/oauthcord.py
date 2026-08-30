@@ -16,13 +16,13 @@ if TYPE_CHECKING:
     from .._types import (
         message as message_types,
     )
-    from .base import ValidToken
+    from .base import ValidAccessToken
 
 
 class LobbyHTTPClientMixin(BaseHTTPClient):
     async def join_or_create_lobby(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         secret: str,
         lobby_metadata: dict[str, str] | None = None,
@@ -48,7 +48,7 @@ class LobbyHTTPClientMixin(BaseHTTPClient):
 
     async def leave_lobby(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         lobby_id: int | str,
         user_id: int | str,
@@ -60,7 +60,7 @@ class LobbyHTTPClientMixin(BaseHTTPClient):
 
     async def create_lobby_invite_for_current_user(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         lobby_id: int | str,
     ) -> lobby_types.CreateLobbyInviteForCurrentUserResponse:
@@ -71,7 +71,7 @@ class LobbyHTTPClientMixin(BaseHTTPClient):
 
     async def edit_lobby_linked_channel(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         lobby_id: int | str,
         channel_id: int | str | None = NotSet,
@@ -88,7 +88,7 @@ class LobbyHTTPClientMixin(BaseHTTPClient):
 
     async def get_lobby_messages(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         lobby_id: int | str,
         limit: int | None = None,
@@ -105,7 +105,7 @@ class LobbyHTTPClientMixin(BaseHTTPClient):
 
     async def create_lobby_message(
         self,
-        token: ValidToken,
+        token: ValidAccessToken,
         *,
         lobby_id: int | str,
         content: str | None = None,
