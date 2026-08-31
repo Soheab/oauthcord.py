@@ -112,9 +112,15 @@ class Client:
     ----------
     http: :class:`OAuth2HTTPClient`
         Internal HTTP client used for Discord requests.
+    auto_refresh_token: :class:`bool`
+        Whether to automatically refresh a token when it is expired. If enabled, the token will be refreshed
+        automatically when making requests with an expired token.
+
+        Defaults to ``False``.
     """
 
     __slots__ = (
+        "_auto_refresh_token",
         "_model_state",
         "_redirect_uri",
         "_revoke_tokens_on_session_close",
@@ -136,12 +142,14 @@ class Client:
         session: aiohttp.ClientSession = utils.NotSet,
         store_session: bool = False,
         revoke_tokens_on_session_close: bool = False,
+        auto_refresh_token: bool = False,
     ) -> None:
         self.http: HTTPClient = HTTPClient(
             self,
             client_id=int(client_id),
             client_secret=client_secret,
             session=session,
+            auto_refresh_token=auto_refresh_token,
         )
 
         # Session-less model state, for models created outside any authorisation.

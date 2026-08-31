@@ -220,12 +220,14 @@ class HTTPClient(
         session: aiohttp.ClientSession = NotSet,
         max_retries: int = 5,
         max_ratelimit_timeout: float | None = None,
+        auto_refresh_token: bool = False,
     ) -> None:
         self.__get_client = lambda: client
 
         self.client_id: int = client_id
         self.max_retries: int = max_retries
         self.max_ratelimit_timeout: float | None = max_ratelimit_timeout
+        self._auto_refresh_token: bool = auto_refresh_token
 
         self._auth = aiohttp.BasicAuth(str(client_id), client_secret)
         self.__session: aiohttp.ClientSession | None = session or None
@@ -250,11 +252,40 @@ class HTTPClient(
             self.__session = aiohttp.ClientSession()
         return self.__session
 
-    def __get_token_header(
-        self,
-        token: ValidAccessToken,
-    ) -> dict[Literal["Authorization"], str]:
-        return {"Authorization": f"Bearer {_get_access_token(token)}"}
+    def __get_token_header(self, token: str) -> dict[str, str]:
+        return {"Authorization": f"Bearer {token}"}
+
+    async def __get_token(self, token: ValidAccessToken) -> str:
+        if isinstance(token, str):
+            return token
+
+        from ..models.access_token import AccessToken
+
+        if isinstance(token, AccessToken):
+            if self._auto_refresh_token:
+                await token.refresh(check_expired=True)
+
+            return token.access_token
+
+        if isinstance(token, dict):
+            try:
+                token = AccessToken.from_dict(self.__get_client(), token)
+                if self._auto_refresh_token:
+                    await token.refresh(check_expired=True)
+
+                return token.access_token
+            except Exception:
+                return _get_access_token(token)
+
+        from ..client import AuthorisedSession
+
+        if isinstance(token, AuthorisedSession):
+            if self._auto_refresh_token:
+                await token.refresh(check_expired=True)
+
+            return token.token.access_token
+
+        return _get_access_token(token)
 
     async def get_from_cdn(
         self,
@@ -279,7 +310,9 @@ class HTTPClient(
         session = await self.__get_session()
         prepared_headers = headers or {}
         if token:
-            prepared_headers.update(self.__get_token_header(token))  # type: ignore
+            token = await self.__get_token(token)
+            prepared_headers.update(self.__get_token_header(token))
+
         kwargs["headers"] = prepared_headers
 
         method = route.method
