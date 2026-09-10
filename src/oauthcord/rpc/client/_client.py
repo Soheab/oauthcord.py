@@ -1,14 +1,3 @@
-"""Discord RPC client.
-
-Implements the local IPC protocol Discord's desktop client exposes, documented at
-https://docs.discord.food/topics/rpc (community mirror of the removed official docs).
-
-This connects to a Unix domain socket (Linux/macOS) or a named pipe (Windows) that the
-Discord desktop application creates locally — it has nothing to do with the OAuth2 REST
-API used by the rest of this library, and requires the Discord desktop client to be
-running on the same machine.
-"""
-
 from __future__ import annotations
 
 import asyncio
