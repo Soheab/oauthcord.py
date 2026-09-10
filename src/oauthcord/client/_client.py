@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import datetime
 import urllib.parse
 import uuid
@@ -10,9 +11,10 @@ import aiohttp
 
 from .. import utils
 from ..enums import Scope
+from ..errors import BadRequest, DeviceCodeExchangeFailed
 from ..internals.http import HTTPClient
 from ..internals.state import State
-from ..models.access_token import AccessToken
+from ..models.access_token import AccessToken, DeviceCode
 from ..models.current_auth import CurrentInformation
 from ._application import ApplicationClientMixin
 from ._channel import ChannelClientMixin
@@ -32,11 +34,21 @@ if TYPE_CHECKING:
         AccessTokenResponse as AccessTokenResponsePayload,
     )
     from ..internals._types.token import (
+        ClientCredentialsResponse as ClientCredentialsResponsePayload,
+    )
+    from ..internals._types.token import (
+        DeviceCodeResponse as DeviceCodeResponsePayload,
+    )
+    from ..internals._types.token import (
         RefreshTokenResponse as RefreshTokenResponsePayload,
     )
 else:
     AccessTokenResponsePayload = dict[str, Any]
     RefreshTokenResponsePayload = dict[str, Any]
+
+    ClientCredentialsResponsePayload = dict[str, Any]
+    RefreshTokenResponsePayload = dict[str, Any]
+    DeviceCodeResponsePayload = dict[str, Any]
 
 
 class AuthorisedSessionPayload(TypedDict):
@@ -120,6 +132,7 @@ class Client:
     """
 
     __slots__ = (
+        "__device_code_polling_tasks",
         "_auto_refresh_token",
         "_model_state",
         "_redirect_uri",
@@ -152,8 +165,6 @@ class Client:
             auto_refresh_token=auto_refresh_token,
         )
 
-        # Session-less model state, for models created outside any authorisation.
-        # Named `_model_state` because `_state` is the OAuth2 state string.
         self._model_state: State = State(self.http)
 
         self._scopes: list[Scope | UnknownEnum] = []
@@ -166,10 +177,18 @@ class Client:
         self._sessions: dict[str, AuthorisedSession] = {}
         self._revoke_tokens_on_session_close: bool = revoke_tokens_on_session_close
 
+        # device_code: Task
+        self.__device_code_polling_tasks: dict[str, asyncio.Task[AccessToken]] = {}
+
     @property
     def id(self) -> int:
         """:class:`int`: Returns the provided client ID."""
         return self.http.client_id
+
+    @property
+    def secret(self) -> str:
+        """:class:`str`: Returns the provided client secret."""
+        return self.http.client_secret
 
     @property
     def scopes(self) -> list[Scope | UnknownEnum]:
@@ -186,12 +205,45 @@ class Client:
 
         self._scopes = Scope.from_list(value)
 
+    async def get_token(
+        self,
+        scopes: list[Scope | UnknownEnum | str] | None = None,
+    ) -> AuthorisedSession:
+        """Get a new access token using the client credentials flow.
+
+        This is a quick and easy way to get your own bearer token for testing purposes, without
+        requiring user authorization. It is not intended for use in production applications.
+
+        You cannot refresh this token, so you will need to call this method again when it expires.
+
+        Parameters
+        ----------
+        scopes: :class:`list`[:class:`Scope` | :class:`UnknownEnum` | :class:`str`] | :data:`None`
+            Optional list of scopes to request. If omitted or empty, the client's configured
+            :attr:`Client.scopes` are used instead. If neither is set, the token is requested
+            with no scopes.
+
+        Returns
+        -------
+        :class:`AuthorisedSession`
+            Session initialized with the new access token with the requested scopes as `extras`.
+        """
+        scopes_ = Scope.from_list(scopes) if scopes else []
+        if not scopes_:
+            scopes_ = list(self._scopes)
+
+        res = await self.http.get_token(scopes=[str(scope) for scope in scopes_])
+        return await AuthorisedSession._initialise(
+            client=self, data=res, extras={"scopes": scopes_}
+        )
+
     async def exchange_token(
         self,
         code: str,
         *,
         redirect_uri: str | None = utils.NotSet,
         session_identifier: str | None = utils.NotSet,
+        code_verifier: str = utils.NotSet,
         extras: dict[str, Any] = utils.NotSet,
     ) -> AuthorisedSession:
         """Exchange an authorization code for an authorised session.
@@ -214,6 +266,10 @@ class Client:
             if ``store_session`` is enabled.
 
             Defaults to a random UUID string if ``store_session`` is enabled.
+        code_verifier: :class:`str`
+            Optional code verifier to send with the exchange for PKCE.
+
+            This will omit the ``client_secret`` from the request.
         extras: :class:`dict`
             Optional extra data to associate with the session.
 
@@ -228,9 +284,148 @@ class Client:
         redirect_uri_ = (
             redirect_uri if redirect_uri is not utils.NotSet else self._redirect_uri
         )
-        res = await self.http.exchange_token(code, redirect_uri=redirect_uri_)
+        code_verifier_ = code_verifier if code_verifier is not utils.NotSet else None
+        res = await self.http.exchange_token(
+            code, redirect_uri=redirect_uri_, code_verifier=code_verifier_
+        )
         session = await AuthorisedSession._initialise(
             client=self, data=res, identifier=session_identifier, extras=extras
+        )
+        return session
+
+    async def get_device_code(
+        self, scopes: list[Scope | UnknownEnum | str] | None = None
+    ) -> DeviceCode:
+        """Get a device code for the device authorization flow.
+
+        This is used to authorize devices that do not have a browser or input method, such as
+        smart TVs or IoT devices.
+
+        Parameters
+        ----------
+        scopes: :class:`list`[:class:`Scope` | :class:`UnknownEnum` | :class:`str`] | :data:`None`
+            Optional list of scopes to request. If omitted or empty, the client's configured
+            :attr:`Client.scopes` are used instead. If neither is set, the device code is requested
+            with no scopes.
+
+            You generally do not need any scopes to call endpoints that require it.
+
+        Returns
+        -------
+        :class:`DeviceCode`
+            A DeviceCode object containing the device code, user code, verification URI, expiration time,
+            and polling interval.
+        """
+        scopes_ = Scope.from_list(scopes) if scopes else []
+        if not scopes_:
+            scopes_ = list(self._scopes)
+
+        res = await self.http.get_device_code(scopes=[str(scope) for scope in scopes_])
+        return DeviceCode(data=res, state=self._model_state)
+
+    async def __device_code_polling_task(self, device_code: DeviceCode) -> AccessToken:
+        interval = int(device_code.interval)
+        found: AccessToken | None = None
+        try:
+            while not found:
+                try:
+                    res = await self.http.exchange_device_code(device_code.device_code)
+                except BadRequest as exc:
+                    if (
+                        not isinstance(exc.response, dict)
+                        or "error" not in exc.response
+                    ):
+                        raise
+                    res = exc.response
+
+                if "error" not in res:
+                    found = AccessToken(data=res, state=self._model_state)  # pyright: ignore[reportArgumentType]
+                    break
+
+                if device_code.is_expired:
+                    raise DeviceCodeExchangeFailed(
+                        device_code, message="The device code has expired."
+                    )
+
+                error = res["error"]
+                if error == "authorization_pending":
+                    await asyncio.sleep(interval)
+                elif error == "slow_down":
+                    interval += 5
+                    await asyncio.sleep(interval)
+                elif error == "expired_token":
+                    raise DeviceCodeExchangeFailed(
+                        device_code, message="The device code has expired."
+                    )
+                elif error == "access_denied":
+                    raise DeviceCodeExchangeFailed(
+                        device_code,
+                        message="The user denied the authorization request.",
+                    )
+                else:
+                    raise DeviceCodeExchangeFailed(
+                        device_code, message=f"Unknown error: {error}"
+                    )
+
+        finally:
+            self.__device_code_polling_tasks.pop(device_code.device_code, None)
+
+        return found
+
+    async def exchange_device_code(
+        self,
+        device_code: DeviceCode,
+        *,
+        session_identifier: str | None = utils.NotSet,
+        extras: dict[str, Any] = utils.NotSet,
+    ) -> AuthorisedSession:
+        """Exchange a device code for an authorised session.
+
+        This will poll the Discord API until the user authorizes the device or the device code expires.
+
+        If ``store_session`` is enabled, the new session is stored in memory
+        by default unless ``session_identifier`` is explicitly set to :data:`None`.
+
+        Parameters
+        ----------
+        device_code: :class:`DeviceCode`
+            Device code returned by Discord.
+        session_identifier: :class:`str` | :data:`None`
+            The session's registry identifier. If :data:`None`, the session is not stored even
+            if ``store_session`` is enabled.
+
+            Defaults to a random UUID string if ``store_session`` is enabled.
+        extras: :class:`dict`
+            Optional extra data to associate with the session.
+
+            This is never used by the library itself, but can be used to store arbitrary data
+            associated with the session, such as user IDs, guild IDs, or other metadata.
+
+        Raises
+        ------
+        :class:`DeviceCodeExchangeFailed`
+            The device code expired, the user denied the authorization request, or
+            Discord returned an unrecognised error while polling.
+
+        Returns
+        -------
+        :class:`AuthorisedSession`
+            Session initialized with the exchanged access token.
+
+
+        """
+        if device_code in self.__device_code_polling_tasks:
+            task = self.__device_code_polling_tasks[device_code.device_code]
+        else:
+            task = asyncio.create_task(self.__device_code_polling_task(device_code))
+            self.__device_code_polling_tasks[device_code.device_code] = task
+
+        access_token = await task
+        session = await AuthorisedSession._initialise(
+            client=self,
+            data=access_token.to_dict(),
+            identifier=session_identifier,
+            extras=extras,
         )
         return session
 
@@ -241,6 +436,13 @@ class Client:
         """
         await self.http.close()
         self.clear_sessions()
+        if self.__device_code_polling_tasks:
+            for task in self.__device_code_polling_tasks.values():
+                try:
+                    task.cancel()
+                except Exception:
+                    pass
+        self.__device_code_polling_tasks.clear()
 
     @property
     def sessions(self) -> list[AuthorisedSession]:
@@ -321,6 +523,8 @@ class Client:
         scopes: Sequence[Scope | UnknownEnum | str] = utils.NotSet,
         append_scopes: bool = False,
         state: str = utils.NotSet,
+        code_challenge: str = utils.NotSet,
+        prompt: Literal["none", "consent"] | None = "consent",
     ) -> str:
         """Build the Discord OAuth2 authorization URL.
 
@@ -347,6 +551,16 @@ class Client:
             configured state.
 
             You may combine this with the client's :attr:`Client.state`.
+        code_challenge: :class:`str`
+            Optional code challenge to include in the URL for PKCE.
+
+            This also sets the ``code_challenge_method`` to ``"S256"``.
+
+        prompt: :class:`Literal`["none", "consent"] | :class:`None`
+            Optional prompt parameter to include in the URL.
+
+            Defaults to ``"consent"``, which means the user will always be prompted to
+            authorize the application.
 
         Returns
         -------
@@ -374,8 +588,15 @@ class Client:
             "redirect_uri": redirect_uri_,
             "scope": " ".join(str(scope) for scope in scopes_),
         }
+        if code_challenge is not utils.NotSet:
+            params["code_challenge"] = code_challenge
+            params["code_challenge_method"] = "S256"
+
         if state_:
             params["state"] = state_
+
+        if prompt is not None:
+            params["prompt"] = prompt
 
         url = urllib.parse.urljoin(self.http.BASE_URL, "/oauth2/authorize")
         url += "?" + urllib.parse.urlencode(params)
@@ -389,6 +610,8 @@ class Client:
         guild_id: int = utils.NotSet,
         disable_guild_select: bool = False,
         application_id: int | str = utils.NotSet,
+        prompt: Literal["none", "consent"] | None = "consent",
+        code_challenge: str = utils.NotSet,
     ) -> str:
         """Build a Discord OAuth2 URL for bot or command authorization.
 
@@ -406,6 +629,15 @@ class Client:
             ``guild_id``.
         application_id: :class:`int` | :data:`None`
             Optional application ID. Defaults to this client's application ID.
+        code_challenge: :class:`str`
+            Optional code challenge to include in the URL for PKCE.
+
+            This also sets the ``code_challenge_method`` to ``"S256"``.
+        prompt: :class:`Literal`["none", "consent"] | :class:`None`
+            Optional prompt parameter to include in the URL.
+
+            Defaults to ``"consent"``, which means the user will always be prompted to
+            authorize the application.
 
         Returns
         -------
@@ -434,6 +666,12 @@ class Client:
         integration_type = (
             integration_type if integration_type is not utils.NotSet else 0
         )
+        if code_challenge is not utils.NotSet:
+            params["code_challenge"] = code_challenge
+            params["code_challenge_method"] = "S256"
+
+        if prompt is not None:
+            params["prompt"] = prompt
 
         if integration_type is not utils.NotSet:
             if integration_type not in (0, 1):
@@ -523,7 +761,9 @@ class AuthorisedSession(
         cls,
         client: Client,
         *,
-        data: AccessTokenResponsePayload | RefreshTokenResponsePayload,
+        data: AccessTokenResponsePayload
+        | RefreshTokenResponsePayload
+        | ClientCredentialsResponsePayload,
         identifier: str | None = utils.NotSet,
         extras: dict[str, Any] = utils.NotSet,
     ) -> Self:

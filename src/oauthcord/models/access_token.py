@@ -17,6 +17,12 @@ if TYPE_CHECKING:
         AccessTokenResponse as AccessTokenResponsePayload,
     )
     from ..internals._types.token import (
+        ClientCredentialsResponse as ClientCredentialsResponsePayload,
+    )
+    from ..internals._types.token import (
+        DeviceCodeResponse as DeviceCodeResponsePayload,
+    )
+    from ..internals._types.token import (
         RefreshTokenResponse as RefreshTokenResponsePayload,
     )
 
@@ -26,8 +32,8 @@ __all__ = ("AccessToken",)
 
 class AccessToken(
     BaseModel[
-        "AccessTokenResponsePayload | RefreshTokenResponsePayload | RPCAuthenticateResponsePayload",
-        "AccessTokenResponsePayload | RefreshTokenResponsePayload | RPCAuthenticateResponsePayload",
+        "AccessTokenResponsePayload | RefreshTokenResponsePayload | RPCAuthenticateResponsePayload | ClientCredentialsResponsePayload",
+        "AccessTokenResponsePayload | RefreshTokenResponsePayload | RPCAuthenticateResponsePayload | ClientCredentialsResponsePayload",
     ]
 ):
     """Represents an OAuth2 access token from Discord.
@@ -40,6 +46,9 @@ class AccessToken(
         The access token string used for authorization.
     refresh_token: :class:`str`
         The refresh token string used to obtain new access tokens.
+    id_token: :class:`str` | None
+        The ID token string, if provided by Discord. This is typically used in OpenID Connect
+        or when getting a provisional account token.
     """
 
     __slots__ = (
@@ -47,6 +56,7 @@ class AccessToken(
         "_expires_in",
         "_scope",
         "access_token",
+        "id_token",
         "refresh_token",
         "token_type",
     )
@@ -56,6 +66,7 @@ class AccessToken(
         self,
         data: AccessTokenResponsePayload
         | RefreshTokenResponsePayload
+        | ClientCredentialsResponsePayload
         | RPCAuthenticateResponsePayload,
     ) -> None:
         self.token_type: str = data.get("token_type", "Bearer")
@@ -71,6 +82,7 @@ class AccessToken(
             self._scope: str = scope
 
         self._expires_in: int = int(data.get("expires_in", data.get("expires", 0)))
+        self.id_token: str | None = data.get("id_token")
 
         self._created_at: datetime.datetime = datetime.datetime.now(datetime.UTC)
 
@@ -81,6 +93,7 @@ class AccessToken(
         client: Client | AuthorisedSession,
         data: AccessTokenResponsePayload
         | RefreshTokenResponsePayload
+        | ClientCredentialsResponsePayload
         | RPCAuthenticateResponsePayload,
         *,
         created_at: datetime.datetime | None = None,
@@ -208,3 +221,65 @@ class AccessToken(
             This will revoke all access and refresh tokens associated with the current authorization.
         """
         await self._http.revoke_token(self)
+
+
+class DeviceCode(BaseModel["DeviceCodeResponsePayload"]):
+    """Represents a device code response from Discord.
+
+    Attributes
+    ----------
+    device_code: :class:`str`
+        The device code string used for authorization.
+    user_code: :class:`str`
+        The user code string that the user needs to enter on a verification page.
+    verification_uri: :class:`str`
+        The URL where the user needs to enter the user code for authorization.
+    verification_uri_complete: :class:`str`
+        The complete URL with the user code included, which can be embedded in a
+        QR code for easier access.
+    expires_in: :class:`int`
+        The number of seconds until the device code expires.
+    interval: :class:`int`
+        The interval in seconds at which the client should check for token updates.
+    """
+
+    @override
+    def _initialize(self, data: DeviceCodeResponsePayload) -> None:
+        self.device_code: str = data["device_code"]
+        self.user_code: str = data["user_code"]
+        self.verification_uri: str = data["verification_uri"]
+        self.verification_uri_complete: str = data["verification_uri_complete"]
+        self._expires_in: int = data["expires_in"]
+        self.interval: int = data["interval"]
+
+        self._created_at: datetime.datetime = datetime.datetime.now(datetime.UTC)
+
+    @property
+    def expires_in(self) -> int:
+        """:class:`int`: The number of seconds until the token expires."""
+        return self._expires_in
+
+    @property
+    def created_at(self) -> datetime.datetime:
+        """:class:`datetime.datetime`: When this object was created, representing when the token was obtained.
+
+        This is used to calculate the expiration time of the token.
+
+        This is set to the current time at the moment of creation this object.
+        """
+        return self._created_at
+
+    @property
+    def expires_at(self) -> datetime.datetime:
+        """:class:`datetime.datetime`: When the token expires.
+
+        This is calculated by adding the :attr:`expires_in` value to :attr:`created_at`.
+        """
+        return self._created_at + datetime.timedelta(seconds=self._expires_in)
+
+    @property
+    def is_expired(self) -> bool:
+        """:class:`bool`: Whether the token is expired based on the current time
+        and the :attr:`expires_at` value.
+        """
+        return self.expires_at <= datetime.datetime.now(datetime.UTC)

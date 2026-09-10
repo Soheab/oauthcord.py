@@ -73,6 +73,7 @@ __all__ = (  # noqa: RUF022
     "BadRequest",
     "Conflict",
     "DiscordServerError",
+    "DeviceCodeExchangeFailed",
     "Forbidden",
     "HTTPException",
     "NotFound",

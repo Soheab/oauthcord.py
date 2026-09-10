@@ -4,11 +4,13 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from .internals.endpoints.base import Route
+    from .models.access_token import DeviceCode
 
 
 __all__ = (
     "BadRequest",
     "Conflict",
+    "DeviceCodeExchangeFailed",
     "DiscordServerError",
     "Forbidden",
     "HTTPException",
@@ -68,7 +70,7 @@ class HTTPException(OauthCordException):
             except Exception:
                 self.code = None
 
-        return f"{self.status!r} for '{self.route.method} @ {self.route.path}': {self.message!r} (code: {self.code!r})"
+        return f"{self.status!r} for {self.route.method!r} @ {self.route.path!r}: {self.message} (code: {self.code!r})"
 
 
 class RateLimited(HTTPException):
@@ -93,7 +95,15 @@ class BadRequest(HTTPException):
 
 
 class Unauthorized(HTTPException):
-    pass
+    def __init__(
+        self, route: Route, response: str | dict[str, Any] | list[Any], status: int
+    ) -> None:
+        super().__init__(route, response, status)
+        self.message = (
+            f"{self.message} (check that your client ID/secret are correct, that any token "
+            "you passed is still valid and not revoked, and that it was granted the scopes "
+            "required for this endpoint)"
+        )
 
 
 class Forbidden(HTTPException):
@@ -114,6 +124,15 @@ class UnprocessableEntity(HTTPException):
 
 class DiscordServerError(HTTPException):
     pass
+
+
+class DeviceCodeExchangeFailed(OauthCordException):
+    """Raised when the device code exchange fails."""
+
+    def __init__(self, device_code: DeviceCode, message: str | None = None) -> None:
+        self.device_code: DeviceCode = device_code
+        self.message: str = message or "The device code exchange failed."
+        super().__init__(self.message)
 
 
 def create_http_exception(

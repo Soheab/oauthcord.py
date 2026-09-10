@@ -4,7 +4,7 @@ import asyncio
 import json
 import logging
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, ClassVar, Literal
+from typing import TYPE_CHECKING, Any, ClassVar
 
 import aiohttp
 
@@ -201,9 +201,10 @@ class HTTPClient(
         "_auto_refresh_token",
         "_bucket_hashes",
         "_buckets",
+        "_client_id",
+        "_client_secret",
         "_global_over",
         "_store_token",
-        "client_id",
         "max_ratelimit_timeout",
         "max_retries",
         "redirect_uri",
@@ -224,7 +225,8 @@ class HTTPClient(
     ) -> None:
         self.__get_client = lambda: client
 
-        self.client_id: int = client_id
+        self._client_id: int = client_id
+        self._client_secret: str = client_secret
         self.max_retries: int = max_retries
         self.max_ratelimit_timeout: float | None = max_ratelimit_timeout
         self._auto_refresh_token: bool = auto_refresh_token
@@ -234,6 +236,19 @@ class HTTPClient(
         self._session_provided = session is not NotSet
 
         self._init_ratelimiter()
+
+    @property
+    def client_id(self) -> int:
+        """:class:`int`: The client ID of the application associated with this HTTP client."""
+        return self._client_id
+
+    @property
+    def client_secret(self) -> str:
+        """:class:`str`: The client secret of the application associated with this HTTP client.
+
+        This must be kept secret and should not be shared or exposed in client-side code.
+        """
+        return self._client_secret
 
     async def close(self) -> None:
         if self._session_provided:

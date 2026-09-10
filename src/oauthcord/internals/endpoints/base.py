@@ -28,6 +28,14 @@ class BaseHTTPClient:
     redirect_uri: str
     _auth: aiohttp.BasicAuth
 
+    @property
+    def client_id(self) -> int:
+        raise NotImplementedError
+
+    @property
+    def client_secret(self) -> str:
+        raise NotImplementedError
+
     async def request(
         self,
         route: Route,
