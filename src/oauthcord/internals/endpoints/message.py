@@ -25,7 +25,12 @@ class MessageHTTPClientMixin(BaseHTTPClient):
             data["content"] = content
 
         return await self.request(
-            Route("PATCH", f"/users/{user_id}/messages/{message_id}"),
+            Route(
+                "PATCH",
+                "/users/{user_id}/messages/{message_id}",
+                user_id=user_id,
+                message_id=message_id,
+            ),
             token=token,
             json=data,
         )
@@ -38,7 +43,12 @@ class MessageHTTPClientMixin(BaseHTTPClient):
         message_id: int | str,
     ) -> None:
         return await self.request(
-            Route("DELETE", f"/users/{user_id}/messages/{message_id}"),
+            Route(
+                "DELETE",
+                "/users/{user_id}/messages/{message_id}",
+                user_id=user_id,
+                message_id=message_id,
+            ),
             token=token,
         )
 
@@ -65,7 +75,7 @@ class MessageHTTPClientMixin(BaseHTTPClient):
             params["limit"] = limit
 
         return await self.request(
-            Route("GET", f"/users/{user_id}/messages"),
+            Route("GET", "/users/{user_id}/messages", user_id=user_id),
             token=token,
             params=params,
         )
@@ -110,7 +120,7 @@ class MessageHTTPClientMixin(BaseHTTPClient):
         )
 
         return await self.request(
-            Route("POST", f"/users/{user_id}/messages"),
+            Route("POST", "/users/{user_id}/messages", user_id=user_id),
             token=token,
             **kwargs,
         )

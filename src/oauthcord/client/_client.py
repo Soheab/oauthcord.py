@@ -37,9 +37,6 @@ if TYPE_CHECKING:
         ClientCredentialsResponse as ClientCredentialsResponsePayload,
     )
     from ..internals._types.token import (
-        DeviceCodeResponse as DeviceCodeResponsePayload,
-    )
-    from ..internals._types.token import (
         RefreshTokenResponse as RefreshTokenResponsePayload,
     )
 else:
@@ -48,7 +45,6 @@ else:
 
     ClientCredentialsResponsePayload = dict[str, Any]
     RefreshTokenResponsePayload = dict[str, Any]
-    DeviceCodeResponsePayload = dict[str, Any]
 
 
 class AuthorisedSessionPayload(TypedDict):
@@ -339,7 +335,10 @@ class Client:
                     res = exc.response
 
                 if "error" not in res:
-                    found = AccessToken(data=res, state=self._model_state)  # pyright: ignore[reportArgumentType]
+                    found = AccessToken(
+                        data=res,  # pyright: ignore[reportArgumentType]
+                        state=self._model_state,
+                    )
                     break
 
                 if device_code.is_expired:

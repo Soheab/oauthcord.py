@@ -28,15 +28,20 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
         application_id: int | str,
         file: File,
     ) -> application_types.CreateApplicationAttachmentResponse:
+        content, filename = file.read()
         form = aiohttp.FormData()
         form.add_field(
             "file",
-            file.read(),
-            filename=file.filename,
+            content,
+            filename=filename,
             content_type=file.content_type,
         )
         return await self.request(
-            Route("POST", f"/applications/{application_id}/attachment"),
+            Route(
+                "POST",
+                "/applications/{application_id}/attachment",
+                application_id=application_id,
+            ),
             token=token,
             data=form,
         )
@@ -48,7 +53,11 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
         application_id: int | str,
     ) -> application_types.PartialApplicationResponse:
         return await self.request(
-            Route("GET", f"/applications/{application_id}/partial"),
+            Route(
+                "GET",
+                "/applications/{application_id}/partial",
+                application_id=application_id,
+            ),
             token=token,
         )
 
@@ -59,7 +68,11 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
         application_id: int | str,
     ) -> application_types.ApplicationRoleConnectionResponse:
         return await self.request(
-            Route("GET", f"/users/@me/applications/{application_id}/role-connection"),
+            Route(
+                "GET",
+                "/users/@me/applications/{application_id}/role-connection",
+                application_id=application_id,
+            ),
             token=token,
         )
 
@@ -81,7 +94,11 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
             data["metadata"] = metadata
 
         return await self.request(
-            Route("PUT", f"/users/@me/applications/{application_id}/role-connection"),
+            Route(
+                "PUT",
+                "/users/@me/applications/{application_id}/role-connection",
+                application_id=application_id,
+            ),
             token=token,
             json=data,
         )
@@ -105,7 +122,11 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
             data["custom_id"] = custom_id
 
         return await self.request(
-            Route("POST", f"/applications/{application_id}/quick-links/"),
+            Route(
+                "POST",
+                "/applications/{application_id}/quick-links/",
+                application_id=application_id,
+            ),
             token=token,
             json=data,
         )
@@ -158,7 +179,11 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
             params["limit"] = limit
 
         return await self.request(
-            Route("GET", f"/applications/{application_id}/entitlements"),
+            Route(
+                "GET",
+                "/applications/{application_id}/entitlements",
+                application_id=application_id,
+            ),
             token=token,
             params=params,
         )
@@ -172,7 +197,10 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
     ) -> entitlement_types.EntitlementResponse:
         return await self.request(
             Route(
-                "GET", f"/applications/{application_id}/entitlements/{entitlement_id}"
+                "GET",
+                "/applications/{application_id}/entitlements/{entitlement_id}",
+                application_id=application_id,
+                entitlement_id=entitlement_id,
             ),
             token=token,
         )
@@ -187,7 +215,9 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
         await self.request(
             Route(
                 "POST",
-                f"/applications/{application_id}/entitlements/{entitlement_id}/consume",
+                "/applications/{application_id}/entitlements/{entitlement_id}/consume",
+                application_id=application_id,
+                entitlement_id=entitlement_id,
             ),
             token=token,
         )
@@ -202,7 +232,9 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
         await self.request(
             Route(
                 "DELETE",
-                f"/applications/{application_id}/entitlements/{entitlement_id}",
+                "/applications/{application_id}/entitlements/{entitlement_id}",
+                application_id=application_id,
+                entitlement_id=entitlement_id,
             ),
             token=token,
         )

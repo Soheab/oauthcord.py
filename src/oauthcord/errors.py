@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from .internals._types.http import RateLimitResponse
     from .internals.endpoints.base import Route
     from .models.access_token import DeviceCode
 
@@ -42,48 +43,60 @@ class MissingSession(MissingState):
 
 class HTTPException(OauthCordException):
     def __init__(
-        self, route: Route, response: str | dict[str, Any] | list[Any], status: int
+        self,
+        route: Route,
+        response: str | dict[str, Any] | list[Any] | RateLimitResponse,
+        status: int,
     ) -> None:
         self.route: Route = route
         self.response = response
         self.status = status
-        self.message: str | None = None
-        self.code: int | None = None
+        if isinstance(response, dict):
+            self.message = str(
+                response.get("message", response.get("error", str(response)))
+            )
+            code = response.get("code", 0)
+            self.code = (
+                code if isinstance(code, int) and not isinstance(code, bool) else None
+            )
+        else:
+            self.message = str(response)
+            self.code = None
+
         super().__init__(str(self))
 
     def __str__(self) -> str:
-        if self.message is None:
-            try:
-                data = self.response
-                if isinstance(data, dict):
-                    self.message = data.get("message", data.get("error", str(data)))
-                else:
-                    self.message = str(data)
-            except Exception:
-                self.message = "No message"
-
-        if self.code is None:
-            try:
-                data = self.response
-                if isinstance(data, dict):
-                    self.code = data.get("code", 0)
-            except Exception:
-                self.code = None
-
         return f"{self.status!r} for {self.route.method!r} @ {self.route.path!r}: {self.message} (code: {self.code!r})"
 
 
 class RateLimited(HTTPException):
+    """An HTTP request could not proceed within its rate-limit timeout.
+
+    Parameters
+    ----------
+    route: :class:`Route`
+        Route affected by the rate limit.
+    retry_after: :class:`float`
+        Number of seconds after which another request may be attempted.
+    is_global: :class:`bool`
+        Whether the limit applies globally rather than to a route bucket.
+    """
+
     def __init__(
         self,
         route: Route,
-        response: str | dict[str, Any] | list[Any],
         retry_after: float,
+        *,
         is_global: bool = False,
     ) -> None:
-        self.retry_after = retry_after
+        self.retry_after = float(retry_after)
         self.is_global = is_global
-        super().__init__(route, response, 429)
+        data: RateLimitResponse = {
+            "message": "Rate limit exceeded",
+            "retry_after": self.retry_after,
+            "global": is_global,
+        }
+        super().__init__(route, data, 429)
 
     def __str__(self) -> str:
         scope = "Global" if self.is_global else "Route"
@@ -96,7 +109,10 @@ class BadRequest(HTTPException):
 
 class Unauthorized(HTTPException):
     def __init__(
-        self, route: Route, response: str | dict[str, Any] | list[Any], status: int
+        self,
+        route: Route,
+        response: str | dict[str, Any] | list[Any] | RateLimitResponse,
+        status: int,
     ) -> None:
         super().__init__(route, response, status)
         self.message = (
@@ -104,6 +120,7 @@ class Unauthorized(HTTPException):
             "you passed is still valid and not revoked, and that it was granted the scopes "
             "required for this endpoint)"
         )
+        self.args = (str(self),)
 
 
 class Forbidden(HTTPException):
@@ -136,7 +153,9 @@ class DeviceCodeExchangeFailed(OauthCordException):
 
 
 def create_http_exception(
-    route: Route, response: str | dict[str, Any] | list[Any], status: int
+    route: Route,
+    response: str | dict[str, Any] | list[Any] | RateLimitResponse,
+    status: int,
 ) -> HTTPException:
     match status:
         case 400:

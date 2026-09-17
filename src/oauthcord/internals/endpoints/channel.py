@@ -17,7 +17,7 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
         user_id: int | str,
     ) -> channels.DMChannelResponse:
         return await self.request(
-            Route("GET", f"/users/@me/dms/{user_id}"),
+            Route("GET", "/users/@me/dms/{user_id}", user_id=user_id),
             token=token,
         )
 
@@ -49,7 +49,7 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
         with_can_link_lobby: bool = False,
     ) -> list[channels.GuildChannelResponse]:
         return await self.request(
-            Route("GET", f"/guilds/{guild_id}/channels"),
+            Route("GET", "/guilds/{guild_id}/channels", guild_id=guild_id),
             token=token,
             params={
                 "permissions": int(permissions),
@@ -61,7 +61,7 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
         self, token: ValidAccessToken, *, channel_id: int | str
     ) -> channels.CallEligibilityResponse:
         return await self.request(
-            Route("GET", f"/channels/{channel_id}/call"),
+            Route("GET", "/channels/{channel_id}/call", channel_id=channel_id),
             token=token,
         )
 
@@ -77,7 +77,7 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
             data["recipients"] = recipients
 
         await self.request(
-            Route("POST", f"/channels/{channel_id}/call/ring"),
+            Route("POST", "/channels/{channel_id}/call/ring", channel_id=channel_id),
             token=token,
             json=data,
         )
@@ -94,7 +94,11 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
             data["recipients"] = recipients
 
         await self.request(
-            Route("POST", f"/channels/{channel_id}/call/stop-ringing"),
+            Route(
+                "POST",
+                "/channels/{channel_id}/call/stop-ringing",
+                channel_id=channel_id,
+            ),
             token=token,
             json=data,
         )
@@ -111,7 +115,9 @@ class ChannelHTTPClientMixin(BaseHTTPClient):
             params["user_ids"] = user_ids
 
         return await self.request(
-            Route("GET", f"/channels/{channel_id}/linked-accounts"),
+            Route(
+                "GET", "/channels/{channel_id}/linked-accounts", channel_id=channel_id
+            ),
             token=token,
             params=params,
         )

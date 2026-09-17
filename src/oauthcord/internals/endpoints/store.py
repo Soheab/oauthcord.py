@@ -39,7 +39,11 @@ class StoreHTTPClientMixin(BaseHTTPClient):
             params["with_bundled_skus"] = with_bundled_skus
 
         return await self.request(
-            Route("GET", f"/applications/{application_id}/skus"),
+            Route(
+                "GET",
+                "/applications/{application_id}/skus",
+                application_id=application_id,
+            ),
             token=token,
             params=params,
         )
@@ -151,7 +155,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
             params["localize"] = localize
 
         return await self.request(
-            Route("GET", f"/store/skus/{sku_id}"),
+            Route("GET", "/store/skus/{sku_id}", sku_id=sku_id),
             token=token,
             params=params,
         )
@@ -240,7 +244,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
             data["release_date"] = release_date
 
         return await self.request(
-            Route("PATCH", f"/store/skus/{sku_id}"),
+            Route("PATCH", "/store/skus/{sku_id}", sku_id=sku_id),
             token=token,
             json=data,
         )
@@ -260,7 +264,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
             params["localize"] = localize
 
         return await self.request(
-            Route("GET", f"/store/skus/{sku_id}/listings"),
+            Route("GET", "/store/skus/{sku_id}/listings", sku_id=sku_id),
             token=token,
             params=params,
         )
@@ -353,7 +357,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
             params["localize"] = localize
 
         return await self.request(
-            Route("GET", f"/store/listings/{listing_id}"),
+            Route("GET", "/store/listings/{listing_id}", listing_id=listing_id),
             token=token,
             params=params,
         )
@@ -426,7 +430,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
             data["hero_video_asset_id"] = hero_video_asset_id
 
         return await self.request(
-            Route("PATCH", f"/store/listings/{listing_id}"),
+            Route("PATCH", "/store/listings/{listing_id}", listing_id=listing_id),
             token=token,
             json=data,
         )
@@ -438,7 +442,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
         listing_id: int | str,
     ) -> None:
         await self.request(
-            Route("DELETE", f"/store/listings/{listing_id}"),
+            Route("DELETE", "/store/listings/{listing_id}", listing_id=listing_id),
             token=token,
         )
 
@@ -449,7 +453,7 @@ class StoreHTTPClientMixin(BaseHTTPClient):
         sku_id: int | str,
     ) -> list[store_types.SubscriptionPlanResponse]:
         return await self.request(
-            Route("GET", f"/store/skus/{sku_id}/plans"),
+            Route("GET", "/store/skus/{sku_id}/plans", sku_id=sku_id),
             token=token,
         )
 
@@ -460,7 +464,11 @@ class StoreHTTPClientMixin(BaseHTTPClient):
         application_id: int | str,
     ) -> list[store_types.StoreAssetResponse]:
         return await self.request(
-            Route("GET", f"/store/applications/{application_id}/assets"),
+            Route(
+                "GET",
+                "/store/applications/{application_id}/assets",
+                application_id=application_id,
+            ),
             token=token,
         )
 
@@ -480,7 +488,11 @@ class StoreHTTPClientMixin(BaseHTTPClient):
             content_type=file.content_type or "application/octet-stream",
         )
         return await self.request(
-            Route("POST", f"/store/applications/{application_id}/assets"),
+            Route(
+                "POST",
+                "/store/applications/{application_id}/assets",
+                application_id=application_id,
+            ),
             token=token,
             data=form,
         )
@@ -493,6 +505,11 @@ class StoreHTTPClientMixin(BaseHTTPClient):
         asset_id: int | str,
     ) -> None:
         await self.request(
-            Route("DELETE", f"/store/applications/{application_id}/assets/{asset_id}"),
+            Route(
+                "DELETE",
+                "/store/applications/{application_id}/assets/{asset_id}",
+                application_id=application_id,
+                asset_id=asset_id,
+            ),
             token=token,
         )

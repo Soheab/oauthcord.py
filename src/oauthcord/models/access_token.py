@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import datetime
 from typing import TYPE_CHECKING, Self, override
 
@@ -26,16 +27,18 @@ if TYPE_CHECKING:
         RefreshTokenResponse as RefreshTokenResponsePayload,
     )
 
+    type AccessTokenPayload = (
+        AccessTokenResponsePayload
+        | RefreshTokenResponsePayload
+        | RPCAuthenticateResponsePayload
+        | ClientCredentialsResponsePayload
+    )
+
 
 __all__ = ("AccessToken",)
 
 
-class AccessToken(
-    BaseModel[
-        "AccessTokenResponsePayload | RefreshTokenResponsePayload | RPCAuthenticateResponsePayload | ClientCredentialsResponsePayload",
-        "AccessTokenResponsePayload | RefreshTokenResponsePayload | RPCAuthenticateResponsePayload | ClientCredentialsResponsePayload",
-    ]
-):
+class AccessToken(BaseModel["AccessTokenPayload", "AccessTokenPayload"]):
     """Represents an OAuth2 access token from Discord.
 
     Attributes
@@ -54,6 +57,7 @@ class AccessToken(
     __slots__ = (
         "_created_at",
         "_expires_in",
+        "_refresh_lock",
         "_scope",
         "access_token",
         "id_token",
@@ -85,6 +89,8 @@ class AccessToken(
         self.id_token: str | None = data.get("id_token")
 
         self._created_at: datetime.datetime = datetime.datetime.now(datetime.UTC)
+        if not hasattr(self, "_refresh_lock"):
+            self._refresh_lock: asyncio.Lock = asyncio.Lock()
 
     @classmethod
     @override
@@ -210,8 +216,12 @@ class AccessToken(
         if check_expired and not self.is_expired:
             return self
 
-        res = await self._http.refresh_token(self)
-        return self._update(res)
+        async with self._refresh_lock:
+            if check_expired and not self.is_expired:
+                return self
+
+            res = await self._http.refresh_token(self)
+            return self._update(res)
 
     async def revoke(self) -> None:
         """Revoke this token.
@@ -242,6 +252,16 @@ class DeviceCode(BaseModel["DeviceCodeResponsePayload"]):
     interval: :class:`int`
         The interval in seconds at which the client should check for token updates.
     """
+
+    __slots__ = (
+        "_created_at",
+        "_expires_in",
+        "device_code",
+        "interval",
+        "user_code",
+        "verification_uri",
+        "verification_uri_complete",
+    )
 
     @override
     def _initialize(self, data: DeviceCodeResponsePayload) -> None:

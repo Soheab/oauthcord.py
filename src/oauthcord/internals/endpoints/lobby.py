@@ -54,7 +54,12 @@ class LobbyHTTPClientMixin(BaseHTTPClient):
         user_id: int | str,
     ) -> None:
         await self.request(
-            Route("DELETE", f"/lobbies/{lobby_id}/members/{user_id}"),
+            Route(
+                "DELETE",
+                "/lobbies/{lobby_id}/members/{user_id}",
+                lobby_id=lobby_id,
+                user_id=user_id,
+            ),
             token=token,
         )
 
@@ -65,7 +70,7 @@ class LobbyHTTPClientMixin(BaseHTTPClient):
         lobby_id: int | str,
     ) -> lobby_types.CreateLobbyInviteForCurrentUserResponse:
         return await self.request(
-            Route("POST", f"/lobbies/{lobby_id}/members/@me/invites"),
+            Route("POST", "/lobbies/{lobby_id}/members/@me/invites", lobby_id=lobby_id),
             token=token,
         )
 
@@ -81,7 +86,7 @@ class LobbyHTTPClientMixin(BaseHTTPClient):
             data["channel_id"] = channel_id
 
         return await self.request(
-            Route("PATCH", f"/lobbies/{lobby_id}/channel-linking"),
+            Route("PATCH", "/lobbies/{lobby_id}/channel-linking", lobby_id=lobby_id),
             token=token,
             json=data,
         )
@@ -98,7 +103,7 @@ class LobbyHTTPClientMixin(BaseHTTPClient):
             params["limit"] = limit
 
         return await self.request(
-            Route("GET", f"/lobbies/{lobby_id}/messages"),
+            Route("GET", "/lobbies/{lobby_id}/messages", lobby_id=lobby_id),
             token=token,
             params=params,
         )
@@ -143,7 +148,7 @@ class LobbyHTTPClientMixin(BaseHTTPClient):
         )
 
         return await self.request(
-            Route("POST", f"/lobbies/{lobby_id}/messages"),
+            Route("POST", "/lobbies/{lobby_id}/messages", lobby_id=lobby_id),
             token=token,
             **kwargs,
         )

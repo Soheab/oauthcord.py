@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from abc import ABC
 from collections import deque
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
@@ -12,18 +11,27 @@ from typing import TYPE_CHECKING, Any
 import aiohttp
 
 from ..errors import RateLimited
-
-if TYPE_CHECKING:
-    from .endpoints.base import Route
-
 from .endpoints.base import Route
 
+if TYPE_CHECKING:
+    from ._types.http import RateLimitResponse
+
+
 _log = logging.getLogger("http")
-_RATELIMIT_ROUTE = Route("GET", "/")
+
+
+class _RatelimitTimeout(Exception):
+    __slots__ = ("retry_after",)
+
+    def __init__(self, retry_after: float) -> None:
+        self.retry_after = retry_after
+        super().__init__(retry_after)
 
 
 class Ratelimit:
     __slots__ = (
+        "_generation",
+        "_last_used",
         "_lock",
         "_loop",
         "_max_ratelimit_timeout",
@@ -47,6 +55,8 @@ class Ratelimit:
         self._loop: asyncio.AbstractEventLoop | None = None
         self._pending: deque[asyncio.Future[Any]] = deque()
         self._lock: asyncio.Lock = asyncio.Lock()
+        self._generation: int = 0
+        self._last_used: float = 0.0
 
     def _get_loop(self) -> asyncio.AbstractEventLoop:
         if self._loop is None:
@@ -58,14 +68,39 @@ class Ratelimit:
         self.expires = None
         self.reset_after = 0.0
         self.dirty = False
+        self._generation += 1
 
-    def update(self, response: aiohttp.ClientResponse) -> None:
+    def hit_429(self, retry_after: float) -> None:
+        """Mark this bucket as exhausted after a 429 response for its route."""
+        now = self._get_loop().time()
+        self.expires = max(self.expires or 0.0, now + retry_after)
+        self.reset_after = self.expires - now
+        self.remaining = 0
+        self.dirty = True
+
+    def is_inactive(self) -> bool:
+        if self.outgoing > 0 or self._pending:
+            return False
+        if not self.is_expired():
+            # Still inside a known cooldown window (e.g. a long 429 retry_after) -
+            # evicting now would make the next request start from a fresh,
+            # falsely-optimistic bucket and immediately re-trigger the limit.
+            return False
+        return (self._get_loop().time() - self._last_used) >= 60
+
+    def update(
+        self, response: aiohttp.ClientResponse, *, generation: int | None = None
+    ) -> None:
+        if generation is not None and generation != self._generation:
+            return
         headers = response.headers
+        self._last_used = self._get_loop().time()
 
         self.limit = int(headers.get("X-RateLimit-Limit", 1))
 
         if self.dirty:
             self.remaining = min(
+                self.remaining,
                 int(headers.get("X-RateLimit-Remaining", 0)),
                 self.limit - self.outgoing,
             )
@@ -73,17 +108,16 @@ class Ratelimit:
             self.remaining = int(headers.get("X-RateLimit-Remaining", 0))
             self.dirty = True
 
-        if reset_after := headers.get("X-RateLimit-Reset-After"):
-            self.reset_after = float(reset_after)
-        else:
-            self.reset_after = 0.0
-
-        self.expires = self._get_loop().time() + self.reset_after
+        self.expires = max(
+            self.expires or 0.0,
+            self._last_used + float(headers.get("X-RateLimit-Reset-After", 0.0)),
+        )
+        self.reset_after = self.expires - self._last_used
 
     def is_expired(self) -> bool:
         if self.expires is None:
             return True
-        return self._get_loop().time() > self.expires
+        return self._get_loop().time() >= self.expires
 
     def time_until_reset(self) -> float:
         if self.expires is None:
@@ -97,7 +131,9 @@ class Ratelimit:
                 future.set_result(None)
                 break
 
-    def _wake(self, count: int = 1, *, exception: RateLimited | None = None) -> None:
+    def _wake(self, count: int = 1, *, exception: BaseException | None = None) -> None:
+        if count <= 0:
+            return
         awoken = 0
         while self._pending:
             future = self._pending.popleft()
@@ -112,34 +148,29 @@ class Ratelimit:
                 break
 
     async def _refresh(self) -> None:
-        error = (
-            self._max_ratelimit_timeout is not None
-            and self.reset_after > self._max_ratelimit_timeout
-        )
-        exception = (
-            RateLimited(_RATELIMIT_ROUTE, {}, self.reset_after, is_global=False)
-            if error
-            else None
-        )
-
+        generation = self._generation
         async with self._lock:
-            if not error:
-                _log.debug(
-                    "Rate limit bucket sleeping for %.2f seconds", self.reset_after
-                )
-                await asyncio.sleep(self.reset_after)
-                _log.debug("Rate limit bucket done sleeping")
-
-        self.reset()
-        _log.debug(
-            "Rate limit bucket reset, waking %d pending requests", self.remaining
-        )
-        self._wake(self.remaining, exception=exception)
+            while generation == self._generation:
+                delay = self.time_until_reset()
+                if (
+                    self._max_ratelimit_timeout is not None
+                    and delay > self._max_ratelimit_timeout
+                ):
+                    self._wake(
+                        len(self._pending),
+                        exception=_RatelimitTimeout(delay),
+                    )
+                    return
+                if delay <= 0:
+                    self.reset()
+                    self._wake(self.remaining)
+                    return
+                await asyncio.sleep(delay)
 
     async def acquire(self) -> None:
         loop = self._get_loop()
 
-        if self.is_expired():
+        if self.expires is not None and self.is_expired():
             _log.debug("Rate limit bucket expired, resetting")
             self.reset()
 
@@ -151,12 +182,7 @@ class Ratelimit:
                     current_reset_after,
                     self._max_ratelimit_timeout,
                 )
-                raise RateLimited(
-                    _RATELIMIT_ROUTE,
-                    {},
-                    current_reset_after,
-                    is_global=False,
-                )
+                raise _RatelimitTimeout(current_reset_after)
 
         while self.remaining <= 0:
             if self.expires is None:
@@ -174,18 +200,22 @@ class Ratelimit:
             self._pending.append(future)
             try:
                 while not future.done():
-                    max_wait = max(0.1, self.expires - loop.time())
+                    max_wait = self.time_until_reset()
                     await asyncio.wait([future], timeout=max_wait)
                     if not future.done():
                         await self._refresh()
-            except Exception:
+                future.result()
+            except (Exception, asyncio.CancelledError):
                 future.cancel()
+                if future in self._pending:
+                    self._pending.remove(future)
                 if self.remaining > 0 and not future.cancelled():
                     self._wake_next()
                 raise
 
         self.remaining -= 1
         self.outgoing += 1
+        self._last_used = loop.time()
         _log.debug(
             "Acquired rate limit token (remaining=%d, outgoing=%d)",
             self.remaining,
@@ -194,7 +224,7 @@ class Ratelimit:
 
     def release(self) -> None:
         self.outgoing -= 1
-        tokens = self.remaining - self.outgoing
+        tokens = self.remaining
         _log.debug(
             "Released rate limit token (remaining=%d, outgoing=%d, pending=%d)",
             self.remaining,
@@ -209,21 +239,10 @@ class Ratelimit:
                 )
                 asyncio.create_task(self._refresh())  # noqa: RUF006
             elif self._pending:
-                exception = (
-                    RateLimited(
-                        _RATELIMIT_ROUTE,
-                        {},
-                        self.reset_after,
-                        is_global=False,
-                    )
-                    if self._max_ratelimit_timeout
-                    and self.reset_after > self._max_ratelimit_timeout
-                    else None
-                )
                 _log.debug(
                     "Waking %d pending requests", min(tokens, len(self._pending))
                 )
-                self._wake(tokens, exception=exception)
+                self._wake(tokens)
 
     def snapshot(self) -> dict[str, Any]:
         return {
@@ -238,33 +257,69 @@ class Ratelimit:
 
 @dataclass(slots=True, frozen=True)
 class RatelimitContext:
+    route: Route
+    authentication_key: str
     route_key: str
-    bucket_hash: str | None
     bucket_key: str
     ratelimit: Ratelimit
+    generation: int
 
 
-class HTTPRateLimiterMixin(ABC):
+_BUCKET_CLEANUP_INTERVAL = 60.0
+
+
+class HTTPRateLimiterMixin:
     __slots__ = ()
 
     _bucket_hashes: dict[str, str]
     _buckets: dict[str, Ratelimit]
-    _global_over: asyncio.Event | None
+    _global_expires: dict[str, float]
+    _last_bucket_cleanup: float
     max_ratelimit_timeout: float | None
 
     def _init_ratelimiter(self) -> None:
         self._bucket_hashes = {}
         self._buckets = {}
-        self._global_over = None
+        self._global_expires = {}
+        self._last_bucket_cleanup = 0.0
 
-    def _get_global_event(self) -> asyncio.Event:
-        if self._global_over is None:
-            self._global_over = asyncio.Event()
-            self._global_over.set()
-        return self._global_over
+    def _cleanup_stale_buckets(self) -> None:
+        loop = asyncio.get_running_loop()
+        now = loop.time()
+        if now - self._last_bucket_cleanup < _BUCKET_CLEANUP_INTERVAL:
+            return
+        self._last_bucket_cleanup = now
+        self._global_expires = {
+            key: deadline
+            for key, deadline in self._global_expires.items()
+            if deadline > now
+        }
 
-    def _get_route_key(self, method: str, path: str) -> str:
-        return f"{method}:{path}"
+        stale_keys = [
+            key for key, bucket in self._buckets.items() if bucket.is_inactive()
+        ]
+        for key in stale_keys:
+            del self._buckets[key]
+
+        if stale_keys:
+            _log.debug(
+                "Cleaned up %d stale rate limit bucket(s), %d remaining",
+                len(stale_keys),
+                len(self._buckets),
+            )
+
+        stale_routes = [
+            route_key
+            for route_key, bucket_hash in self._bucket_hashes.items()
+            if bucket_hash not in self._buckets
+        ]
+        for route_key in stale_routes:
+            del self._bucket_hashes[route_key]
+
+    def _get_route_key(self, route: Route, authentication_key: str = "") -> str:
+        return (
+            f"{route.method}:{route.path}:{route.major_parameters}:{authentication_key}"
+        )
 
     def _get_ratelimit(self, key: str) -> Ratelimit:
         try:
@@ -274,120 +329,161 @@ class HTTPRateLimiterMixin(ABC):
             return self._buckets[key]
 
     def _get_bucket_for_route(self, route_key: str) -> Ratelimit | None:
-        if bucket_hash := self._bucket_hashes.get(route_key):
-            return self._buckets.get(bucket_hash)
-        return self._buckets.get(route_key)
+        return self._buckets.get(self._get_bucket_key(route_key))
 
     def _get_bucket_key(self, route_key: str) -> str:
         return self._bucket_hashes.get(route_key, route_key)
 
     def _update_bucket_hash(
         self,
-        *,
-        route_key: str,
-        current_bucket_key: str,
-        current_bucket_hash: str | None,
+        context: RatelimitContext,
         discord_bucket_hash: str | None,
-        ratelimit: Ratelimit,
     ) -> None:
-        if discord_bucket_hash is None or current_bucket_hash == discord_bucket_hash:
+        if discord_bucket_hash is None:
+            return
+
+        scoped_bucket_key = (
+            f"{discord_bucket_hash}:{context.authentication_key}:"
+            f"{context.route.major_parameters}"
+        )
+        if context.bucket_key == scoped_bucket_key:
             return
 
         _log.debug(
-            "Bucket hash for %s: %s -> %s",
-            route_key,
-            current_bucket_hash,
-            discord_bucket_hash,
+            "Discovered rate limit bucket for %s %s",
+            context.route.method,
+            context.route.path,
         )
-        self._bucket_hashes[route_key] = discord_bucket_hash
-        self._buckets[discord_bucket_hash] = ratelimit
+        self._bucket_hashes[context.route_key] = scoped_bucket_key
+        existing = self._buckets.setdefault(scoped_bucket_key, context.ratelimit)
+        if existing is not context.ratelimit and context.ratelimit.dirty:
+            # Responses from a newly discovered alias must not erase a cooldown
+            # already learned from another route sharing this bucket.
+            if existing.is_expired():
+                existing.reset()
+                existing.limit = context.ratelimit.limit
+                existing.remaining = max(
+                    0, context.ratelimit.remaining - existing.outgoing
+                )
+            else:
+                existing.remaining = min(
+                    existing.remaining, context.ratelimit.remaining
+                )
+            existing.dirty = True
+            existing.expires = max(
+                existing.expires or 0, context.ratelimit.expires or 0
+            )
+            existing.reset_after = existing.time_until_reset()
         if (
-            current_bucket_key != discord_bucket_hash
-            and current_bucket_key in self._buckets
+            context.bucket_key != scoped_bucket_key
+            and context.bucket_key in self._buckets
+            and context.bucket_key not in self._bucket_hashes.values()
         ):
-            del self._buckets[current_bucket_key]
+            del self._buckets[context.bucket_key]
 
     def get_ratelimit_snapshot(self) -> list[dict[str, Any]]:
         snapshot: list[dict[str, Any]] = []
-        for key, bucket in self._buckets.items():
+        seen: set[int] = set()
+        for bucket in self._buckets.values():
+            bucket_identity = id(bucket)
+            if bucket_identity in seen:
+                continue
+            seen.add(bucket_identity)
             state = bucket.snapshot()
-            state["key"] = key
+            state["key"] = f"bucket:{len(snapshot)}"
             snapshot.append(state)
         return snapshot
 
-    async def _wait_for_global_ratelimit(self) -> None:
-        global_event = self._get_global_event()
-        if global_event.is_set():
+    async def _wait_for_global_ratelimit(
+        self, route: Route, authentication_key: str = ""
+    ) -> None:
+        key = authentication_key
+        loop = asyncio.get_running_loop()
+        while True:
+            if (deadline := self._global_expires.get(key)) is not None:
+                delay = deadline - loop.time()
+                if delay > 0:
+                    if (
+                        self.max_ratelimit_timeout is not None
+                        and delay > self.max_ratelimit_timeout
+                    ):
+                        raise RateLimited(route, delay, is_global=True)
+                    await asyncio.sleep(delay)
+                    continue
+                del self._global_expires[key]
             return
-
-        _log.warning("Global rate limit active, waiting...")
-        await global_event.wait()
-        _log.debug("Global rate limit cleared, proceeding")
 
     @asynccontextmanager
     async def _acquire_ratelimit(
-        self, method: str, path: str
+        self, route: Route, authentication_key: str = ""
     ) -> AsyncGenerator[RatelimitContext]:
-        route_key = self._get_route_key(method, path)
-        bucket_hash = self._bucket_hashes.get(route_key)
-        bucket_key = self._get_bucket_key(route_key)
-        ratelimit = self._get_ratelimit(bucket_key)
+        self._cleanup_stale_buckets()
 
-        await self._wait_for_global_ratelimit()
-        _log.debug("%s %s - acquiring rate limit token", method, path)
-        await ratelimit.acquire()
+        route_key = self._get_route_key(route, authentication_key)
+        while True:
+            await self._wait_for_global_ratelimit(route, authentication_key)
+            bucket_key = self._get_bucket_key(route_key)
+            ratelimit = self._get_ratelimit(bucket_key)
+            _log.debug("%s %s - acquiring rate limit token", route.method, route.path)
+            try:
+                await ratelimit.acquire()
+            except _RatelimitTimeout as error:
+                raise RateLimited(route, error.retry_after) from error
+            deadline = self._global_expires.get(authentication_key)
+            if deadline is not None:
+                if deadline > asyncio.get_running_loop().time():
+                    ratelimit.release()
+                    continue
+                del self._global_expires[authentication_key]
+            if self._get_bucket_for_route(route_key) is ratelimit:
+                break
+            # Discovery may have changed the route's bucket while we waited.
+            ratelimit.release()
         try:
             yield RatelimitContext(
+                route=route,
+                authentication_key=authentication_key,
                 route_key=route_key,
-                bucket_hash=bucket_hash,
                 bucket_key=bucket_key,
                 ratelimit=ratelimit,
+                generation=ratelimit._generation,
             )
         finally:
             ratelimit.release()
 
-    async def _handle_rate_limited_response(
+    def _handle_rate_limited_response(
         self,
-        *,
-        route: Route,
-        method: str,
-        url: str,
-        data: dict[str, Any] | list[Any] | str,
-    ) -> None:
-        retry_after = (
-            float(data.get("retry_after", 1)) if isinstance(data, dict) else 1.0
-        )
-        is_global = isinstance(data, dict) and data.get("global", False)
+        context: RatelimitContext,
+        data: RateLimitResponse,
+    ) -> float:
+        retry_after = float(data.get("retry_after", 1))
+        is_global = data.get("global", False)
 
         _log.warning(
             "Rate limited on %s %s (%s). Retry after %.2fs",
-            method,
-            url,
+            context.route.method,
+            context.route.path,
             "global" if is_global else "route",
             retry_after,
         )
+
+        if not is_global:
+            context.ratelimit.hit_429(retry_after)
+            if (
+                shared := self._get_bucket_for_route(context.route_key)
+            ) is not None and shared is not context.ratelimit:
+                shared.hit_429(max(retry_after, shared.time_until_reset()))
+        else:
+            key = context.authentication_key
+            self._global_expires[key] = max(
+                self._global_expires.get(key, 0.0),
+                asyncio.get_running_loop().time() + retry_after,
+            )
 
         if (
             self.max_ratelimit_timeout is not None
             and retry_after > self.max_ratelimit_timeout
         ):
-            _log.error(
-                "Rate limit retry_after %.2fs exceeds max timeout %.2fs",
-                retry_after,
-                self.max_ratelimit_timeout,
-            )
-            raise RateLimited(route, data, retry_after, is_global=is_global)
+            raise RateLimited(context.route, retry_after, is_global=is_global)
 
-        global_event = self._get_global_event()
-        if is_global:
-            _log.warning("Setting global rate limit lock")
-            global_event.clear()
-
-        try:
-            _log.info("Sleeping %.2fs for rate limit...", retry_after)
-            await asyncio.sleep(retry_after)
-            _log.debug("Done sleeping, retrying request")
-        finally:
-            if is_global:
-                _log.info("Clearing global rate limit lock")
-                global_event.set()
+        return retry_after

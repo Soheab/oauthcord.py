@@ -34,7 +34,7 @@ class RelationshipHTTPClientMixin(BaseHTTPClient):
             "confirm_stranger_request": confirm_stranger_request,
         }
         await self.request(
-            Route("PUT", f"/users/@me/relationships/{user_id}"),
+            Route("PUT", "/users/@me/relationships/{user_id}", user_id=user_id),
             token=token,
             json=data,
         )
@@ -46,7 +46,7 @@ class RelationshipHTTPClientMixin(BaseHTTPClient):
         user_id: int | str,
     ) -> None:
         await self.request(
-            Route("DELETE", f"/users/@me/relationships/{user_id}"),
+            Route("DELETE", "/users/@me/relationships/{user_id}", user_id=user_id),
             token=token,
         )
 
@@ -70,7 +70,7 @@ class RelationshipHTTPClientMixin(BaseHTTPClient):
             "type": type or -1,
         }
         await self.request(
-            Route("PUT", f"/users/@me/game-relationships/{user_id}"),
+            Route("PUT", "/users/@me/game-relationships/{user_id}", user_id=user_id),
             token=token,
             json=data,
         )
@@ -82,7 +82,7 @@ class RelationshipHTTPClientMixin(BaseHTTPClient):
         user_id: int | str,
     ) -> None:
         await self.request(
-            Route("DELETE", f"/users/@me/game-relationships/{user_id}"),
+            Route("DELETE", "/users/@me/game-relationships/{user_id}", user_id=user_id),
             token=token,
         )
 

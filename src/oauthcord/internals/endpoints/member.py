@@ -18,7 +18,7 @@ class MemberHTTPClientMixin(BaseHTTPClient):
         guild_id: str | int,
     ) -> member_types.GuildMemberResponse:
         return await self.request(
-            Route("GET", f"/users/@me/guilds/{guild_id}/member"),
+            Route("GET", "/users/@me/guilds/{guild_id}/member", guild_id=guild_id),
             token=token,
         )
 
@@ -52,7 +52,12 @@ class MemberHTTPClientMixin(BaseHTTPClient):
             data["flags"] = member_flags.value
 
         return await self.request(
-            Route("PUT", f"/guilds/{guild_id}/members/{user_id}"),
+            Route(
+                "PUT",
+                "/guilds/{guild_id}/members/{user_id}",
+                guild_id=guild_id,
+                user_id=user_id,
+            ),
             data=data,
-            headers={"Authorization": f"Bot {bot_token}"},
+            bot_token=bot_token,
         )

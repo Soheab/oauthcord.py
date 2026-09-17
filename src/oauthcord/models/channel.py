@@ -25,7 +25,7 @@ if TYPE_CHECKING:
         ChannelNickResponse,
         DefaultReactionResponse,
         DMChannelResponse,
-        EphemeralDMChannelResponse,  # noqa: F401
+        EphemeralDMChannelResponse,
         FollowedChannelResponse,
         ForumTagResponse,
         GetChannelLinkedAccountsResponse,
@@ -45,6 +45,8 @@ if TYPE_CHECKING:
         _ThreadChannelResponse,
         _VoiceChannelResponse,
     )
+
+    type EphemeralDMChannelResponsePayload = EphemeralDMChannelResponse
     from ..internals.state import State
 
     type EmojiPayload = DefaultReactionResponse | IconEmojiResponse
@@ -630,7 +632,7 @@ class GroupDMChannel(PrivateChannel["GroupDMChannelResponse"]):
         )
 
 
-class EphemeralDMChannel(PrivateChannel["EphemeralDMChannelResponse"]):
+class EphemeralDMChannel(PrivateChannel["EphemeralDMChannelResponsePayload"]):
     """Represents Discord API data for `EphemeralDMChannel`."""
 
 

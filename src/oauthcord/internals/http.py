@@ -1,16 +1,20 @@
 from __future__ import annotations
 
 import asyncio
+import copy
 import json
 import logging
-from collections.abc import Callable
+import math
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, ClassVar
 
 import aiohttp
 
-from ..errors import HTTPException, create_http_exception
+from ..errors import HTTPException, RateLimited, create_http_exception
 from ..utils import NotSet, _get_access_token
-from ._ratelimiter import HTTPRateLimiterMixin
+from ._ratelimiter import HTTPRateLimiterMixin, RatelimitContext
+from ._types.http import RateLimitResponse
 from .endpoints.application import ApplicationHTTPClientMixin
 from .endpoints.base import (
     Route,
@@ -45,6 +49,12 @@ if TYPE_CHECKING:
 
 _log = logging.getLogger("http")
 
+
+@dataclass(slots=True, frozen=True)
+class _RetryRequest:
+    delay: float
+
+
 __all__ = (
     "Route",
     "get_message_create_payload",
@@ -71,34 +81,34 @@ def get_multipart_payload(
     *,
     attachments: list[message_types.PartialAttachmentRequest] | None = None,
     files: list[File] | None = None,
-    data: dict[str, Any] | None = None,
+    data: Mapping[str, object] | None = None,
 ) -> dict[str, Any]:
-    form = aiohttp.FormData()
     payload: dict[str, object] = dict(data) if data else {}
-    if not files and not attachments:
+    if not files:
+        if attachments is not None:
+            payload["attachments"] = attachments.copy()
         return {"json": payload}
 
-    files = files or []
+    form = aiohttp.FormData()
 
     prepared_files: list[tuple[bytes, str, str | None]] = []
     for file in files:
         data_bytes, filename = file.read()
         prepared_files.append((data_bytes, filename, file.description))
 
-    if attachments:
-        payload_attachments: list[message_types.PartialAttachmentRequest] = []
+    payload_attachments = (attachments or []).copy()
 
-        for index, (_, filename, description) in enumerate(prepared_files):
-            if not any(att.get("id") == index for att in payload_attachments):
-                entry: message_types.PartialAttachmentRequest = {
-                    "id": index,
-                    "filename": filename,
-                }
-                if description is not None:
-                    entry["description"] = description
-                payload_attachments.append(entry)
+    for index, (_, filename, description) in enumerate(prepared_files):
+        if not any(att.get("id") == index for att in payload_attachments):
+            entry: message_types.PartialAttachmentRequest = {
+                "id": index,
+                "filename": filename,
+            }
+            if description is not None:
+                entry["description"] = description
+            payload_attachments.append(entry)
 
-        payload["attachments"] = payload_attachments
+    payload["attachments"] = payload_attachments
 
     form.add_field(
         "payload_json",
@@ -127,6 +137,7 @@ def get_message_create_payload(
     message_reference: message_types.MessageReferenceRequest | None = None,
     components: list[component_types.ComponentRequest] | None = None,
     sticker_ids: list[int | str] | None = None,
+    attachments: list[message_types.PartialAttachmentRequest] | None = None,
     flags: int | None = None,
     metadata: dict[str, object] | None = None,
     files: list[File] | None = None,
@@ -154,9 +165,10 @@ def get_message_create_payload(
     if metadata is not None:
         data["metadata"] = metadata
 
-    data.update({k: v for k, v in extras.items() if v})  # pyright: ignore[reportCallIssue, reportArgumentType]
+    payload: dict[str, object] = dict(data)
+    payload.update({key: value for key, value in extras.items() if value is not None})
 
-    return get_multipart_payload(files=files, data=data)  # pyright: ignore[reportArgumentType]
+    return get_multipart_payload(attachments=attachments, files=files, data=payload)
 
 
 class HTTPClient(
@@ -191,7 +203,8 @@ class HTTPClient(
             524,
         }
     )
-    CONNECTION_RESET_ERRNOS: ClassVar[frozenset[int]] = frozenset({54, 10054})
+    RETRYABLE_ACCEPTED_CODES: ClassVar[frozenset[int]] = frozenset({110000, 110001})
+    CONNECTION_RESET_ERRNOS: ClassVar[frozenset[int]] = frozenset({54, 104, 10054})
 
     __get_client: Callable[[], Client]
     __slots__ = (
@@ -203,7 +216,9 @@ class HTTPClient(
         "_buckets",
         "_client_id",
         "_client_secret",
-        "_global_over",
+        "_global_expires",
+        "_last_bucket_cleanup",
+        "_session_provided",
         "_store_token",
         "max_ratelimit_timeout",
         "max_retries",
@@ -223,6 +238,11 @@ class HTTPClient(
         max_ratelimit_timeout: float | None = None,
         auto_refresh_token: bool = False,
     ) -> None:
+        if max_retries < 1:
+            raise ValueError("max_retries must be at least 1")
+        if max_ratelimit_timeout is not None and max_ratelimit_timeout < 0:
+            raise ValueError("max_ratelimit_timeout cannot be negative")
+
         self.__get_client = lambda: client
 
         self._client_id: int = client_id
@@ -262,7 +282,43 @@ class HTTPClient(
     def _get_retry_delay(attempt: int) -> int:
         return 1 + attempt * 2
 
+    @staticmethod
+    def _parse_retry_after(value: object, *, default: float) -> float:
+        try:
+            retry_after = float(value)  # pyright: ignore[reportArgumentType]
+        except (TypeError, ValueError):
+            return default
+        if not math.isfinite(retry_after) or retry_after < 0:
+            return default
+        return retry_after
+
+    def _get_accepted_retry_after(
+        self,
+        status: int,
+        data: ResponsePayload,
+    ) -> float | None:
+        if status != 202 or not isinstance(data, dict):
+            return None
+
+        code = data.get("code")
+        if (
+            not isinstance(code, int)
+            or isinstance(code, bool)
+            or code not in self.RETRYABLE_ACCEPTED_CODES
+        ):
+            return None
+
+        return self._parse_retry_after(data.get("retry_after") or 5, default=5.0)
+
     async def __get_session(self) -> aiohttp.ClientSession:
+        if self._session_provided:
+            if not self.__session or self.__session.closed:
+                raise RuntimeError(
+                    "The provided aiohttp.ClientSession is closed. Please provide a valid session."
+                )
+
+            return self.__session
+
         if not self.__session or self.__session.closed:
             self.__session = aiohttp.ClientSession()
         return self.__session
@@ -283,14 +339,12 @@ class HTTPClient(
             return token.access_token
 
         if isinstance(token, dict):
-            try:
-                token = AccessToken.from_dict(self.__get_client(), token)
-                if self._auto_refresh_token:
-                    await token.refresh(check_expired=True)
-
-                return token.access_token
-            except Exception:
+            if not self._auto_refresh_token:
                 return _get_access_token(token)
+
+            token = AccessToken.from_dict(self.__get_client(), token)
+            await token.refresh(check_expired=True)
+            return token.access_token
 
         from ..client import AuthorisedSession
 
@@ -314,137 +368,260 @@ class HTTPClient(
                 raise HTTPException(route, await response.text(), response.status)
             return await response.read()
 
+    async def _prepare_request_authentication(
+        self,
+        token: ValidAccessToken | None,
+        bot_token: str | None,
+        headers: dict[str, str] | None,
+    ) -> tuple[dict[str, str], str]:
+        prepared_headers = dict(headers or {})
+        if any(key.casefold() == "authorization" for key in prepared_headers):
+            raise TypeError(
+                "Pass authentication with 'token' or 'bot_token', not through headers"
+            )
+        if token is not None and bot_token is not None:
+            raise TypeError("'token' and 'bot_token' are mutually exclusive")
+
+        if token is not None:
+            token_str = await self.__get_token(token)
+            prepared_headers.update(self.__get_token_header(token_str))
+            return prepared_headers, f"bearer:{token_str}"
+        if bot_token is not None:
+            prepared_headers["Authorization"] = f"Bot {bot_token}"
+            return prepared_headers, f"bot:{bot_token}"
+        return prepared_headers, ""
+
+    def _update_ratelimit_from_response(
+        self,
+        context: RatelimitContext,
+        response: aiohttp.ClientResponse,
+    ) -> None:
+        has_ratelimit_headers = "X-RateLimit-Remaining" in response.headers
+        if has_ratelimit_headers and response.status != 429:
+            context.ratelimit.update(response, generation=context.generation)
+
+        self._update_bucket_hash(
+            context,
+            response.headers.get("X-RateLimit-Bucket"),
+        )
+        if has_ratelimit_headers and response.status != 429:
+            _log.debug(
+                "Rate limit updated: %d/%d remaining, resets in %.2fs",
+                context.ratelimit.remaining,
+                context.ratelimit.limit,
+                context.ratelimit.reset_after,
+            )
+
+    def _handle_successful_response(
+        self,
+        route: Route,
+        status: int,
+        data: ResponsePayload,
+    ) -> ResponsePayload | None:
+        _log.debug("%s %s completed successfully", route.method, route.path)
+        if status == 204:
+            return None
+        if not isinstance(data, (dict, list)):
+            if not data:
+                return None
+            raise TypeError(f"Expected dict or list, got {type(data).__name__}")
+        return data
+
+    def _handle_429_response(
+        self,
+        route: Route,
+        response: aiohttp.ClientResponse,
+        data: ResponsePayload,
+        context: RatelimitContext,
+        attempt: int,
+    ) -> _RetryRequest:
+        if not response.headers.get("Via") or not isinstance(data, dict):
+            _log.error("Cloudflare ban detected on %s %s", route.method, route.path)
+            raise create_http_exception(route, data, response.status)
+
+        rate_limit_data: RateLimitResponse = {
+            "message": str(data.get("message", "Rate limit exceeded")),
+            "retry_after": self._parse_retry_after(
+                data.get(
+                    "retry_after",
+                    response.headers.get("Retry-After", 1),
+                ),
+                default=1.0,
+            ),
+            "global": bool(data.get("global", False)),
+        }
+        if isinstance(code := data.get("code"), int) and not isinstance(code, bool):
+            rate_limit_data["code"] = code
+
+        retry_after = self._handle_rate_limited_response(
+            context,
+            data=rate_limit_data,
+        )
+        if attempt >= self.max_retries - 1:
+            raise RateLimited(
+                route,
+                retry_after,
+                is_global=rate_limit_data["global"],
+            )
+        return _RetryRequest(retry_after)
+
+    def _handle_response(
+        self,
+        route: Route,
+        response: aiohttp.ClientResponse,
+        data: ResponsePayload,
+        attempt: int,
+        context: RatelimitContext,
+    ) -> ResponsePayload | _RetryRequest | None:
+        if (
+            accepted_retry_after := self._get_accepted_retry_after(
+                response.status, data
+            )
+        ) is not None:
+            if attempt >= self.max_retries - 1:
+                raise create_http_exception(route, data, response.status)
+            _log.debug(
+                "%s %s is not ready, retrying in %.2fs",
+                route.method,
+                route.path,
+                accepted_retry_after,
+            )
+            return _RetryRequest(accepted_retry_after)
+
+        if 200 <= response.status < 300:
+            return self._handle_successful_response(route, response.status, data)
+        if response.status == 429:
+            return self._handle_429_response(
+                route,
+                response,
+                data,
+                context,
+                attempt,
+            )
+        if response.status in self.RETRYABLE_SERVER_STATUSES:
+            if attempt < self.max_retries - 1:
+                retry_after = self._get_retry_delay(attempt)
+                _log.warning(
+                    "Server error %d on %s %s, retrying in %ds",
+                    response.status,
+                    route.method,
+                    route.path,
+                    retry_after,
+                )
+                return _RetryRequest(retry_after)
+            _log.error(
+                "Server error %d on %s %s: %s",
+                response.status,
+                route.method,
+                route.path,
+                data,
+            )
+            raise create_http_exception(route, data, response.status)
+
+        _log.error(
+            "HTTP error %d on %s %s: %s",
+            response.status,
+            route.method,
+            route.path,
+            data,
+        )
+        raise create_http_exception(route, data, response.status)
+
+    async def _perform_request(
+        self,
+        session: aiohttp.ClientSession,
+        route: Route,
+        url: str,
+        authentication_key: str,
+        attempt: int,
+        kwargs: dict[str, Any],
+    ) -> ResponsePayload | _RetryRequest | None:
+        async with (
+            self._acquire_ratelimit(route, authentication_key) as context,
+            session.request(route.method, url=url, **kwargs) as response,
+        ):
+            data = await json_or_text(response)
+            _log.debug(
+                "%s %s returned status %d",
+                route.method,
+                route.path,
+                response.status,
+            )
+            self._update_ratelimit_from_response(context, response)
+            return self._handle_response(route, response, data, attempt, context)
+
+    def _get_connection_retry_delay(
+        self,
+        error: aiohttp.ServerDisconnectedError | OSError,
+        attempt: int,
+    ) -> int | None:
+        is_retryable = isinstance(error, aiohttp.ServerDisconnectedError) or (
+            error.errno in self.CONNECTION_RESET_ERRNOS
+        )
+        if is_retryable and attempt < self.max_retries - 1:
+            return self._get_retry_delay(attempt)
+        return None
+
+    @staticmethod
+    def _prepare_attempt_kwargs(kwargs: dict[str, Any]) -> dict[str, Any]:
+        if not isinstance(kwargs.get("data"), aiohttp.FormData):
+            return kwargs
+
+        prepared_kwargs = kwargs.copy()
+        prepared_kwargs["data"] = copy.deepcopy(kwargs["data"])
+        return prepared_kwargs
+
     async def request(
         self,
         route: Route,
         *,
         token: ValidAccessToken | None = None,
+        bot_token: str | None = None,
         headers: dict[str, str] | None = None,
         **kwargs: Any,
     ) -> Any:
         session = await self.__get_session()
-        prepared_headers = headers or {}
-        if token:
-            token = await self.__get_token(token)
-            prepared_headers.update(self.__get_token_header(token))
-
+        (
+            prepared_headers,
+            authentication_key,
+        ) = await self._prepare_request_authentication(token, bot_token, headers)
         kwargs["headers"] = prepared_headers
 
-        method = route.method
         url = route.get_constructed_url(self.API_BASE)
 
-        async with self._acquire_ratelimit(method, url) as ratelimit_context:
-            for attempt in range(self.max_retries):
-                _log.debug(
-                    "%s %s - attempt %d/%d",
-                    method,
+        for attempt in range(self.max_retries):
+            _log.debug(
+                "%s %s - attempt %d/%d",
+                route.method,
+                route.path,
+                attempt + 1,
+                self.max_retries,
+            )
+            try:
+                result = await self._perform_request(
+                    session,
+                    route,
                     url,
-                    attempt + 1,
-                    self.max_retries,
+                    authentication_key,
+                    attempt,
+                    self._prepare_attempt_kwargs(kwargs),
                 )
-                try:
-                    async with session.request(method, url=url, **kwargs) as response:
-                        data = await json_or_text(response)
-                        _log.debug(
-                            "%s %s returned status %d",
-                            method,
-                            url,
-                            response.status,
-                        )
-
-                        discord_hash = response.headers.get("X-RateLimit-Bucket")
-                        has_ratelimit_headers = (
-                            "X-RateLimit-Remaining" in response.headers
-                        )
-                        self._update_bucket_hash(
-                            route_key=ratelimit_context.route_key,
-                            current_bucket_key=ratelimit_context.bucket_key,
-                            current_bucket_hash=ratelimit_context.bucket_hash,
-                            discord_bucket_hash=discord_hash,
-                            ratelimit=ratelimit_context.ratelimit,
-                        )
-
-                        if has_ratelimit_headers and response.status != 429:
-                            ratelimit_context.ratelimit.update(response)
-                            _log.debug(
-                                "Rate limit updated: %d/%d remaining, resets in %.2fs",
-                                ratelimit_context.ratelimit.remaining,
-                                ratelimit_context.ratelimit.limit,
-                                ratelimit_context.ratelimit.reset_after,
-                            )
-
-                        if 200 <= response.status < 300:
-                            _log.debug("%s %s completed successfully", method, url)
-                            if response.status == 204:
-                                return None
-                            if not isinstance(data, (dict, list)):
-                                if not data:
-                                    return None
-                                raise TypeError(
-                                    f"Expected dict or list, got {type(data).__name__}"
-                                )
-                            return data
-
-                        if response.status == 429:
-                            if not response.headers.get("Via") or isinstance(data, str):
-                                _log.error(
-                                    "Cloudflare ban detected on %s %s", method, url
-                                )
-                                raise create_http_exception(
-                                    route, data, response.status
-                                )
-                            await self._handle_rate_limited_response(
-                                method=method,
-                                url=url,
-                                data=data,
-                                route=route,
-                            )
-                            continue
-
-                        if response.status in self.RETRYABLE_SERVER_STATUSES:
-                            if attempt < self.max_retries - 1:
-                                sleep_time = self._get_retry_delay(attempt)
-                                _log.warning(
-                                    "Server error %d on %s %s, retrying in %ds",
-                                    response.status,
-                                    method,
-                                    url,
-                                    sleep_time,
-                                )
-                                await asyncio.sleep(sleep_time)
-                                continue
-                            _log.error(
-                                "Server error %d on %s %s: %s",
-                                response.status,
-                                method,
-                                url,
-                                data,
-                            )
-                            raise create_http_exception(route, data, response.status)
-
-                        _log.error(
-                            "HTTP error %d on %s %s: %s",
-                            response.status,
-                            method,
-                            url,
-                            data,
-                        )
-                        raise create_http_exception(route, data, response.status)
-                except OSError as e:
-                    if (
-                        attempt < self.max_retries - 1
-                        and e.errno in self.CONNECTION_RESET_ERRNOS
-                    ):
-                        sleep_time = self._get_retry_delay(attempt)
-                        _log.warning(
-                            "Connection reset on %s %s, retrying in %ds",
-                            method,
-                            url,
-                            sleep_time,
-                        )
-                        await asyncio.sleep(sleep_time)
-                        continue
+            except (aiohttp.ServerDisconnectedError, OSError) as error:
+                retry_delay = self._get_connection_retry_delay(error, attempt)
+                if retry_delay is None:
                     raise
+                _log.warning(
+                    "Connection reset on %s %s, retrying in %ds",
+                    route.method,
+                    route.path,
+                    retry_delay,
+                )
+            else:
+                if not isinstance(result, _RetryRequest):
+                    return result
 
-        _log.error("Max retries exceeded for %s %s", method, url)
-        raise HTTPException(route=route, response="Max retries exceeded", status=429)
+                retry_delay = result.delay
+
+            await asyncio.sleep(retry_delay)
+
+        raise RuntimeError("Request retry loop exited unexpectedly")

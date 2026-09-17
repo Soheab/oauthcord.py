@@ -22,7 +22,7 @@ class InviteHTTPClientMixin(BaseHTTPClient):
             data["session_id"] = session_id
 
         return await self.request(
-            Route("POST", f"/invites/{code}"),
+            Route("POST", "/invites/{code}", code=code),
             token=token,
             json=data,
         )
