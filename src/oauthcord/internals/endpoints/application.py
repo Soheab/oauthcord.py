@@ -243,3 +243,288 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
             ),
             token=token,
         )
+
+    async def get_global_application_commands(
+        self,
+        token: ValidAccessToken,
+        *,
+        application_id: int | str,
+        with_localizations: bool | None = None,
+    ) -> application_types.ListGlobalApplicationCommandsResponse:
+        params: application_types.ListGlobalApplicationCommandsRequest = {}
+        if with_localizations is not None:
+            params["with_localizations"] = with_localizations
+
+        return await self.request(
+            Route(
+                "GET",
+                "/applications/{application_id}/commands",
+                application_id=application_id,
+            ),
+            token=token,
+            params=params,
+        )
+
+    async def get_global_application_command(
+        self,
+        token: ValidAccessToken,
+        *,
+        application_id: int | str,
+        command_id: int | str,
+    ) -> application_types.GlobalApplicationCommandResponse:
+        return await self.request(
+            Route(
+                "GET",
+                "/applications/{application_id}/commands/{command_id}",
+                application_id=application_id,
+                command_id=command_id,
+            ),
+            token=token,
+        )
+
+    async def create_global_application_command(
+        self,
+        token: ValidAccessToken,
+        *,
+        application_id: int | str,
+        data: application_types.CreateGlobalApplicationCommandRequest,
+    ) -> application_types.GlobalApplicationCommandResponse:
+        return await self.request(
+            Route(
+                "POST",
+                "/applications/{application_id}/commands",
+                application_id=application_id,
+            ),
+            token=token,
+            json=data,
+        )
+
+    async def edit_global_application_command(
+        self,
+        token: ValidAccessToken,
+        *,
+        application_id: int | str,
+        command_id: int | str,
+        data: application_types.EditGlobalApplicationCommandRequest,
+    ) -> application_types.GlobalApplicationCommandResponse:
+        return await self.request(
+            Route(
+                "PATCH",
+                "/applications/{application_id}/commands/{command_id}",
+                application_id=application_id,
+                command_id=command_id,
+            ),
+            token=token,
+            json=data,
+        )
+
+    async def delete_global_application_command(
+        self,
+        token: ValidAccessToken,
+        *,
+        application_id: int | str,
+        command_id: int | str,
+    ) -> None:
+        await self.request(
+            Route(
+                "DELETE",
+                "/applications/{application_id}/commands/{command_id}",
+                application_id=application_id,
+                command_id=command_id,
+            ),
+            token=token,
+        )
+
+    async def bulk_overwrite_global_application_commands(
+        self,
+        token: ValidAccessToken,
+        *,
+        application_id: int | str,
+        data: application_types.BulkEditGlobalApplicationCommandsRequest,
+    ) -> application_types.BulkEditGlobalApplicationCommandsResponse:
+        return await self.request(
+            Route(
+                "PUT",
+                "/applications/{application_id}/commands",
+                application_id=application_id,
+            ),
+            token=token,
+            json=data,
+        )
+
+    async def get_guild_application_commands(
+        self,
+        token: ValidAccessToken,
+        *,
+        application_id: int | str,
+        guild_id: int | str,
+        with_localizations: bool | None = None,
+    ) -> application_types.ListGuildApplicationCommandsResponse:
+        params: application_types.ListGuildApplicationCommandsRequest = {}
+        if with_localizations is not None:
+            params["with_localizations"] = with_localizations
+
+        return await self.request(
+            Route(
+                "GET",
+                "/applications/{application_id}/guilds/{guild_id}/commands",
+                application_id=application_id,
+                guild_id=guild_id,
+            ),
+            token=token,
+            params=params,
+        )
+
+    async def get_guild_application_command(
+        self,
+        token: ValidAccessToken,
+        *,
+        application_id: int | str,
+        guild_id: int | str,
+        command_id: int | str,
+    ) -> application_types.GetGuildApplicationCommandResponse:
+        return await self.request(
+            Route(
+                "GET",
+                "/applications/{application_id}/guilds/{guild_id}/commands/{command_id}",
+                application_id=application_id,
+                guild_id=guild_id,
+                command_id=command_id,
+            ),
+            token=token,
+        )
+
+    async def create_guild_application_command(
+        self,
+        token: ValidAccessToken,
+        *,
+        application_id: int | str,
+        guild_id: int | str,
+        data: application_types.CreateGuildApplicationCommandRequest,
+    ) -> application_types.CreateGuildApplicationCommandResponse:
+        return await self.request(
+            Route(
+                "POST",
+                "/applications/{application_id}/guilds/{guild_id}/commands",
+                application_id=application_id,
+                guild_id=guild_id,
+            ),
+            token=token,
+            json=data,
+        )
+
+    async def edit_guild_application_command(
+        self,
+        token: ValidAccessToken,
+        *,
+        application_id: int | str,
+        guild_id: int | str,
+        command_id: int | str,
+        data: application_types.EditGuildApplicationCommandRequest,
+    ) -> application_types.EditGuildApplicationCommandResponse:
+        return await self.request(
+            Route(
+                "PATCH",
+                "/applications/{application_id}/guilds/{guild_id}/commands/{command_id}",
+                application_id=application_id,
+                guild_id=guild_id,
+                command_id=command_id,
+            ),
+            token=token,
+            json=data,
+        )
+
+    async def delete_guild_application_command(
+        self,
+        token: ValidAccessToken,
+        *,
+        application_id: int | str,
+        guild_id: int | str,
+        command_id: int | str,
+    ) -> None:
+        await self.request(
+            Route(
+                "DELETE",
+                "/applications/{application_id}/guilds/{guild_id}/commands/{command_id}",
+                application_id=application_id,
+                guild_id=guild_id,
+                command_id=command_id,
+            ),
+            token=token,
+        )
+
+    async def bulk_overwrite_guild_application_commands(
+        self,
+        token: ValidAccessToken,
+        *,
+        application_id: int | str,
+        guild_id: int | str,
+        data: application_types.BulkEditGuildApplicationCommandsRequest,
+    ) -> application_types.BulkEditGuildApplicationCommandsResponse:
+        return await self.request(
+            Route(
+                "PUT",
+                "/applications/{application_id}/guilds/{guild_id}/commands",
+                application_id=application_id,
+                guild_id=guild_id,
+            ),
+            token=token,
+            json=data,
+        )
+
+    async def get_guild_application_command_permissions(
+        self,
+        token: ValidAccessToken,
+        *,
+        application_id: int | str,
+        guild_id: int | str,
+    ) -> application_types.ListGuildApplicationCommandPermissionsResponse:
+        return await self.request(
+            Route(
+                "GET",
+                "/applications/{application_id}/guilds/{guild_id}/commands/permissions",
+                application_id=application_id,
+                guild_id=guild_id,
+            ),
+            token=token,
+        )
+
+    async def get_application_command_permissions(
+        self,
+        token: ValidAccessToken,
+        *,
+        application_id: int | str,
+        guild_id: int | str,
+        command_id: int | str,
+    ) -> application_types.GetApplicationCommandPermissionsResponse:
+        return await self.request(
+            Route(
+                "GET",
+                "/applications/{application_id}/guilds/{guild_id}/commands/{command_id}/permissions",
+                application_id=application_id,
+                guild_id=guild_id,
+                command_id=command_id,
+            ),
+            token=token,
+        )
+
+    async def edit_application_command_permissions(
+        self,
+        token: ValidAccessToken,
+        *,
+        application_id: int | str,
+        guild_id: int | str,
+        command_id: int | str,
+        data: application_types.EditApplicationCommandPermissionsRequest,
+    ) -> application_types.EditApplicationCommandPermissionsResponse:
+        return await self.request(
+            Route(
+                "PUT",
+                "/applications/{application_id}/guilds/{guild_id}/commands/{command_id}/permissions",
+                application_id=application_id,
+                guild_id=guild_id,
+                command_id=command_id,
+            ),
+            token=token,
+            json=data,
+        )

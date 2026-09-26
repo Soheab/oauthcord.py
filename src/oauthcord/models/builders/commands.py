@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Self
 from ...enums import (
     ApplicationCommandHandlerType,
     ApplicationCommandOptionType,
+    ApplicationCommandPermissionType,
     ApplicationCommandType,
     ChannelType,
     IntegrationInstallType,
@@ -22,6 +23,8 @@ if TYPE_CHECKING:
 
 
 __all__ = (
+    "ApplicationCommandBuilder",
+    "ApplicationCommandPermissionBuilder",
     "ChatInputCommandBuilder",
     "ChatInputGroupCommandBuilder",
     "ChatInputSubCommandBuilder",
@@ -720,37 +723,41 @@ class ChatInputGroupCommandBuilder(_BaseApplicationCommandBuilder):
         | command_types._SubCommandGroupCommandOptionRequest
     ):
         if self.parent is None:
-            model_data: command_types.ApplicationCommandRequest = {
-                "type": self.type.value,
-                "name": self.name,
-                "description": self.description,
-                "options": [group._to_option_request() for group in self.groups]
-                + [subcommand.to_request() for subcommand in self.subcommands],
-            }
-            if self.name_localizations:
-                model_data["name_localizations"] = _serialize_localizations(
-                    self.name_localizations
-                )
-            if self.description_localizations:
-                model_data["description_localizations"] = _serialize_localizations(
-                    self.description_localizations
-                )
-            if self.integration_types is not None:
-                model_data["integration_types"] = [
-                    integration_type.value
-                    for integration_type in self.integration_types
-                ]
-            if self.contexts is not None:
-                model_data["contexts"] = [context.value for context in self.contexts]
-            if self.default_member_permissions is not None:
-                model_data["default_member_permissions"] = str(
-                    self.default_member_permissions.value
-                )
-            if self.nsfw:
-                model_data["nsfw"] = self.nsfw
-            return command_models.RequestCommand(data=model_data).to_dict()
+            return self._to_command_request()
 
         return self._to_option_request()
+
+    def _to_command_request(
+        self,
+    ) -> command_types._ChatInputApplicationCommandRequest:
+        model_data: command_types.ApplicationCommandRequest = {
+            "type": self.type.value,
+            "name": self.name,
+            "description": self.description,
+            "options": [group._to_option_request() for group in self.groups]
+            + [subcommand.to_request() for subcommand in self.subcommands],
+        }
+        if self.name_localizations:
+            model_data["name_localizations"] = _serialize_localizations(
+                self.name_localizations
+            )
+        if self.description_localizations:
+            model_data["description_localizations"] = _serialize_localizations(
+                self.description_localizations
+            )
+        if self.integration_types is not None:
+            model_data["integration_types"] = [
+                integration_type.value for integration_type in self.integration_types
+            ]
+        if self.contexts is not None:
+            model_data["contexts"] = [context.value for context in self.contexts]
+        if self.default_member_permissions is not None:
+            model_data["default_member_permissions"] = str(
+                self.default_member_permissions.value
+            )
+        if self.nsfw:
+            model_data["nsfw"] = self.nsfw
+        return command_models.RequestCommand(data=model_data).to_dict()
 
     def _to_option_request(
         self,
@@ -926,6 +933,58 @@ class UserCommandBuilder(_BaseContextMenuCommandBuilder):
         if self.contexts is not None:
             model_data["contexts"] = [context.value for context in self.contexts]
         return command_models.RequestCommand(data=model_data).to_dict()
+
+
+type ApplicationCommandBuilder = (
+    ChatInputCommandBuilder
+    | ChatInputGroupCommandBuilder
+    | MessageCommandBuilder
+    | UserCommandBuilder
+    | PrimaryEntryPointCommandBuilder
+)
+
+
+class ApplicationCommandPermissionBuilder:
+    """Builder for an application command permission overwrite.
+
+    Parameters
+    ----------
+    id: :class:`int` | :class:`str`
+        The ID of the role, user, or channel the permission applies to.
+
+        Use the guild ID to target ``@everyone``, or the guild ID minus one
+        to target all channels.
+    type: :class:`ApplicationCommandPermissionType` | :class:`int`
+        The type of entity :attr:`id` refers to.
+    permission: :class:`bool`
+        Whether the command is allowed (``True``) or denied (``False``).
+    """
+
+    def __init__(
+        self,
+        *,
+        id: int | str,
+        type: ApplicationCommandPermissionType | int,
+        permission: bool,
+    ) -> None:
+        self.id: int = int(id)
+        self.type: ApplicationCommandPermissionType = _coerce_enum(
+            ApplicationCommandPermissionType, type
+        )
+        self.permission: bool = permission
+
+    def to_request(self) -> command_types.ApplicationCommandPermissionsRequest:
+        return {
+            "id": str(self.id),
+            "type": self.type.value,
+            "permission": self.permission,
+        }
+
+    def __repr__(self) -> str:
+        return (
+            f"<ApplicationCommandPermissionBuilder id={self.id!r} "
+            f"type={self.type!r} permission={self.permission!r}>"
+        )
 
 
 def _coerce_enum[E: Enum](enum_cls: type[E], value: E | int | str) -> E:

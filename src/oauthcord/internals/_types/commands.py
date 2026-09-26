@@ -37,7 +37,7 @@ from .channels import ChannelType
 ApplicationCommandType = Literal[1, 2, 3, 4]
 ApplicationCommandOptionType = Literal[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
 ApplicationIntegrationType = Literal[0, 1]
-EntryPointCommandHandlerType = Literal[1, 2]
+EntryPointCommandHandlerType = Literal[1, 2, 3]
 
 
 class ApplicationCommandOptionChoiceRequest(TypedDict):
@@ -89,6 +89,19 @@ _PrimaryEntryPointApplicationCommandRequest = _BaseApplicationCommandRequest
 
 
 ApplicationCommandRequest = _BaseApplicationCommandRequest
+
+
+class EditApplicationCommandRequest(TypedDict, total=False):
+    name: str
+    name_localizations: dict[str, str] | None
+    description: str
+    description_localizations: dict[str, str] | None
+    options: list[ApplicationCommandOptionRequest]
+    default_member_permissions: str | None
+    integration_types: list[ApplicationIntegrationType]
+    contexts: list[InteractionContextType]
+    nsfw: bool
+    handler: EntryPointCommandHandlerType
 
 
 class _BaseApplicationCommandOptionResponse(TypedDict):
@@ -284,6 +297,12 @@ ApplicationCommandPermissionType = Literal[1, 2, 3]
 
 
 class ApplicationCommandPermissionsResponse(TypedDict):
+    id: Snowflake
+    type: ApplicationCommandPermissionType
+    permission: bool
+
+
+class ApplicationCommandPermissionsRequest(TypedDict):
     id: Snowflake
     type: ApplicationCommandPermissionType
     permission: bool

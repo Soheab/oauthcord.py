@@ -106,6 +106,8 @@ __all__ = (  # noqa: RUF022
     "Attachment",
 
     # models/builders
+    "ApplicationCommandBuilder",
+    "ApplicationCommandPermissionBuilder",
     "ChatInputCommandBuilder",
     "ChatInputGroupCommandBuilder",
     "ChatInputSubCommandBuilder",

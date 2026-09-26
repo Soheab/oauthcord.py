@@ -13,13 +13,19 @@ from ..enums import (
     InteractionContextType,
     Locale,
 )
-from ..utils import _serialize_localizations, convert_snowflake, to_enum
+from ..utils import NotSet, _serialize_localizations, convert_snowflake, to_enum
 from ._base import BaseModel
 from .flags import Permissions
 
 if TYPE_CHECKING:
     from ..internals._types import commands
     from ..internals.state import State
+    from .builders.commands import (
+        ApplicationCommandPermissionBuilder,
+        ChatInputGroupCommandBuilder,
+        ChatInputSubCommandBuilder,
+        OptionBuilder,
+    )
 
 __all__ = (
     "ApplicationCommandPermission",
@@ -250,10 +256,12 @@ class RequestCommand(BaseModel["commands.ApplicationCommandRequest"]):
         payload: commands.ApplicationCommandRequest = {
             "type": self.type.value,
             "name": self.name,
-            "description": self.description or "...",
+            # Context menu commands must have an empty description.
+            "description": ""
+            if self.type
+            in {ApplicationCommandType.USER, ApplicationCommandType.MESSAGE}
+            else self.description or "...",
         }
-        if self.description is not None:
-            payload["description"] = self.description
         if self.name_localizations is not None:
             payload["name_localizations"] = _serialize_localizations(
                 self.name_localizations
@@ -347,6 +355,163 @@ class Command[
             self._initialize_other(Option, option)
             for option in data_.get("options", [])
         ]
+
+    async def fetch(self) -> Command:
+        """Fetch the latest version of this command.
+
+        Uses the guild endpoint if this is a guild command.
+
+        Returns
+        -------
+        :class:`Command`
+            The fetched command.
+        """
+        if self.guild_id is not None:
+            return await self._session.get_guild_application_command(
+                guild_id=self.guild_id, command=self.id
+            )
+        return await self._session.get_global_application_command(command=self.id)
+
+    async def edit(
+        self,
+        *,
+        name: str = NotSet,
+        name_localizations: dict[Locale | str, str] | None = NotSet,
+        description: str = NotSet,
+        description_localizations: dict[Locale | str, str] | None = NotSet,
+        options: list[
+            OptionBuilder | ChatInputSubCommandBuilder | ChatInputGroupCommandBuilder
+        ] = NotSet,
+        default_member_permissions: Permissions | int | None = NotSet,
+        integration_types: list[IntegrationInstallType | int] = NotSet,
+        contexts: list[InteractionContextType | int] = NotSet,
+        nsfw: bool = NotSet,
+        handler: ApplicationCommandHandlerType | int = NotSet,
+    ) -> Command:
+        """Edit this command.
+
+        Uses the guild endpoint if this is a guild command. See
+        :meth:`AuthorisedSession.edit_global_application_command` for
+        the parameters.
+
+        Raises
+        ------
+        TypeError
+            ``integration_types``, ``contexts``, or ``handler`` was passed
+            for a guild command.
+
+        Returns
+        -------
+        :class:`Command`
+            The edited command.
+        """
+        if self.guild_id is None:
+            return await self._session.edit_global_application_command(
+                command=self.id,
+                name=name,
+                name_localizations=name_localizations,
+                description=description,
+                description_localizations=description_localizations,
+                options=options,
+                default_member_permissions=default_member_permissions,
+                integration_types=integration_types,
+                contexts=contexts,
+                nsfw=nsfw,
+                handler=handler,
+            )
+
+        if any(value is not NotSet for value in (integration_types, contexts, handler)):
+            raise TypeError(
+                "integration_types, contexts, and handler can only be edited "
+                "on global commands"
+            )
+
+        return await self._session.edit_guild_application_command(
+            guild_id=self.guild_id,
+            command=self.id,
+            name=name,
+            name_localizations=name_localizations,
+            description=description,
+            description_localizations=description_localizations,
+            options=options,
+            default_member_permissions=default_member_permissions,
+            nsfw=nsfw,
+        )
+
+    async def delete(self) -> None:
+        """Delete this command.
+
+        Uses the guild endpoint if this is a guild command.
+        """
+        if self.guild_id is not None:
+            await self._session.delete_guild_application_command(
+                guild_id=self.guild_id, command=self.id
+            )
+        else:
+            await self._session.delete_global_application_command(command=self.id)
+
+    async def permissions(
+        self, *, guild_id: int | str | None = None
+    ) -> GuildApplicationCommandPermissions:
+        """Fetch the permissions for this command in a guild.
+
+        Parameters
+        ----------
+        guild_id: :class:`int` | :class:`str` | :data:`None`
+            The ID of the guild. Defaults to :attr:`guild_id`.
+            Required for global commands.
+
+        Raises
+        ------
+        ValueError
+            No ``guild_id`` was passed for a global command.
+
+        Returns
+        -------
+        :class:`GuildApplicationCommandPermissions`
+            The command's permissions in the guild.
+        """
+        if (guild_id := guild_id or self.guild_id) is None:
+            raise ValueError("guild_id is required for global commands")
+
+        return await self._session.get_application_command_permissions(
+            guild_id=guild_id, command=self.id
+        )
+
+    async def edit_permissions(
+        self,
+        *,
+        permissions: list[ApplicationCommandPermissionBuilder],
+        guild_id: int | str | None = None,
+    ) -> GuildApplicationCommandPermissions:
+        """Overwrite the permissions for this command in a guild.
+
+        .. scope:: applications.commands.permissions.update
+
+        Parameters
+        ----------
+        permissions: list[:class:`ApplicationCommandPermissionBuilder`]
+            The permission overwrites for the command. Max 100.
+        guild_id: :class:`int` | :class:`str` | :data:`None`
+            The ID of the guild. Defaults to :attr:`guild_id`.
+            Required for global commands.
+
+        Raises
+        ------
+        ValueError
+            No ``guild_id`` was passed for a global command.
+
+        Returns
+        -------
+        :class:`GuildApplicationCommandPermissions`
+            The command's updated permissions in the guild.
+        """
+        if (guild_id := guild_id or self.guild_id) is None:
+            raise ValueError("guild_id is required for global commands")
+
+        return await self._session.edit_application_command_permissions(
+            guild_id=guild_id, command=self.id, permissions=permissions
+        )
 
 
 class Subcommand[D = commands._SubCommandCommandOptionResponse](BaseModel[D]):

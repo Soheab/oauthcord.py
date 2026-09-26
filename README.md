@@ -23,7 +23,7 @@ This is not a gateway or bot framework. If you need bot events, shards, or gatew
 
 - Async client built on `aiohttp`
 - Typed models for OAuth2 and related Discord REST resources
-- Coverage for user, guild, connection, DM, relationship, lobby, application, entitlement, and store routes
+- Coverage for user, guild, connection, DM, relationship, lobby, application, application command, entitlement, and store routes
 - RPC support for local IPC communication with the Discord desktop client
 - Strict typing with Pyright
 
@@ -219,6 +219,7 @@ The wrapper currently includes typed support for these route groups:
 - Invite acceptance
 - Lobbies and lobby messages
 - Application attachments, partial application data, quick links, and role connections
+- Global and guild application commands, and command permissions
 - Application entitlements
 - Store SKUs, listings, assets, and plans
 
@@ -285,6 +286,22 @@ For the current concrete route list implemented by the wrapper:
   - `GET /applications/{application_id}/entitlements/{entitlement_id}`
   - `POST /applications/{application_id}/entitlements/{entitlement_id}/consume`
   - `DELETE /applications/{application_id}/entitlements/{entitlement_id}`
+- Application commands
+  - `GET /applications/{application_id}/commands`
+  - `POST /applications/{application_id}/commands`
+  - `PUT /applications/{application_id}/commands`
+  - `GET /applications/{application_id}/commands/{command_id}`
+  - `PATCH /applications/{application_id}/commands/{command_id}`
+  - `DELETE /applications/{application_id}/commands/{command_id}`
+  - `GET /applications/{application_id}/guilds/{guild_id}/commands`
+  - `POST /applications/{application_id}/guilds/{guild_id}/commands`
+  - `PUT /applications/{application_id}/guilds/{guild_id}/commands`
+  - `GET /applications/{application_id}/guilds/{guild_id}/commands/{command_id}`
+  - `PATCH /applications/{application_id}/guilds/{guild_id}/commands/{command_id}`
+  - `DELETE /applications/{application_id}/guilds/{guild_id}/commands/{command_id}`
+  - `GET /applications/{application_id}/guilds/{guild_id}/commands/permissions`
+  - `GET /applications/{application_id}/guilds/{guild_id}/commands/{command_id}/permissions`
+  - `PUT /applications/{application_id}/guilds/{guild_id}/commands/{command_id}/permissions`
 - Store and SKUs
   - `GET /applications/{application_id}/skus`
   - `POST /store/skus`
@@ -494,47 +511,27 @@ Audited endpoint/client/model files:
 - [ ] `get_entitlement(entitlement_id=...)`
   - Can forward `get_application_entitlement(application_id=self.id, entitlement_id=...)`.
 
-##### Added But Not Implemented
+- [X] Application command methods
+  - `get_global_application_commands()`, `get_global_application_command()`,
+    `create_global_application_command()`, `edit_global_application_command()`,
+    `delete_global_application_command()`, `bulk_overwrite_global_application_commands()`,
+    and their guild equivalents.
+  - `get_guild_application_command_permissions()`, `get_application_command_permissions()`,
+    and `edit_application_command_permissions()`.
+  - All forward to the matching `AuthorisedSession` method.
 
-These are already declared on `CurrentApplication` in
-`src/oauthcord/models/current_auth.py`, but currently only contain `pass`.
+#### `Command`
 
-- [ ] `get_global_application_commands()`
-  - Likely needs `GET /applications/{application.id}/commands`.
-  - Needs command HTTP/client mixins, then command model construction.
-- [ ] `get_global_application_command(command_id)`
-  - Likely needs `GET /applications/{application.id}/commands/{command.id}`.
-- [ ] `create_global_application_command(data)`
-  - Likely needs `POST /applications/{application.id}/commands`.
-  - Should accept typed command request payloads/builders, not `Any`.
-- [ ] `edit_global_application_command(command_id, data)`
-  - Likely needs `PATCH /applications/{application.id}/commands/{command.id}`.
-- [ ] `delete_global_application_command(command_id)`
-  - Likely needs `DELETE /applications/{application.id}/commands/{command.id}`.
-- [ ] `bulk_overwrite_global_application_commands(data)`
-  - Likely needs `PUT /applications/{application.id}/commands`.
-  - Should return command models if the endpoint response is modeled.
-- [ ] `get_guild_application_commands(guild_id)`
-  - Likely needs `GET /applications/{application.id}/guilds/{guild.id}/commands`.
-- [ ] `get_guild_application_command(guild_id, command_id)`
-  - Likely needs `GET /applications/{application.id}/guilds/{guild.id}/commands/{command.id}`.
-- [ ] `edit_guild_application_command(guild_id, command_id, data)`
-  - Likely needs `PATCH /applications/{application.id}/guilds/{guild.id}/commands/{command.id}`.
-  - Should accept typed command request payloads/builders.
-- [ ] `delete_guild_application_command(guild_id, command_id)`
-  - Likely needs `DELETE /applications/{application.id}/guilds/{guild.id}/commands/{command.id}`.
-- [ ] `bulk_overwrite_guild_application_commands(guild_id, data)`
-  - Likely needs `PUT /applications/{application.id}/guilds/{guild.id}/commands`.
-  - Should return command models if the endpoint response is modeled.
-- [ ] `get_guild_application_command_permissions(guild_id)`
-  - Likely needs `GET /applications/{application.id}/guilds/{guild.id}/commands/permissions`.
-  - Model type likely `GuildApplicationCommandPermissions`.
-- [ ] `get_application_command_permissions(guild_id, command_id)`
-  - Likely needs `GET /applications/{application.id}/guilds/{guild.id}/commands/{command.id}/permissions`.
-  - Model type likely `GuildApplicationCommandPermissions`.
-- [ ] `edit_application_command_permissions(guild_id, command_id, data)`
-  - Likely needs `PUT /applications/{application.id}/guilds/{guild.id}/commands/{command.id}/permissions`.
-  - Should accept typed permission payloads, not `Any`.
+- [X] `fetch()`
+  - Forwards `get_guild_application_command()` or `get_global_application_command()`
+    depending on `guild_id`.
+- [X] `edit(...)`
+  - Forwards `edit_guild_application_command()` or `edit_global_application_command()`.
+- [X] `delete()`
+  - Forwards `delete_guild_application_command()` or `delete_global_application_command()`.
+- [X] `permissions(guild_id=...)` / `edit_permissions(...)`
+  - Forwards `get_application_command_permissions()` and `edit_application_command_permissions()`.
+  - `guild_id` defaults to the command's guild and is required for global commands.
 
 #### `CurrentUser`
 

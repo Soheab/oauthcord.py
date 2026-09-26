@@ -2,6 +2,14 @@ from typing import Literal, NotRequired, TypedDict
 
 from .attachment import Attachment
 from .base import Snowflake
+from .commands import (
+    ApplicationCommandPermissionsRequest,
+    ApplicationCommandRequest,
+    EditApplicationCommandRequest,
+    GlobalApplicationCommandResponse,
+    GuildApplicationCommandPermissionsResponse,
+    GuildApplicationCommandResponse,
+)
 from .user import PartialUserResponse
 
 ApplicationType = Literal[1, 2, 3, 4, 5]
@@ -203,3 +211,42 @@ class PartialApplicationResponse(TypedDict):
 
 
 PartialApplication = PartialApplicationResponse
+
+
+class ListGlobalApplicationCommandsRequest(TypedDict):
+    with_localizations: NotRequired[bool]
+
+
+ListGlobalApplicationCommandsResponse = list[GlobalApplicationCommandResponse]
+
+CreateGlobalApplicationCommandRequest = ApplicationCommandRequest
+CreateGlobalApplicationCommandResponse = GlobalApplicationCommandResponse
+GetGlobalApplicationCommandResponse = GlobalApplicationCommandResponse
+EditGlobalApplicationCommandRequest = EditApplicationCommandRequest
+EditGlobalApplicationCommandResponse = GlobalApplicationCommandResponse
+DeleteGlobalApplicationCommandResponse = None
+BulkEditGlobalApplicationCommandsRequest = list[ApplicationCommandRequest]
+BulkEditGlobalApplicationCommandsResponse = list[GlobalApplicationCommandResponse]
+
+ListGuildApplicationCommandsRequest = ListGlobalApplicationCommandsRequest
+ListGuildApplicationCommandsResponse = list[GuildApplicationCommandResponse]
+CreateGuildApplicationCommandRequest = ApplicationCommandRequest
+CreateGuildApplicationCommandResponse = GuildApplicationCommandResponse
+GetGuildApplicationCommandResponse = GuildApplicationCommandResponse
+EditGuildApplicationCommandRequest = EditApplicationCommandRequest
+EditGuildApplicationCommandResponse = GuildApplicationCommandResponse
+DeleteGuildApplicationCommandResponse = None
+BulkEditGuildApplicationCommandsRequest = list[ApplicationCommandRequest]
+BulkEditGuildApplicationCommandsResponse = list[GuildApplicationCommandResponse]
+
+ListGuildApplicationCommandPermissionsResponse = list[
+    GuildApplicationCommandPermissionsResponse
+]
+GetApplicationCommandPermissionsResponse = GuildApplicationCommandPermissionsResponse
+
+
+class EditApplicationCommandPermissionsRequest(TypedDict):
+    permissions: list[ApplicationCommandPermissionsRequest]
+
+
+EditApplicationCommandPermissionsResponse = GuildApplicationCommandPermissionsResponse

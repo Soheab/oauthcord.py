@@ -123,6 +123,8 @@ __all__ = (  # noqa: RUF022
     "Attachment",
 
     # builders
+    "ApplicationCommandBuilder",
+    "ApplicationCommandPermissionBuilder",
     "ChatInputCommandBuilder",
     "ChatInputGroupCommandBuilder",
     "ChatInputSubCommandBuilder",
