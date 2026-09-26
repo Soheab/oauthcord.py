@@ -51,14 +51,19 @@ class ApplicationHTTPClientMixin(BaseHTTPClient):
         token: ValidAccessToken,
         *,
         application_id: int | str,
+        with_guild: bool | None = None,
     ) -> application_types.PartialApplicationResponse:
+        data: dict[str, bool] = {}
+        if with_guild is not None:
+            data["with_guild"] = with_guild
         return await self.request(
             Route(
                 "GET",
-                "/applications/{application_id}/partial",
+                "/applications/{application_id}/public",
                 application_id=application_id,
             ),
             token=token,
+            params=data,
         )
 
     async def get_user_application_role_connection(

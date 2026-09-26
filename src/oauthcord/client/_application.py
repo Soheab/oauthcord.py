@@ -50,6 +50,7 @@ class ApplicationClientMixin:
         self: _AuthorisedSessionProto,
         *,
         application_id: int | str,
+        with_guild: bool | None = None,
     ) -> PartialApplication:
         """Fetch a partial application with
         all the publicly available information about it.
@@ -58,6 +59,9 @@ class ApplicationClientMixin:
         ----------
         application_id: :class:`int` | :class:`str`
             The ID of the application.
+        with_guild: :class:`bool`
+            Whether to include the guild object in the response if the guild is discoverable.
+            Defaults to `False`.
 
         Returns
         -------
@@ -67,6 +71,7 @@ class ApplicationClientMixin:
         res = await self.client.http.get_partial_application(
             self.token,
             application_id=application_id,
+            with_guild=with_guild,
         )
         return utils._construct_model(PartialApplication, data=res, state=self._state)
 

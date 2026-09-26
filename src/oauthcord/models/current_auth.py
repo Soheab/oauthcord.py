@@ -104,8 +104,11 @@ class CurrentApplication(
 
     async def get_partial(
         self,
+        with_guild: bool | None = None,
     ) -> PartialApplication:
-        return await self._session.get_partial_application(application_id=self.id)
+        return await self._session.get_partial_application(
+            application_id=self.id, with_guild=with_guild
+        )
 
 
 class CurrentInformation(BaseModel["CurrentAuthorizationInformationResponsePayload"]):
