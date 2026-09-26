@@ -35,7 +35,7 @@ if TYPE_CHECKING:
     )
 
 
-__all__ = ("AccessToken",)
+__all__ = ("AccessToken", "DeviceCode")
 
 
 class AccessToken(BaseModel["AccessTokenPayload", "AccessTokenPayload"]):

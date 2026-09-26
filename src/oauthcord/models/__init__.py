@@ -100,6 +100,7 @@ __all__ = (  # noqa: RUF022
 
     # access_token
     "AccessToken",
+    "DeviceCode",
 
     # application
     "ActivityLink",
