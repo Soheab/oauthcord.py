@@ -191,18 +191,16 @@ class HTTPClient(
     BASE_URL: ClassVar[str] = "https://discord.com/oauth2/authorize"
     CDN_URL: ClassVar[str] = "https://cdn.discordapp.com"
 
-    RETRYABLE_SERVER_STATUSES: ClassVar[frozenset[int]] = frozenset(
-        {
-            500,
-            502,
-            503,
-            504,
-            521,
-            522,
-            523,
-            524,
-        }
-    )
+    RETRYABLE_SERVER_STATUSES: ClassVar[frozenset[int]] = frozenset({
+        500,
+        502,
+        503,
+        504,
+        521,
+        522,
+        523,
+        524,
+    })
     RETRYABLE_ACCEPTED_CODES: ClassVar[frozenset[int]] = frozenset({110000, 110001})
     CONNECTION_RESET_ERRNOS: ClassVar[frozenset[int]] = frozenset({54, 104, 10054})
 
@@ -580,6 +578,19 @@ class HTTPClient(
         headers: dict[str, str] | None = None,
         **kwargs: Any,
     ) -> Any:
+        params: dict[str, Any] = kwargs.get("params", {})
+        if params:
+            if not isinstance(params, dict):
+                raise TypeError(
+                    f"Expected dict for 'params', got {type(params).__name__}"
+                )
+
+            params = {
+                key: str(value) if isinstance(value, (int, float)) else value
+                for key, value in params.items()
+                if value is not None
+            }
+
         session = await self.__get_session()
         (
             prepared_headers,
