@@ -770,7 +770,7 @@ class AuthorisedSession(
         token = AccessToken.from_dict(client, data)
         self = cls(client, token=token, extras=extras)
         current_auth = await self.get_current_authorization_information()
-        token._created_at = current_auth.expires_at
+        token.created_at = current_auth.expires_at
         # fmt: on
 
         if identifier is not None and client._store_session:
@@ -897,12 +897,12 @@ class AuthorisedSession(
 
         inst = cls(client, token=token, extras=extras_)
         if created_at_timestamp is not None:
-            token._created_at = datetime.datetime.fromtimestamp(
+            token.created_at = datetime.datetime.fromtimestamp(
                 created_at_timestamp, tz=datetime.UTC
             )
         else:
             current_auth = await inst.get_current_authorization_information()
-            token._created_at = current_auth.expires_at
+            token.created_at = current_auth.expires_at
 
         if identifier is not None and client._store_session:
             client.add_session(inst, identifier=identifier)
@@ -986,7 +986,7 @@ class AuthorisedSession(
 
         if refreshed:
             current_auth = await self.get_current_authorization_information()
-            self.token._created_at = current_auth.expires_at
+            self.token.created_at = current_auth.expires_at
 
         return self.token
 

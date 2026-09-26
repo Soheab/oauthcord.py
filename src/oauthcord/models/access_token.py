@@ -160,6 +160,17 @@ class AccessToken(BaseModel["AccessTokenPayload", "AccessTokenPayload"]):
         """
         return self._created_at
 
+    @created_at.setter
+    def created_at(self, value: datetime.datetime) -> None:
+        if not isinstance(value, datetime.datetime):
+            raise TypeError("created_at must be a datetime.datetime instance.")
+
+        if value >= self.expires_at:
+            # assume expires_at
+            self._created_at = value - datetime.timedelta(seconds=self._expires_in)
+        else:
+            self._created_at = value
+
     @property
     def expires_at(self) -> datetime.datetime:
         """:class:`datetime.datetime`: When the token expires.
@@ -288,6 +299,17 @@ class DeviceCode(BaseModel["DeviceCodeResponsePayload"]):
         This is set to the current time at the moment of creation this object.
         """
         return self._created_at
+
+    @created_at.setter
+    def created_at(self, value: datetime.datetime) -> None:
+        if not isinstance(value, datetime.datetime):
+            raise TypeError("created_at must be a datetime.datetime instance.")
+
+        if value >= self.expires_at:
+            # assume expires_at
+            self._created_at = value - datetime.timedelta(seconds=self._expires_in)
+        else:
+            self._created_at = value
 
     @property
     def expires_at(self) -> datetime.datetime:
