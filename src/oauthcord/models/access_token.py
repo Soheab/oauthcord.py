@@ -183,7 +183,12 @@ class AccessToken(BaseModel["AccessTokenPayload", "AccessTokenPayload"]):
     def is_expired(self) -> bool:
         """:class:`bool`: Whether the token is expired based on the current time
         and the :attr:`expires_at` value.
+
+        Tokens without an expiry (``expires_in`` of ``0``) are never considered expired.
         """
+        if not self._expires_in:
+            return False
+
         return self.expires_at <= datetime.datetime.now(datetime.UTC)
 
     @property
@@ -221,11 +226,11 @@ class AccessToken(BaseModel["AccessTokenPayload", "AccessTokenPayload"]):
         :class:`AccessToken`
             The new access token response obtained from refreshing.
         """
-        if not self.refresh_token:
-            raise ValueError("Cannot refresh token without a refresh token.")
-
         if check_expired and not self.is_expired:
             return self
+
+        if not self.refresh_token:
+            raise ValueError("Cannot refresh token without a refresh token.")
 
         async with self._refresh_lock:
             if check_expired and not self.is_expired:

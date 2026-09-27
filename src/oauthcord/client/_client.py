@@ -897,6 +897,7 @@ class AuthorisedSession(
             if existing_session is not None:
                 if replace_token_of_existing_session:
                     existing_session.token = token
+                    existing_session._current_authorization_information = None
                     if created_at_timestamp is None:
                         current_auth = await existing_session.get_current_authorization_information()
                         token._set_expires_at(current_auth.expires_at)
@@ -984,11 +985,11 @@ class AuthorisedSession(
         :class:`AccessToken`
             The updated access token data after refresh.
         """
-        refreshed = self.token.is_expired if check_expired else True
+        old_access_token = self.token.access_token
 
         await self.token.refresh(check_expired=check_expired)
 
-        if refreshed:
+        if self.token.access_token != old_access_token:
             current_auth = await self.get_current_authorization_information()
             self.token._set_expires_at(current_auth.expires_at)
 
