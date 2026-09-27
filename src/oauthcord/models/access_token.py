@@ -165,11 +165,7 @@ class AccessToken(BaseModel["AccessTokenPayload", "AccessTokenPayload"]):
         if not isinstance(value, datetime.datetime):
             raise TypeError("created_at must be a datetime.datetime instance.")
 
-        if value >= self.expires_at:
-            # assume expires_at
-            self._created_at = value - datetime.timedelta(seconds=self._expires_in)
-        else:
-            self._created_at = value
+        self._created_at = value
 
     @property
     def expires_at(self) -> datetime.datetime:
@@ -178,6 +174,10 @@ class AccessToken(BaseModel["AccessTokenPayload", "AccessTokenPayload"]):
         This is calculated by adding the :attr:`expires_in` value to :attr:`created_at`.
         """
         return self._created_at + datetime.timedelta(seconds=self._expires_in)
+
+    def _set_expires_at(self, value: datetime.datetime) -> None:
+        # Discord only gives us the expiry, so work back to when the token was created.
+        self.created_at = value - datetime.timedelta(seconds=self._expires_in)
 
     @property
     def is_expired(self) -> bool:
@@ -305,11 +305,7 @@ class DeviceCode(BaseModel["DeviceCodeResponsePayload"]):
         if not isinstance(value, datetime.datetime):
             raise TypeError("created_at must be a datetime.datetime instance.")
 
-        if value >= self.expires_at:
-            # assume expires_at
-            self._created_at = value - datetime.timedelta(seconds=self._expires_in)
-        else:
-            self._created_at = value
+        self._created_at = value
 
     @property
     def expires_at(self) -> datetime.datetime:
