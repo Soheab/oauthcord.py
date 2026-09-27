@@ -585,8 +585,14 @@ class HTTPClient(
                     f"Expected dict for 'params', got {type(params).__name__}"
                 )
 
-            params = {
-                key: str(value) if isinstance(value, (int, float)) else value
+            kwargs["params"] = {
+                key: (
+                    str(value).lower()
+                    if isinstance(value, bool)
+                    else str(value)
+                    if isinstance(value, (int, float))
+                    else value
+                )
                 for key, value in params.items()
                 if value is not None
             }
