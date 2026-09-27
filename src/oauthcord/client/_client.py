@@ -601,7 +601,7 @@ class Client:
         url += "?" + urllib.parse.urlencode(params)
         return url
 
-    async def get_bot_authorization_url(
+    def get_bot_authorization_url(
         self,
         *,
         permissions: int = utils.NotSet,
@@ -662,9 +662,6 @@ class Client:
 
             params["disable_guild_select"] = "true"
 
-        integration_type = (
-            integration_type if integration_type is not utils.NotSet else 0
-        )
         if code_challenge is not utils.NotSet:
             params["code_challenge"] = code_challenge
             params["code_challenge_method"] = "S256"
@@ -683,7 +680,7 @@ class Client:
         if integration_type == 1:
             params["scope"] = "applications.commands"
         else:
-            params["scope"] = "bot+applications.commands"
+            params["scope"] = "bot applications.commands"
 
         url = urllib.parse.urljoin(self.http.BASE_URL, "/oauth2/authorize")
         url += "?" + urllib.parse.urlencode(params)
