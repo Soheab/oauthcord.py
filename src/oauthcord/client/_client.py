@@ -887,20 +887,24 @@ class AuthorisedSession(
         if extras is not utils.NotSet:
             extras_.update(extras)
 
+        if created_at_timestamp is not None:
+            token.created_at = datetime.datetime.fromtimestamp(
+                created_at_timestamp, tz=datetime.UTC
+            )
+
         if identifier not in (utils.NotSet, None) and not ignore_existing_identifier:
             existing_session = client.get_session(identifier)
             if existing_session is not None:
                 if replace_token_of_existing_session:
                     existing_session.token = token
+                    if created_at_timestamp is None:
+                        current_auth = await existing_session.get_current_authorization_information()
+                        token._set_expires_at(current_auth.expires_at)
                 existing_session.extras.update(extras_)
                 return existing_session
 
         inst = cls(client, token=token, extras=extras_)
-        if created_at_timestamp is not None:
-            token.created_at = datetime.datetime.fromtimestamp(
-                created_at_timestamp, tz=datetime.UTC
-            )
-        else:
+        if created_at_timestamp is None:
             current_auth = await inst.get_current_authorization_information()
             token._set_expires_at(current_auth.expires_at)
 
