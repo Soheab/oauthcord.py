@@ -578,21 +578,15 @@ class HTTPClient(
         headers: dict[str, str] | None = None,
         **kwargs: Any,
     ) -> Any:
-        params: dict[str, Any] = kwargs.get("params", {})
-        if params:
+        if params := kwargs.get("params"):
             if not isinstance(params, dict):
                 raise TypeError(
                     f"Expected dict for 'params', got {type(params).__name__}"
                 )
 
+            # yarl handles str/int/float but rejects bools, Discord wants "true"/"false".
             kwargs["params"] = {
-                key: (
-                    str(value).lower()
-                    if isinstance(value, bool)
-                    else str(value)
-                    if isinstance(value, (int, float))
-                    else value
-                )
+                key: str(value).lower() if isinstance(value, bool) else value
                 for key, value in params.items()
                 if value is not None
             }
