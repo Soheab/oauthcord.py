@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import copy
+import hashlib
 import json
 import logging
 import math
@@ -366,6 +367,11 @@ class HTTPClient(
                 raise HTTPException(route, await response.text(), response.status)
             return await response.read()
 
+    @staticmethod
+    def _hash_token(token: str) -> str:
+        # Keeps raw tokens out of the long-lived rate limit bucket keys.
+        return hashlib.sha256(token.encode()).hexdigest()
+
     async def _prepare_request_authentication(
         self,
         token: ValidAccessToken | None,
@@ -383,10 +389,10 @@ class HTTPClient(
         if token is not None:
             token_str = await self.__get_token(token)
             prepared_headers.update(self.__get_token_header(token_str))
-            return prepared_headers, f"bearer:{token_str}"
+            return prepared_headers, f"bearer:{self._hash_token(token_str)}"
         if bot_token is not None:
             prepared_headers["Authorization"] = f"Bot {bot_token}"
-            return prepared_headers, f"bot:{bot_token}"
+            return prepared_headers, f"bot:{self._hash_token(bot_token)}"
         return prepared_headers, ""
 
     def _update_ratelimit_from_response(
@@ -578,7 +584,8 @@ class HTTPClient(
         headers: dict[str, str] | None = None,
         **kwargs: Any,
     ) -> Any:
-        if params := kwargs.get("params"):
+        params: dict[str, Any] | None = kwargs.get("params")
+        if params:
             if not isinstance(params, dict):
                 raise TypeError(
                     f"Expected dict for 'params', got {type(params).__name__}"
