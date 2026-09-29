@@ -29,6 +29,7 @@ from ..errors import (
 from ..events import RPCEventsManager
 from ..handler import EventsHandler
 from ..models.auth import RPCAuthentication
+from ..models.events import ReadyEvent
 from ._commands import _RPCCommandsClient
 
 if TYPE_CHECKING:
@@ -286,6 +287,10 @@ class RPCClient(_RPCCommandsClient):
         The OAuth2 client passed to the constructor.
     user: :class:`dict` | :data:`None`
         The connected user's data, populated after a successful handshake.
+    ready: :class:`~oauthcord.rpc.ReadyEvent` | :data:`None`
+        The ``READY`` payload from the last successful handshake. Its
+        ``config.api_endpoint`` identifies which Discord build (Stable, PTB or
+        Canary) this connection is attached to.
 
     Examples
     --------
@@ -326,6 +331,7 @@ class RPCClient(_RPCCommandsClient):
         "_state",
         "_subscriptions",
         "client",
+        "ready",
         "user",
     )
 
@@ -375,6 +381,7 @@ class RPCClient(_RPCCommandsClient):
             )
 
         self.user: dict[str, Any] | None = None
+        self.ready: ReadyEvent | None = None
 
         # Our own state: models built from this connection bind to it, and it
         # gains the session once this connection authenticates.
@@ -513,6 +520,7 @@ class RPCClient(_RPCCommandsClient):
             )
 
         self.user = payload.get("data", {}).get("user")
+        self.ready = ReadyEvent(data=payload["data"], state=self._state)
         self._closed = False
         self._listener_task = asyncio.ensure_future(self._listen())
         await self._events_manager.start()
