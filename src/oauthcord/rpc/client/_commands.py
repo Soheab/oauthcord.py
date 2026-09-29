@@ -303,7 +303,6 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
         data: payloads.SetActivityResponse = await self.send_command(
             SendableRPCCommand.SET_ACTIVITY, **args
         )  # type: ignore
-        print(f"Set activity response data: {data}")  # Debugging line
         return (
             Activity.from_dict(data)
             if data is not None  # pyright: ignore[reportUnnecessaryComparison]
