@@ -252,8 +252,6 @@ class Scope(StrEnum):
     # RELATIONSHIPS_WRITE = "relationships.write"
     # Allows updating a user's connection and application-specific metadata (Public: Yes)
     ROLE_CONNECTIONS_WRITE = "role_connections.write"
-    # When using RPC, allows controlling the local Discord client.
-    # This also encompasses most RPC scopes below. (Public: No)
     # Allows connecting to voice on the user's behalf and seeing all voice members in a guild (Public: No)
     # VOICE = "voice"
     # Creates an application-owned webhook in a user-selected channel and returns it in the token exchange (Public: Yes)
@@ -267,7 +265,17 @@ class Scope(StrEnum):
     # guilds, guilds.channels.read, and lobbies.write. (Public: No)
     SDK_SOCIAL_LAYER = "sdk.social_layer"
 
+    # When using RPC, allows controlling the local Discord client.
+    # This also encompasses most RPC scopes below. (Public: No)
     RPC = "rpc"
+    # When using RPC, allows updating the user's activity (Public: No)
+    RPC_ACTIVITIES_WRITE = "rpc.activities.write"
+    # When using RPC, allows receiving notifications pushed out to the user (Public: No)
+    RPC_NOTIFICATIONS_READ = "rpc.notifications.read"
+    # When using RPC, allows reading voice settings and listening for voice events (Public: No)
+    RPC_VOICE_READ = "rpc.voice.read"
+    # When using RPC, allows updating voice settings (Public: No)
+    RPC_VOICE_WRITE = "rpc.voice.write"
     RPC_AUTHENTICATED = "rpc.authenticated"
     RPC_LOCAL_STORAGE = "rpc.local"
     RPC_PRIVATE = "rpc.private"
