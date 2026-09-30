@@ -77,6 +77,7 @@ class EmbedMedia(
 
     __slots__ = (
         "content_scan_metadata",
+        "content_scan_version",
         "content_type",
         "description",
         "flags",
@@ -99,6 +100,7 @@ class EmbedMedia(
         flags: int | None = None,
         content_type: str | None = None,
         content_scan_metadata: ContentScanMetadata | None = None,
+        content_scan_version: int | None = None,
         placeholder_version: int | None = None,
         placeholder: str | None = None,
     ) -> None:
@@ -112,6 +114,7 @@ class EmbedMedia(
         self.flags: int | None = flags
         self.content_type: str | None = content_type
         self.content_scan_metadata: ContentScanMetadata | None = content_scan_metadata
+        self.content_scan_version: int | None = content_scan_version
         self.placeholder_version: int | None = placeholder_version
         self.placeholder: str | None = placeholder
 
@@ -127,16 +130,21 @@ class EmbedMedia(
     def from_dict(cls, data: message_types.EmbedMediaResponse) -> Self:
         return cls(
             data["url"],
-            proxy_url=data.get("proxy_url"),
+            proxy_url=data.get("proxy_url") or data.get("proxyURL"),  # proxyURL is RPC
             height=data.get("height"),
             width=data.get("width"),
             flags=data.get("flags"),
             description=data.get("description"),
-            content_type=data.get("content_type"),
+            content_type=data.get("content_type")
+            or data.get("contentType"),  # contentType is RPC
             content_scan_metadata=ContentScanMetadata.from_dict(csm)
             if (csm := data.get("content_scan_metadata"))
             else None,
-            placeholder_version=data.get("placeholder_version"),
+            content_scan_version=data.get("content_scan_version") or data.get(
+                "contentScanVersion" 
+            ),  # contentScanVersion is RPC
+            placeholder_version=data.get("placeholder_version")
+            or data.get("placeholderVersion"),  # placeholderVersion is RPC
             placeholder=data.get("placeholder"),
         )
 
@@ -177,8 +185,9 @@ class EmbedAuthor(
         return cls(
             data["name"],
             url=data.get("url"),
-            icon_url=data.get("icon_url"),
-            proxy_icon_url=data.get("proxy_icon_url"),
+            icon_url=data.get("icon_url") or data.get("iconURL"),  # iconURL is RPC
+            proxy_icon_url=data.get("proxy_icon_url")
+            or data.get("iconProxyURL"),  # proxyIconURL is RPC
         )
 
 
@@ -210,7 +219,9 @@ class EmbedField(
     @override
     def from_dict(cls, data: message_types.EmbedFieldResponse) -> Self:
         """Construct this object from a Discord API response payload."""
-        return cls(data["name"], data["value"], inline=data.get("inline"))
+        name = data.get("name") or data.get("rawName", "")  # rawName is RPC
+        value = data.get("value") or data.get("rawValue", "")  # rawValue is RPC
+        return cls(name, value, inline=data.get("inline"))
 
 
 class Embed(BaseModel["message_types.EmbedResponse", "message_types.EmbedRequest"]):
