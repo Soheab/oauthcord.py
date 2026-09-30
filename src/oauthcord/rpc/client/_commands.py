@@ -54,7 +54,7 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
     async def get_guild(
         self: _RPCClientProto, *, guild_id: int | str, timeout: int | None = None
     ) -> RPCGuild:
-        args: payloads.GetGuildRequest = {"guild_id": guild_id}
+        args: payloads.GetGuildRequest = {"guild_id": str(guild_id)}
         if timeout is not None:
             args["timeout"] = timeout
         data: payloads.GetGuildResponse = await self.send_command(
@@ -71,7 +71,7 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
     async def get_channel(
         self: _RPCClientProto, *, channel_id: int | str
     ) -> RPCChannel:
-        args: payloads.GetChannelRequest = {"channel_id": channel_id}
+        args: payloads.GetChannelRequest = {"channel_id": str(channel_id)}
         data: payloads.GetChannelResponse = await self.send_command(
             SendableRPCCommand.GET_CHANNEL, **args
         )  # type: ignore
@@ -80,7 +80,7 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
     async def get_channels(
         self: _RPCClientProto, *, guild_id: int | str
     ) -> list[RPCPartialChannel]:
-        args: payloads.GetChannelsRequest = {"guild_id": guild_id}
+        args: payloads.GetChannelsRequest = {"guild_id": str(guild_id)}
         data: payloads.GetChannelsResponse = await self.send_command(
             SendableRPCCommand.GET_CHANNELS, **args
         )  # type: ignore
@@ -101,7 +101,7 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
         self: _RPCClientProto, *, channel_id: int | str
     ) -> Invite:
         self._ensure_session()
-        args: payloads.CreateChannelInviteRequest = {"channel_id": channel_id}
+        args: payloads.CreateChannelInviteRequest = {"channel_id": str(channel_id)}
         data: payloads.CreateChannelInviteResponse = await self.send_command(
             SendableRPCCommand.CREATE_CHANNEL_INVITE, **args
         )  # type: ignore
@@ -119,7 +119,7 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
         ]
 
     async def get_user(self: _RPCClientProto, *, id: int | str) -> RPCUser | None:
-        args: payloads.GetUserRequest = {"id": id}
+        args: payloads.GetUserRequest = {"id": str(id)}
         data: payloads.GetUserResponse = await self.send_command(
             SendableRPCCommand.GET_USER, **args
         )  # type: ignore
@@ -133,7 +133,7 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
         volume: int | None = None,
         mute: bool | None = None,
     ) -> UserVoiceSettings:
-        args: payloads.SetUserVoiceSettingsRequest = {"user_id": user_id}
+        args: payloads.SetUserVoiceSettingsRequest = {"user_id": str(user_id)}
         if pan is not None:
             args["pan"] = pan.to_dict() if isinstance(pan, Pan) else pan
         if volume is not None:
@@ -152,7 +152,7 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
         volume: int | None = None,
         mute: bool | None = None,
     ) -> None:
-        args: payloads.SetUserVoiceSettings2Request = {"user_id": user_id}
+        args: payloads.SetUserVoiceSettings2Request = {"user_id": str(user_id)}
         if volume is not None:
             args["volume"] = volume
         if mute is not None:
@@ -171,7 +171,9 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
         force: bool | None = None,
         navigate: bool | None = None,
     ) -> RPCChannel | None:
-        args: payloads.SelectVoiceChannelRequest = {"channel_id": channel_id}
+        args: payloads.SelectVoiceChannelRequest = {
+            "channel_id": str(channel_id) if channel_id is not None else None
+        }
         if timeout is not None:
             args["timeout"] = timeout
         if force is not None:
@@ -201,7 +203,9 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
         channel_id: int | str | None,
         timeout: int | None = None,
     ) -> RPCChannel | None:
-        args: payloads.SelectTextChannelRequest = {"channel_id": channel_id}
+        args: payloads.SelectTextChannelRequest = {
+            "channel_id": str(channel_id) if channel_id is not None else None
+        }
         if timeout is not None:
             args["timeout"] = timeout
         data: payloads.SelectTextChannelResponse = await self.send_command(
@@ -313,7 +317,7 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
         self: _RPCClientProto, *, user_id: int | str, pid: int | None = None
     ) -> None:
         args: payloads.SendActivityJoinInviteRequest = {
-            "user_id": user_id,
+            "user_id": str(user_id),
             "pid": pid if pid is not None else os.getpid(),
         }
         await self.send_command(SendableRPCCommand.SEND_ACTIVITY_JOIN_INVITE, **args)
@@ -321,7 +325,7 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
     async def close_activity_join_request(
         self: _RPCClientProto, *, user_id: int | str
     ) -> None:
-        args: payloads.CloseActivityJoinRequestRequest = {"user_id": user_id}
+        args: payloads.CloseActivityJoinRequestRequest = {"user_id": str(user_id)}
         await self.send_command(SendableRPCCommand.CLOSE_ACTIVITY_JOIN_REQUEST, **args)
 
     async def activity_invite_user(
@@ -333,7 +337,7 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
         content: str | None = None,
     ) -> None:
         args: payloads.ActivityInviteUserRequest = {
-            "user_id": user_id,
+            "user_id": str(user_id),
             "type": type,
             "pid": pid if pid is not None else os.getpid(),
         }
@@ -353,13 +357,13 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
     ) -> None:
         args: payloads.AcceptActivityInviteRequest = {
             "type": type,
-            "user_id": user_id,
+            "user_id": str(user_id),
             "session_id": session_id,
-            "channel_id": channel_id,
-            "message_id": message_id,
+            "channel_id": str(channel_id),
+            "message_id": str(message_id),
         }
         if application_id is not None:
-            args["application_id"] = application_id
+            args["application_id"] = str(application_id)
         await self.send_command(SendableRPCCommand.ACCEPT_ACTIVITY_INVITE, **args)
 
     async def open_invite_dialog(self: _RPCClientProto) -> None:
@@ -434,12 +438,12 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
         guild_id: int | str | None = None,
     ) -> None:
         args: payloads.OpenMessageRequest = {
-            "channel_id": channel_id,
-            "message_id": message_id,
+            "channel_id": str(channel_id),
+            "message_id": str(message_id),
             "pid": pid if pid is not None else os.getpid(),
         }
         if guild_id is not None:
-            args["guild_id"] = guild_id
+            args["guild_id"] = str(guild_id)
         await self.send_command(SendableRPCCommand.OPEN_MESSAGE, **args)
 
     async def set_certified_devices(
@@ -458,7 +462,7 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
     ) -> Image:
         args: payloads.GetImageRequest = {
             "type": type,
-            "id": id,
+            "id": str(id),
             "format": format,
             "size": size,
         }
@@ -525,7 +529,7 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
         self: _RPCClientProto, *, sku_id: int | str, pid: int | None = None
     ) -> list[Entitlement]:
         self._ensure_session()
-        args: payloads.StartPurchaseRequest = {"sku_id": sku_id}
+        args: payloads.StartPurchaseRequest = {"sku_id": str(sku_id)}
         if pid is not None:
             args["pid"] = pid
         data: payloads.StartPurchaseResponse = await self.send_command(
@@ -610,9 +614,9 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
     ) -> None:
         args: payloads.PlaySoundboardSoundRequest = {}
         if guild_id is not None:
-            args["guild_id"] = guild_id
+            args["guild_id"] = str(guild_id)
         if sound_id is not None:
-            args["sound_id"] = sound_id
+            args["sound_id"] = str(sound_id)
         await self.send_command(SendableRPCCommand.PLAY_SOUNDBOARD_SOUND, **args)
 
     async def toggle_video(self: _RPCClientProto) -> None:
@@ -677,7 +681,7 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
     async def invite_user_embedded(
         self: _RPCClientProto, *, user_id: int | str, content: str | None = None
     ) -> None:
-        args: payloads.InviteUserEmbeddedRequest = {"user_id": user_id}
+        args: payloads.InviteUserEmbeddedRequest = {"user_id": str(user_id)}
         if content is not None:
             args["content"] = content
         await self.send_command(SendableRPCCommand.INVITE_USER_EMBEDDED, **args)
@@ -693,7 +697,7 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
     async def get_quest_enrollment_status(
         self: _RPCClientProto, *, quest_id: int | str
     ) -> QuestEnrollmentStatus:
-        args: payloads.GetQuestEnrollmentStatusRequest = {"quest_id": quest_id}
+        args: payloads.GetQuestEnrollmentStatusRequest = {"quest_id": str(quest_id)}
         data: payloads.GetQuestEnrollmentStatusResponse = await self.send_command(
             SendableRPCCommand.GET_QUEST_ENROLLMENT_STATUS, **args
         )  # type: ignore
@@ -702,7 +706,7 @@ class _RPCCommandsClient(_RPCClientProto):  # pyright: ignore[reportUnusedClass]
     async def quest_start_timer(
         self: _RPCClientProto, *, quest_id: int | str
     ) -> TimerResult:
-        args: payloads.QuestStartTimerRequest = {"quest_id": quest_id}
+        args: payloads.QuestStartTimerRequest = {"quest_id": str(quest_id)}
         data: payloads.QuestStartTimerResponse = await self.send_command(
             SendableRPCCommand.QUEST_START_TIMER, **args
         )  # type: ignore
