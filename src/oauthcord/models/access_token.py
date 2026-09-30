@@ -85,10 +85,18 @@ class AccessToken(BaseModel["AccessTokenPayload", "AccessTokenPayload"]):
         else:
             self._scope: str = scope
 
-        self._expires_in: int = int(data.get("expires_in", data.get("expires", 0)))
+        self._created_at: datetime.datetime = datetime.datetime.now(datetime.UTC)
+        if (expires_in := data.get("expires_in")) is not None:
+            self._expires_in: int = int(expires_in)
+        elif expires := data.get("expires"):
+            # RPC's AUTHENTICATE reports when the token expires as an ISO 8601
+            # timestamp rather than a lifetime in seconds.
+            remaining = utils.iso_to_datetime(expires) - self._created_at
+            self._expires_in = int(remaining.total_seconds())
+        else:
+            self._expires_in = 0
         self.id_token: str | None = data.get("id_token")
 
-        self._created_at: datetime.datetime = datetime.datetime.now(datetime.UTC)
         if not hasattr(self, "_refresh_lock"):
             self._refresh_lock: asyncio.Lock = asyncio.Lock()
 
