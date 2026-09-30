@@ -28,6 +28,7 @@ class RPCMessage(BaseModel["RPCMessageResponse"]):
         "id",
         "mention_everyone",
         "mention_roles",
+        "mentioned_ids",
         "mentions",
         "nicked",
         "pinned",
@@ -38,6 +39,8 @@ class RPCMessage(BaseModel["RPCMessageResponse"]):
 
     @override
     def _initialize(self, data: RPCMessageResponse) -> None:
+        self._handle_mentions(data)
+
         self.id: int = int(data["id"])
         self.blocked: bool = data.get("blocked", False)
         self.bot: bool = data.get("bot", False)
@@ -49,14 +52,7 @@ class RPCMessage(BaseModel["RPCMessageResponse"]):
         )
         self.timestamp: datetime.datetime = iso_to_datetime(data["timestamp"])
         self.tts: bool = data["tts"]
-        self.mentions: list[RPCUser] = [
-            self._initialize_other(RPCUser, mention)
-            for mention in data.get("mentions", [])
-        ]
-        self.mention_everyone: bool = data["mention_everyone"]
-        self.mention_roles: list[int] = [
-            int(role_id) for role_id in data.get("mention_roles", [])
-        ]
+
         self.embeds: list[Embed] = [
             Embed.from_dict(embed) for embed in data.get("embeds", [])
         ]
@@ -69,3 +65,30 @@ class RPCMessage(BaseModel["RPCMessageResponse"]):
         )
         self.pinned: bool = data["pinned"]
         self.type: int = data["type"]
+
+    def _handle_mentions(self, data: RPCMessageResponse) -> None:
+        mentions: list[RPCUser] = []
+        role_mentions: list[int] = []
+        raw_mentions: list[int] = []
+
+        for mention in data.get("mentions", []):
+            if isinstance(mention, dict):
+                mentions.append(self._initialize_other(RPCUser, mention))
+            else:
+                try:
+                    mention_id = int(mention)
+                except (ValueError, TypeError):
+                    continue
+                else:
+                    raw_mentions.append(mention_id)
+
+        for role_id in data.get("mention_roles", []):
+            try:
+                role_mentions.append(int(role_id))
+            except (ValueError, TypeError):
+                continue
+
+        self.mentions = mentions
+        self.mentioned_ids = raw_mentions
+        self.mention_roles = role_mentions
+        self.mention_everyone = data.get("mention_everyone", False)
