@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING, override
 
 from ...models._base import BaseModel
 from ...models.emoji import Emoji
+from ...models.user import PartialUser
 from ...utils import convert_snowflake
 
 if TYPE_CHECKING:
@@ -40,6 +41,13 @@ class SoundboardSound(BaseModel["soundboard.SoundboardSoundResponse"]):
             data, "guild_id", always_available=False
         )
         self.available: bool = data["available"]
+        # Only sent by some endpoints; see SoundboardSoundResponse.
+        self.user: PartialUser | None = self._initialize_other(
+            PartialUser, data.get("user"), optional=True
+        )
+        self.user_id: int | None = convert_snowflake(
+            data, "user_id", always_available=False
+        )
 
     @property
     def emoji(self) -> Emoji | None:
