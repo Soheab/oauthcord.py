@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from ..errors import OauthCordException
 from .enums import RPCErrorCode
+
+if TYPE_CHECKING:
+    from ..internals._types.rpc.events import ErrorEventData
 
 __all__ = (
     "RPCClientClosedError",
@@ -11,6 +16,7 @@ __all__ = (
     "RPCConnectionLostError",
     "RPCError",
     "RPCHandshakeError",
+    "RPCHandshakeTimeoutError",
     "RPCSessionRequiredError",
     "RPCSocketNotFoundError",
     "RPCSubscriptionError",
@@ -67,6 +73,24 @@ class RPCHandshakeError(RPCConnectionError):
         super().__init__(f"{message}. {hint}")
 
 
+class RPCHandshakeTimeoutError(RPCConnectionError):
+    """Raised when Discord never answers the initial RPC handshake.
+
+    Discord serves one IPC connection per application at a time and silently
+    ignores a second handshake for the same ``client_id``, so this usually means
+    another connection for this application is already open on that pipe. It
+    also delays handshakes for a while after an application reconnects rapidly.
+    """
+
+    def __init__(self, timeout: float) -> None:
+        self.timeout = timeout
+        super().__init__(
+            f"Discord did not answer the RPC handshake within {timeout:g}s. Another "
+            "connection for this application may already be open; close it first, "
+            "or wait a little if this application just reconnected."
+        )
+
+
 class RPCClientClosedError(RPCConnectionError):
     """Raised when a command is sent on an :class:`RPCClient` that isn't connected.
 
@@ -103,17 +127,42 @@ class RPCConnectionLostError(RPCConnectionError):
 
 
 class RPCError(OauthCordException):
-    """Raised when the Discord RPC server returns an error response."""
+    """Raised when the Discord RPC server returns an error response.
 
-    def __init__(self, code: int, message: str) -> None:
+    Attributes
+    ----------
+    code: :class:`int`
+        The raw error code.
+    error_code: :class:`RPCErrorCode` | :class:`int`
+        The error code as an :class:`RPCErrorCode`, or the raw code if unknown.
+    message: :class:`str`
+        Discord's error message.
+    command: :class:`str` | :data:`None`
+        The command that failed, e.g. ``"AUTHORIZE"``, if Discord reported it.
+    data: :class:`dict` | :data:`None`
+        The full error payload, including any fields beyond ``code`` and
+        ``message`` that Discord sent.
+    """
+
+    def __init__(
+        self,
+        code: int,
+        message: str,
+        *,
+        command: str | None = None,
+        data: ErrorEventData | None = None,
+    ) -> None:
         self.code = code
         try:
             self.error_code: RPCErrorCode | int = RPCErrorCode(code)
         except ValueError:
             self.error_code = code
         self.message = message
+        self.command = command
+        self.data = data
 
-        super().__init__(f"RPC error {code}: {message}")
+        source = f" from {command}" if command else ""
+        super().__init__(f"RPC error {code}{source}: {message}")
 
 
 class RPCUnauthorizedError(RPCError):

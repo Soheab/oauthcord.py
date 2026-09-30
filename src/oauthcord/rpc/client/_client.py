@@ -22,6 +22,7 @@ from ..errors import (
     RPCConnectionLostError,
     RPCError,
     RPCHandshakeError,
+    RPCHandshakeTimeoutError,
     RPCSessionRequiredError,
     RPCSocketNotFoundError,
     RPCUnauthorizedError,
@@ -51,6 +52,7 @@ __all__ = (
     "RPCConnectionLostError",
     "RPCError",
     "RPCHandshakeError",
+    "RPCHandshakeTimeoutError",
     "RPCSessionRequiredError",
     "RPCSocketNotFoundError",
 )
@@ -280,6 +282,12 @@ class RPCClient(_RPCCommandsClient):
         close instead of closing it immediately. Use this to keep a session running
         until Discord goes away or the user interrupts, without writing your own
         wait loop; see :meth:`wait_until_closed`. Defaults to :data:`False`.
+    handshake_timeout: :class:`float`
+        How long to wait, in seconds, for Discord to answer the handshake in
+        :meth:`connect`. Discord can take up to ~30 seconds to answer when an
+        application reconnects shortly after disconnecting, and never answers a
+        second handshake while the application already has a connection open.
+        Defaults to ``60.0``.
 
     Attributes
     ----------
@@ -320,6 +328,7 @@ class RPCClient(_RPCCommandsClient):
         "_connection",
         "_events_manager",
         "_handler",
+        "_handshake_timeout",
         "_keep_alive",
         "_listener_task",
         "_login_timeout",
@@ -348,6 +357,7 @@ class RPCClient(_RPCCommandsClient):
         auto_subscribe: bool = True,
         keep_alive: bool = False,
         login_timeout: float = 30.0,
+        handshake_timeout: float = 60.0,
     ) -> None:
         self.client: Client = client
         self._pipe = pipe
@@ -357,6 +367,7 @@ class RPCClient(_RPCCommandsClient):
         self._reconnect_backoff = reconnect_backoff
         self._keep_alive = keep_alive
         self._login_timeout = login_timeout
+        self._handshake_timeout = handshake_timeout
 
         self._connection: _ConnectionManager = _ConnectionManager()
         self._pending: dict[str, asyncio.Future[Any]] = {}
@@ -495,6 +506,10 @@ class RPCClient(_RPCCommandsClient):
         ------
         RPCConnectionError
             No local Discord IPC socket could be found or connected to.
+        RPCHandshakeError
+            Discord rejected the handshake.
+        RPCHandshakeTimeoutError
+            Discord did not answer the handshake within ``handshake_timeout``.
         """
         _log.debug("Connecting to local Discord IPC (pipe=%s)...", pipe)
         await self._connection.connect(pipe=pipe if pipe is not None else self._pipe)
@@ -506,7 +521,20 @@ class RPCClient(_RPCCommandsClient):
             },
         )
 
-        opcode, payload = await self._connection.recv()
+        try:
+            opcode, payload = await asyncio.wait_for(
+                self._connection.recv(), self._handshake_timeout
+            )
+        except TimeoutError:
+            _log.debug("No handshake reply within %ss", self._handshake_timeout)
+            await self._connection.close()
+            raise RPCHandshakeTimeoutError(self._handshake_timeout) from None
+        except BaseException:
+            # Cancelled while waiting: a pipe left open with a pending handshake
+            # would keep blocking this application's next connection.
+            await self._connection.close()
+            raise
+
         if opcode == _RPCOpCode.CLOSE or payload.get("evt") == "ERROR":
             # Discord reports handshake failures (e.g. an invalid client_id) either as
             # a FRAME with evt=ERROR and a "data" wrapper, or by closing the pipe
@@ -567,19 +595,19 @@ class RPCClient(_RPCCommandsClient):
 
     async def close(self) -> None:
         """Close the connection to the local Discord client."""
-        if self._closed:
+        if self._closed or self._closing:
             _log.debug("close() called on an already-closed RPCClient, ignoring")
             return
 
         _log.debug("Closing RPC connection")
         self._closing = True
-        self._closed = True
         if self._clear_activity_on_close:
             try:
                 await self.set_activity(None)
             except Exception:
                 msg = "Ignoring error while clearing activity on close:"
                 _log.exception(msg, exc_info=True)
+        self._closed = True
 
         if self._listener_task is not None:
             self._listener_task.cancel()
@@ -664,7 +692,12 @@ class RPCClient(_RPCCommandsClient):
                     future.set_exception(RPCUnauthorizedError())
                 else:
                     future.set_exception(
-                        RPCError(code, data.get("message", "Unknown error"))
+                        RPCError(
+                            code,
+                            data.get("message", "Unknown error"),
+                            command=payload.get("cmd"),
+                            data=data,
+                        )
                     )
             else:
                 future.set_result(payload)

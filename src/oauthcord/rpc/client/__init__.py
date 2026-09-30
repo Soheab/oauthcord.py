@@ -7,6 +7,7 @@ __all__ = (
     "RPCConnectionLostError",
     "RPCError",
     "RPCHandshakeError",
+    "RPCHandshakeTimeoutError",
     "RPCSessionRequiredError",
     "RPCSocketNotFoundError",
 )

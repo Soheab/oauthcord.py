@@ -34,6 +34,7 @@ __all__ = (  # noqa: RUF022
     "RPCConnectionLostError",
     "RPCError",
     "RPCHandshakeError",
+    "RPCHandshakeTimeoutError",
     "RPCSessionRequiredError",
     "RPCSocketNotFoundError",
 
