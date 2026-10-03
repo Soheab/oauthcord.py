@@ -62,6 +62,19 @@ Typical flow:
 6. Refresh with `await session.refresh()` when needed.
 7. Revoke with `await session.revoke()` if needed.
 
+Generate a fresh `state` for every authorization request and compare it on the callback before exchanging the code. For PKCE, `generate_pkce()` returns a matching verifier and challenge:
+
+```python
+from oauthcord import utils
+
+state = utils.generate_state()
+verifier, challenge = utils.generate_pkce()
+
+url = client.get_authorization_url(state=state, code_challenge=challenge)
+# ...store state and verifier, then on the callback:
+session = await client.exchange_token(code, code_verifier=verifier)
+```
+
 ## Session management
 
 `Client` can keep an in-memory registry of `AuthorisedSession` instances for applications that need to look up a user's OAuth session after the callback has finished.

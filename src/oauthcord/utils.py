@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+import base64
 import datetime
+import hashlib
 import re
+import secrets
 from enum import Enum
 from typing import (
     TYPE_CHECKING,
@@ -29,6 +32,8 @@ if TYPE_CHECKING:
 __all__ = (
     "NotSet",
     "convert_snowflake",
+    "generate_pkce",
+    "generate_state",
     "id_to_datetime",
     "iso_to_datetime",
     "parse_invite",
@@ -298,3 +303,35 @@ def parse_invite(invite: str) -> str | None:
     """
     match = INVITE_RE.fullmatch(invite.strip())
     return match and match.group("code")
+
+
+def generate_state() -> str:
+    """Generate a random, URL-safe ``state`` value for the authorization URL.
+
+    Generate a new one per authorization request, store it (e.g. in the user's
+    session) and compare it with the ``state`` query parameter on the callback
+    before exchanging the code, to protect against CSRF.
+
+    Returns
+    -------
+    :class:`str`
+        A cryptographically secure random string.
+    """
+    return secrets.token_urlsafe(32)
+
+
+def generate_pkce() -> tuple[str, str]:
+    """Generate a PKCE code verifier and its S256 code challenge.
+
+    Pass the challenge to :meth:`Client.get_authorization_url` as ``code_challenge``
+    and the verifier to :meth:`Client.exchange_token` as ``code_verifier``.
+
+    Returns
+    -------
+    :class:`tuple`[:class:`str`, :class:`str`]
+        The ``(code_verifier, code_challenge)`` pair.
+    """
+    verifier = secrets.token_urlsafe(64)
+    digest = hashlib.sha256(verifier.encode("ascii")).digest()
+    challenge = base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
+    return verifier, challenge
