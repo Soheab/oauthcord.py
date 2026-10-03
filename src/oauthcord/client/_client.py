@@ -435,12 +435,8 @@ class Client:
         """
         await self.http.close()
         self.clear_sessions()
-        if self.__device_code_polling_tasks:
-            for task in self.__device_code_polling_tasks.values():
-                try:
-                    task.cancel()
-                except Exception:
-                    pass
+        for task in self.__device_code_polling_tasks.values():
+            task.cancel()
         self.__device_code_polling_tasks.clear()
 
     @property

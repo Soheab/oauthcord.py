@@ -68,12 +68,12 @@ async def json_or_text(
     response: aiohttp.ClientResponse,
 ) -> ResponsePayload:
     text = await response.text(encoding="utf-8")
-    try:
-        content_type = response.headers.get("Content-Type", "")
-        if "application/json" in content_type:
+    content_type = response.headers.get("Content-Type", "")
+    if "application/json" in content_type:
+        try:
             return json.loads(text)
-    except Exception:
-        pass
+        except ValueError:
+            pass
 
     return text
 
