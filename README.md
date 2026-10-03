@@ -142,13 +142,13 @@ async def main() -> None:
     session = await client.exchange_token(code)
 
     try:
-        me = await session.current_user()
-        guilds = await session.guilds()
+        me = await session.get_current_user()
+        guilds = await session.get_current_user_guilds()
 
         print(me.id, me.username)
         print(f"Guild count: {len(guilds)}")
     finally:
-        await client.http.close()
+        await client.close()
 
 
 asyncio.run(main())
@@ -186,7 +186,7 @@ All returned models expose a `.data` attribute containing the raw payload from D
 Use this when you want the original API data directly instead of typed attributes.
 
 ```python
-me = await session.current_user()
+me = await session.get_current_user()
 
 # typed model attribute 
 username = me.username

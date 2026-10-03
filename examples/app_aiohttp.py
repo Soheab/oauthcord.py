@@ -14,7 +14,7 @@ How to run
    - `DISCORD_REDIRECT_URI` (for example: `http://127.0.0.1:8000/callback`)
    - Optional: `DISCORD_OAUTH_STATE`
 6. Start the app:
-   - `python examples/aio_app.py`
+   - `python examples/app_aiohttp.py`
 7. Open the printed authorize URL, approve scopes, and Discord will redirect to `/callback`.
 """
 

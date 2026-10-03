@@ -54,7 +54,7 @@ async def callback(code: str) -> Response[dict[str, Any]]:
     session = await client.exchange_token(code)
 
     # Fetch the current user and the user's guild list with that token.
-    # don't need to pass the token here, it's stored after get_token() is called.
+    # No need to pass the token, the session already holds it.
     me = await session.get_current_user()
     guilds = await session.get_current_user_guilds()
 
