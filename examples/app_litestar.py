@@ -64,4 +64,4 @@ async def callback(code: str) -> Response[dict[str, Any]]:
     return Response(data)
 
 
-app = Litestar(route_handlers=[callback], debug=True)
+app = Litestar(route_handlers=[callback])
