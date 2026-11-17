@@ -459,8 +459,8 @@ class ActivityLink(BaseModel["ActivityLinkResponse"]):
     def _initialize(self, data: ActivityLinkResponse) -> None:
         self.application_id: int = convert_snowflake(data, "application_id")
         self.link_id: str = data["link_id"]
-        self.type: ActivityLinkType = ActivityLinkType(
-            int(self.link_id.split("-", 1)[0])
+        self.type: ActivityLinkType = to_enum(
+            ActivityLinkType, int(self.link_id.split("-", 1)[0])
         )
         self.asset_path: str | None = data.get("asset_path")
         self.asset_id: int | None = convert_snowflake(

@@ -133,8 +133,8 @@ class DisplayNameStyle(BaseModel["DisplayNameStyleResponse"]):
 
     @override
     def _initialize(self, data: DisplayNameStyleResponse) -> None:
-        self.font: DisplayNameFont = DisplayNameFont(data["font_id"])
-        self.effect: DisplayNameEffect = DisplayNameEffect(data["effect_id"])
+        self.font: DisplayNameFont = to_enum(DisplayNameFont, data["font_id"])
+        self.effect: DisplayNameEffect = to_enum(DisplayNameEffect, data["effect_id"])
         self.colors: list[int] = data["colors"]
 
 
