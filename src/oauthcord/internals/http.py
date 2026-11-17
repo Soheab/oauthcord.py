@@ -445,20 +445,13 @@ class HTTPClient(
 
         rate_limit_data: RateLimitResponse = {
             "message": str(data.get("message", "Rate limit exceeded")),
-            # Discord's body and headers can disagree: on user-scoped buckets
-            # the body has been seen saying ~20s while Retry-After and
-            # X-RateLimit-Reset-After both said ~260s. Retrying on the shorter
-            # value just earns another 429, so wait for the longest of them.
-            "retry_after": max(
-                self._parse_retry_after(data.get("retry_after", 0), default=0.0),
-                self._parse_retry_after(
-                    response.headers.get("Retry-After", 0), default=0.0
+            "retry_after": self._parse_retry_after(
+                data.get(
+                    "retry_after",
+                    response.headers.get("Retry-After", 1),
                 ),
-                self._parse_retry_after(
-                    response.headers.get("X-RateLimit-Reset-After", 0), default=0.0
-                ),
-            )
-            or 1.0,
+                default=1.0,
+            ),
             "global": bool(data.get("global", False)),
         }
         if isinstance(code := data.get("code"), int) and not isinstance(code, bool):
